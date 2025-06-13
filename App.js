@@ -22,6 +22,7 @@ import Icon from 'react-native-vector-icons/Feather';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import { Share } from 'react-native';
+import Markdown from 'react-native-markdown-display';
 
 const { width, height } = Dimensions.get('window');
 
@@ -135,6 +136,26 @@ export default function App() {
   const insets = useSafeAreaInsets();
   const [donationVisible, setDonationVisible] = useState(false);
   const [thankYouVisible, setThankYouVisible] = useState(false);
+  const [narratorBioVisible, setNarratorBioVisible] = useState(false);
+const [narratorBioText, setNarratorBioText] = useState('');
+const [selectedNarrator, setSelectedNarrator] = useState('');
+const fetchNarratorBio = async (narratorName) => {
+  setSelectedNarrator(narratorName);
+  setNarratorBioVisible(true);
+  setNarratorBioText('Loading biography...');
+  try {
+    const res = await fetch('https://takhrij-backend.onrender.com/narrator-bio', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: narratorName }),
+    });
+    const data = await res.json();
+const raw = data.bio || 'Biography not available.';
+setNarratorBioText(raw);
+  } catch {
+    setNarratorBioText('Error fetching biography.');
+  }
+};
 
   const verifyHadith = async () => {
     setCommentaryModalVisible(false);
@@ -256,8 +277,24 @@ export default function App() {
               >
                 <Text style={styles.sectionHeader}>Commentary</Text>
                 <Text style={styles.modalText}>{commentaryData.commentary}</Text>
-                <Text style={styles.sectionHeader}>Chain of Narrators</Text>
-                <Text style={styles.modalText}>{commentaryData.chain}</Text>
+                <Text style={styles.sectionHeader}>Chain of Narrators (click to view biography)</Text>
+<View style={styles.chainContainer}>
+  {commentaryData.chain
+    .split('→')
+    .map((rawName, idx, arr) => {
+      const narrator = rawName.trim();
+      return (
+        <React.Fragment key={idx}>
+          <TouchableOpacity onPress={() => fetchNarratorBio(narrator)}>
+            <Text style={styles.linkText}>{narrator}</Text>
+          </TouchableOpacity>
+          {idx < arr.length - 1 && (
+            <Text style={styles.arrow}>→</Text>
+          )}
+        </React.Fragment>
+      );
+    })}
+</View>
                 <Text style={styles.sectionHeader}>Evaluation of Hadith</Text>
                 <Text style={styles.modalText}>{commentaryData.evaluation}</Text>
               </ScrollView>
@@ -330,8 +367,6 @@ export default function App() {
     </View>
   </View>
 </Modal>
-
-
 
         <TouchableOpacity
   style={styles.donateButton}
@@ -426,6 +461,38 @@ export default function App() {
   </View>
 </Modal>
 
+<Modal
+  visible={narratorBioVisible}
+  transparent
+  animationType="slide"
+  onRequestClose={() => setNarratorBioVisible(false)}
+>
+  <View style={styles.modalBackdrop}>
+    <View style={styles.modalContent}>
+      <Text style={styles.modalHeader}>{selectedNarrator}</Text>
+      <ScrollView contentContainerStyle={styles.modalScrollContent}>
+        <Markdown
+          style={{
+            body: styles.modalText,         // your normal text styling
+            strong: { fontWeight: 'bold' }  // make **bold** render correctly
+          }}
+        >
+          {narratorBioText}
+        </Markdown>
+        <Text style={styles.modalDisclaimer}>
+  ⚠️ This biography is AI-generated. Always verify with trusted hadith biographical sources or scholars.
+</Text>
+      </ScrollView>
+      <TouchableOpacity
+        style={styles.modalCloseButton}
+        onPress={() => setNarratorBioVisible(false)}
+      >
+        <Text style={styles.modalCloseText}>Close</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
+
         <LinearGradient colors={['#16a085', '#117864']} style={styles.header}>
   <Text style={styles.headerText}>Takhrij</Text>
 </LinearGradient>
@@ -513,9 +580,12 @@ export default function App() {
               <View key={i} style={styles.card}>
                 {h.reference && <Text style={styles.referenceBadge}>{h.reference}</Text>}
                 {h.arabic    && <Text style={styles.arabicMatn}>{h.arabic}</Text>}
-                {h.english && h.english.split('\n').map((para, index) => (
-  <Text key={`english-${index}`} style={styles.englishMatn}>{para.trim()}</Text>
+                {h.english && h.english.split(/\n{2,}/).map((para, index) => (
+  <Text key={`english-${index}`} style={[styles.englishMatn, { marginBottom: 12 }]}>
+    {para.trim()}
+  </Text>
 ))}
+
                 {h.warning   && <Text style={styles.warning}>{h.warning}</Text>}
                 {h.reference !== 'AI Generated' && (
                   <Pressable
@@ -530,9 +600,19 @@ export default function App() {
             
 
             {hasResults && (
-  <TouchableOpacity style={styles.supportButton} onPress={() => setDonationVisible(true)}>
-    <Text style={styles.supportButtonText}>❤️ Support our work and earn Sadaqah Jariyah</Text>
-  </TouchableOpacity>
+  <>
+    <TouchableOpacity style={styles.supportButton} onPress={() => setDonationVisible(true)}>
+      <Text style={styles.supportButtonText}>❤️ Support our work and earn Sadaqah Jariyah</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity onPress={() => Linking.openURL('mailto:takhrijapp@gmail.com')}>
+      <Text style={styles.contactText}>Contact us for feedback and suggestions</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity onPress={() => setAboutVisible(true)}>
+      <Text style={styles.contactText}>About the App</Text>
+    </TouchableOpacity>
+  </>
 )}
           </ScrollView>
         </KeyboardAvoidingView>
@@ -584,6 +664,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  arrow: {
+  fontSize: 16,
+  marginHorizontal: 4,
+  color: '#333',
+},
   safeArea: {
     flex: 1,
     backgroundColor: '#c7e4e0',
@@ -879,6 +964,16 @@ donateLink: {
   shareCopyText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  chainContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginVertical: 8,
+  },
+  linkText: {
+    color: '#2980b9',
+    textDecorationLine: 'underline',
     fontWeight: '600',
   },
   background: {
