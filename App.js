@@ -33,15 +33,15 @@ iOS: Coming soon
 `;
 
 const COLLECTION_KEY_MAP = {
-  'Sahih Bukhari':    'bukhari',
-  'Sahih Muslim':     'muslim',
-  'Jami` at-Tirmidhi':'tirmidhi',
-  "Sunan an-Nasa'i":  'nasai',
-  'Sunan Ibn Majah':  'ibnmajah',
-  'Muwatta Malik':    'malik',
-  'Musnad Ahmad':     'ahmed',
-  'Sunan Abu Dawood':'abudawud',
-  'Sunan ad-Darimi':  'darimi',
+  'Sahih Bukhari': 'bukhari',
+  'Sahih Muslim': 'muslim',
+  'Jami` at-Tirmidhi': 'tirmidhi',
+  "Sunan an-Nasa'i": 'nasai',
+  'Sunan Ibn Majah': 'ibnmajah',
+  'Muwatta Malik': 'malik',
+  'Musnad Ahmad': 'ahmed',
+  'Sunan Abu Dawood': 'abudawud',
+  'Sunan ad-Darimi': 'darimi',
 };
 const glossary = [
   { term: 'Core Concepts', definition: '', reference: '', example: '' },
@@ -246,7 +246,7 @@ setNarratorBioText(raw);
   const fetchCommentary = async (arabic, english, reference, collection) => {
     setLoadingCommentary(true);
     const eng = english.trim() || arabic.trim();
-    const collToSend = collection || reference.split(' ').slice(0,2).join(' ');
+    const collToSend = collection || reference.split(' ').slice(0, 2).join(' ');
     try {
       const res = await fetch('https://takhrij-backend.onrender.com/gpt-commentary', {
         method: 'POST',
@@ -255,13 +255,13 @@ setNarratorBioText(raw);
       });
       const json = await res.json();
       setCommentaryData({
-  commentary: json.commentary || 'No commentary.',
-  chain: json.chain || 'No chain.',
-  evaluation: json.evaluation || 'No evaluation.',
-  arabic: arabic || '',
-  english: english || '',
-  reference: reference || ''
-});
+        commentary: json.commentary || 'No commentary.',
+        chain: json.chain || 'No chain.',
+        evaluation: json.evaluation || 'No evaluation.',
+        arabic: arabic || '',
+        english: english || '',
+        reference: reference || ''
+      });
     } catch {
       setCommentaryData({ commentary: 'Error fetching commentary.', chain: '', evaluation: '' });
     }
@@ -278,7 +278,7 @@ setNarratorBioText(raw);
       english = english.replace(/[\r\n]+/g, ' ').replace(/[*_]/g, '').trim();
       const reference = (s.match(/Reference:\s*(.*?)$/im) || [])[1]?.trim() || '';
       const warning = (s.match(/Warning:\s*(.*?)$/im) || [])[1]?.trim() || '';
-      const nameParts = reference.split(' ').slice(0,2).join(' ');
+      const nameParts = reference.split(' ').slice(0, 2).join(' ');
       const collection = COLLECTION_KEY_MAP[nameParts] || '';
       return { arabic, english, reference, warning, collection };
     }).filter(o => o.arabic || o.english);
@@ -286,9 +286,8 @@ setNarratorBioText(raw);
   };
 
   const { extraText, hadithSections } = parseResult(result);
-  const isFallback  = result.includes('AI Generated');
-  const hasResults  = !loading && hadithSections.length > 0 && !isFallback;
-  const noResults   = !loading && (extraText.startsWith('❌') || isFallback);
+  const hasResults = !loading && hadithSections.length > 0;
+  const noResults  = !loading && extraText.startsWith('❌');
 
   if (showWelcome) {
     return (
@@ -303,7 +302,7 @@ setNarratorBioText(raw);
             <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
             <Text style={styles.welcomeTitle}>Welcome to Takhrij</Text>
             <Text style={styles.welcomeText}>
-  {`Reviving the Sunnah, one hadith at a time.\n\n• Search across the 9 major hadith collections.\n• View the exact matn, grading, and source reference.\n• Learn about each narrator in the chain (birth date, teachers, reliability).\n• Understand hadith terms through our built-in glossary.\n• Get concise, AI-supported commentary to aid your study.\n\nNo match found? Don’t worry — our AI will still provide a scholarly fallback to guide your study.`}
+  {`Reviving the Sunnah, one hadith at a time.\n\n• Search across the 9 major hadith collections.\n• Learn the meaning, context, and chain of narrators.\n• Explore essential terms from the science of hadith (ʿUlūm al-Hadīth).\n• Get concise, AI-supported commentary to aid your study.\n\nStill no result? Don’t worry — our AI will generate a best-effort explanation for you!`}
 </Text>
             <Text style={styles.welcomeDisclaimer}>
               ⚠️ AI-generated commentary. Always verify with reliable scholars for fatwa.
@@ -366,9 +365,9 @@ setNarratorBioText(raw);
                 <Text style={styles.modalText}>{commentaryData.evaluation}</Text>
               </ScrollView>
               <Text style={styles.modalDisclaimer}>
-  ⚠️ This is an AI-generated explanation and may contain errors or inaccuracies. Always verify the information with qualified scholars.
-</Text>
-             <View style={styles.shareCopyRow}>
+                ⚠️ This is an AI-generated explanation and may contain errors or inaccuracies. Always verify the information with qualified scholars.
+              </Text>
+              <View style={styles.shareCopyRow}>
                 <TouchableOpacity
                   style={styles.shareCopyButton}
                   onPress={async () => {
@@ -400,21 +399,21 @@ setNarratorBioText(raw);
         </Modal>
 
         <Modal
-  visible={donationVisible}
-  transparent
-  animationType="slide"
-  onRequestClose={() => setDonationVisible(false)}
->
-  <View style={styles.modalBackdrop}>
-    <View style={styles.modalContent}>
-      <Text style={styles.modalHeader}>Support Takhrij</Text>
-      <ScrollView contentContainerStyle={styles.modalScrollContent}>
-        <Text style={styles.modalText}>
-          Your donation helps cover server costs, GPT credits, and further development of the app.
-        </Text>
-        <Text style={styles.modalText}>
-          Every contribution brings us closer to making authentic hadith knowledge accessible to all.
-        </Text>
+          visible={donationVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setDonationVisible(false)}
+        >
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalHeader}>Support Takhrij</Text>
+              <ScrollView contentContainerStyle={styles.modalScrollContent}>
+                <Text style={styles.modalText}>
+                  Your donation helps cover server costs, GPT credits, and further development of the app.
+                </Text>
+                <Text style={styles.modalText}>
+                  Every contribution brings us closer to making authentic hadith knowledge accessible to all.
+                </Text>
 
         <Modal
   visible={thankYouVisible}
@@ -436,27 +435,29 @@ setNarratorBioText(raw);
   </View>
 </Modal>
 
-        <TouchableOpacity
-  style={styles.donateButton}
-  onPress={() => {
-    Linking.openURL('https://www.paypal.me/takhrij');
-    setDonationVisible(false);
-    setThankYouVisible(true);
-  }}
->
-  <Text style={styles.donateButtonText}>Donate via PayPal</Text>
-</TouchableOpacity>
-      </ScrollView>
 
-      <TouchableOpacity
-        style={styles.modalCloseButton}
-        onPress={() => setDonationVisible(false)}
-      >
-        <Text style={styles.modalCloseText}>Close</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-</Modal>
+
+                <TouchableOpacity
+                  style={styles.donateButton}
+                  onPress={() => {
+                    Linking.openURL('https://www.paypal.me/takhrij');
+                    setDonationVisible(false);
+                    setThankYouVisible(true);
+                  }}
+                >
+                  <Text style={styles.donateButtonText}>Donate via PayPal</Text>
+                </TouchableOpacity>
+              </ScrollView>
+
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setDonationVisible(false)}
+              >
+                <Text style={styles.modalCloseText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
 <Modal
   visible={aboutVisible}
@@ -468,16 +469,9 @@ setNarratorBioText(raw);
     <View style={styles.modalContent}>
       <Text style={styles.modalHeader}>About Takhrij</Text>
       <Text style={styles.modalText}>
-        Takhrij is a hadith research tool designed to help you verify, study, and understand narrations from the 9 major Hadith collections, including Sahih al-Bukhari and Sahih Muslim.{"\n\n"}
-
-  • Search across thousands of authentic narrations.{"\n"}
-  • Access AI-generated commentary and narrator biographies.{"\n"}
-  • Learn Hadith classification, chains (Isnad), and technical terms from 'Ulūm al-Hadīth.{"\n"}
-  • Identify Mutawatir and Ahad narrations automatically.{"\n\n"}
-
-  This app is a digital aid, therefore it is not a substitute for scholarly verification. Always cross-check with trusted scholars.{"\n\n"}
-
-  AI-generated content may contain errors. Use it as a supplementary tool, not a definitive authority. Developed to make the science of Hadith accessible to everyone.
+        Takhrij is a tool designed to help you search, explore, and verify Hadiths from the 9 major collections of Islam. This app is a tool to assist your study, not a substitute for scholarly guidance. Always verify results with qualified scholars.{"\n\n"} 
+        AI responses may and will contain errors or inaccuracies.{"\n\n"}
+        Developed to make the science of Hadith accessible to everyone.
       </Text>
       <TouchableOpacity
         style={styles.modalCloseButton}
@@ -499,41 +493,24 @@ setNarratorBioText(raw);
     <View style={styles.modalContent}>
       <Text style={styles.modalHeader}>Hadith Science Glossary</Text>
       <ScrollView contentContainerStyle={styles.modalScrollContent}>
-        {glossary.map((item,index) => (
-  item.definition === '' 
-    ? (
-      // Section header
-      <Text key={index} style={styles.sectionHeader}>
-        {item.term}
-      </Text>
-    ) : (
-      // Regular entry
-      <View key={index} style={{ marginBottom: 15 }}>
-        <Text style={[styles.modalText, { fontWeight: '700' }]}>
-          {item.term}
-        </Text>
-        <Text style={styles.modalText}>
-          Definition: {item.definition}
-        </Text>
-        <Text style={styles.modalText}>
-          Reference: {item.reference}
-        </Text>
-        <Text style={styles.modalText}>
-          Example: {item.example}
-        </Text>
-      </View>
-    )
-))}
+        {glossary.map((item, index) => (
+          <View key={index} style={{ marginBottom: 15 }}>
+            <Text style={[styles.modalText, { fontWeight: '700' }]}>{item.term}</Text>
+            <Text style={styles.modalText}>Definition: {item.definition}</Text>
+            <Text style={styles.modalText}>Reference: {item.reference}</Text>
+            <Text style={styles.modalText}>Example: {item.example}</Text>
+          </View>
+        ))}
        <Text style={[styles.modalText, { marginTop: 20 }]}>
   <Text style={{ fontWeight: 'bold' }}>Important notice:</Text> <Text style={{ fontStyle: 'italic' }}>This list is not exhaustive. For a deeper study, please refer to the following books on the science of hadith (ʿUlūm al-Hadīth):</Text>
 </Text>
 
-<Text style={[styles.modalText, { marginTop: 10, fontWeight: 'bold' }]}>Arabic Sources:</Text>
-<View style={{ marginLeft: 10 }}>
-  <Text style={styles.modalText}>• Nuzhat al-Nazar by Ibn Hajar al-ʿAsqalānī</Text>
-  <Text style={styles.modalText}>• Muqaddimah Ibn al-Salāh by Ibn al-Salāh</Text>
-  <Text style={styles.modalText}>• Tadrīb al-Rāwī by al-Suyūtī</Text>
-</View>
+                <Text style={[styles.modalText, { marginTop: 10, fontWeight: 'bold' }]}>Arabic Sources:</Text>
+                <View style={{ marginLeft: 10 }}>
+                  <Text style={styles.modalText}>• Nuzhat al-Nazar by Ibn Hajar al-ʿAsqalānī</Text>
+                  <Text style={styles.modalText}>• Muqaddimah Ibn al-Salāh by Ibn al-Salāh</Text>
+                  <Text style={styles.modalText}>• Tadrīb al-Rāwī by al-Suyūtī</Text>
+                </View>
 
 <Text style={[styles.modalText, { marginTop: 10, fontWeight: 'bold' }]}>English Sources:</Text>
 <View style={{ marginLeft: 10 }}>
@@ -553,41 +530,9 @@ setNarratorBioText(raw);
   </View>
 </Modal>
 
-<Modal
-  visible={narratorBioVisible}
-  transparent
-  animationType="slide"
-  onRequestClose={() => setNarratorBioVisible(false)}
->
-  <View style={styles.modalBackdrop}>
-    <View style={styles.modalContent}>
-      <Text style={styles.modalHeader}>{selectedNarrator}</Text>
-      <ScrollView contentContainerStyle={styles.modalScrollContent}>
-        <Markdown
-          style={{
-            body: styles.modalText,         // your normal text styling
-            strong: { fontWeight: 'bold' }  // make **bold** render correctly
-          }}
-        >
-          {narratorBioText}
-        </Markdown>
-        <Text style={styles.modalDisclaimer}>
-  ⚠️ This biography is AI-generated. Always verify with trusted hadith biographical sources or scholars.
-</Text>
-      </ScrollView>
-      <TouchableOpacity
-        style={styles.modalCloseButton}
-        onPress={() => setNarratorBioVisible(false)}
-      >
-        <Text style={styles.modalCloseText}>Close</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-</Modal>
-
         <LinearGradient colors={['#16a085', '#117864']} style={styles.header}>
-  <Text style={styles.headerText}>Takhrij</Text>
-</LinearGradient>
+          <Text style={styles.headerText}>Takhrij</Text>
+        </LinearGradient>
 
         <KeyboardAvoidingView
           style={styles.screenContainer}
@@ -626,17 +571,13 @@ setNarratorBioText(raw);
               </View>
 
               {/* Static Help and Disclaimer Text */}
-              {!hasResults && !loading && !isFallback && (
+              {!hasResults && !loading && (
               <View style={styles.helpStaticCard}>
                 <Text style={styles.helpStaticText}>
-  <Text style={{ fontWeight: 'bold' }}>How to use:</Text> Enter a keyword (e.g. intention) or phrase (e.g. glad tidings to the strangers) in the search bar. The app searches across 9 major hadith collections. If no match is found, AI will attempt to generate a scholarly-style explanation.
-</Text>
-<Text style={styles.helpStaticText}>
-  <Text style={{ fontWeight: 'bold' }}>Tip:</Text> For best results, use phrases found in the hadith matn on sunnah.com. Short and exact phrases work better than long or paraphrased ones.
-</Text>
-
+                  📌 How to use: Enter a keyword (e.g. intention) or phrase (e.g. glad tidings to the strangers) in the search bar. The app will search the 9 major hadith collections. If no match is found, AI will generate a best-effort explanation.
+                </Text>
                 <Text style={[styles.helpStaticText, styles.helpDisclaimer]}>
-                  Disclaimer: This app is a tool to support your learning — not a substitute for traditional scholarship. AI-generated content MAY and WILL contain mistakes. Always verify with qualified scholars.
+                  ⚠️ Disclaimer: This app is a tool to ease your research or study, not a replacement for seeking knowledge directly from scholars. AI responses MAY and WILL contain errors. Always verify with qualified scholars.
                 </Text>
               </View>
               )}
@@ -646,44 +587,8 @@ setNarratorBioText(raw);
   <Text style={styles.supportButtonText}>📚 Ulum Hadith (Sciences of Hadith) Glossary</Text>
 </TouchableOpacity>
 
-{noResults && (
-  <>
-    <Text style={styles.resultsTitle}>Results</Text>
-    <View style={[styles.noResultCard, { alignItems: 'flex-start' }]}>
-      <Text style={[styles.referenceBadge, { marginBottom: 12 }]}>
-        AI Generated
-      </Text>
-
-      {result
-        .replace(/^---\nEnglish Matn:\n/, '')
-        .trim()
-        .split(/\n\s*\n/)
-        .filter(p => !p.trim().startsWith('Reference:')) // remove Reference line
-        .map((para, idx) => {
-          const text = para.trim();
-          let style = styles.noResultText;
-          if (text.startsWith('Warning:')) style = styles.warning;
-          else if (text.startsWith('Search tip:')) style = styles.searchTip;
-
-          return (
-            <Text key={idx} style={[style, { marginBottom: 10 }]}>
-              {text}
-            </Text>
-          );
-        })}
-
-      {/* ✅ Always show these two at the bottom of the card */}
-   
-
-      <Text style={styles.searchTip}>
-        Search tip: Enter specific keywords (minimum 3 letters each) separated by spaces; common words like "and", "the", "of" are ignored, and fuzzy matching helps catch close spellings.
-      </Text>
-    </View>
-  </>
-)}
-
 {!hasResults && (
-
+  
   <>
  <TouchableOpacity style={styles.supportButton} onPress={() => setDonationVisible(true)}>
   <Text style={styles.supportButtonText}>❤️ Support our work and earn Sadaqah Jariyah</Text>
@@ -700,18 +605,21 @@ setNarratorBioText(raw);
   </>
 )}
 
+            {noResults && (
+              <View style={styles.noResultCard}>
+                <Text style={styles.noResultText}>{extraText}</Text>
+              </View>
+            )}
+
             {hasResults && <Text style={styles.resultsTitle}>Results</Text>}
 
             {hasResults && hadithSections.map((h, i) => (
               <View key={i} style={styles.card}>
                 {h.reference && <Text style={styles.referenceBadge}>{h.reference}</Text>}
                 {h.arabic    && <Text style={styles.arabicMatn}>{h.arabic}</Text>}
-                {h.english && h.english.split(/\n{2,}/).map((para, index) => (
-  <Text key={`english-${index}`} style={[styles.englishMatn, { marginBottom: 12 }]}>
-    {para.trim()}
-  </Text>
+                {h.english && h.english.split('\n').map((para, index) => (
+  <Text key={`english-${index}`} style={styles.englishMatn}>{para.trim()}</Text>
 ))}
-
                 {h.warning   && <Text style={styles.warning}>{h.warning}</Text>}
                 {h.reference !== 'AI Generated' && (
                   <Pressable
@@ -723,22 +631,12 @@ setNarratorBioText(raw);
                 )}
               </View>
             ))}
-            
+
 
             {hasResults && (
-  <>
-    <TouchableOpacity style={styles.supportButton} onPress={() => setDonationVisible(true)}>
-      <Text style={styles.supportButtonText}>❤️ Support our work and earn Sadaqah Jariyah</Text>
-    </TouchableOpacity>
-
-    <TouchableOpacity onPress={() => Linking.openURL('mailto:takhrijapp@gmail.com')}>
-      <Text style={styles.contactText}>Contact us for feedback and suggestions</Text>
-    </TouchableOpacity>
-
-    <TouchableOpacity onPress={() => setAboutVisible(true)}>
-      <Text style={styles.contactText}>About the App</Text>
-    </TouchableOpacity>
-  </>
+  <TouchableOpacity style={styles.supportButton} onPress={() => setDonationVisible(true)}>
+    <Text style={styles.supportButtonText}>❤️ Support our work and earn Sadaqah Jariyah</Text>
+  </TouchableOpacity>
 )}
           </ScrollView>
         </KeyboardAvoidingView>
@@ -985,12 +883,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   contactText: {
-  fontSize: 14,
-  color: '#000',
-  textAlign: 'center',
-  marginTop: 8,
-  textDecorationLine: 'underline',
-},
+    fontSize: 14,
+    color: '#000',
+    textAlign: 'center',
+    marginTop: 8,
+    textDecorationLine: 'underline',
+  },
   overlay: {
     flex: 1,
     width,
@@ -1075,15 +973,7 @@ supportButton: {
   borderRadius: 12,
   alignItems: 'center',
   marginBottom: 16,
-  },
-  searchTip: {
-    color: '#2ecc71',       // green
-    fontSize: 14,
-    fontStyle: 'italic',
-    fontWeight: 'bold',
-    lineHeight: 20,
-    marginBottom: 8,
-  },
+},
 supportButtonText: {
   color: '#fff',
   fontSize: 16,
