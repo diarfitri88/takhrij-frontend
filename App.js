@@ -26,6 +26,12 @@ import Markdown from 'react-native-markdown-display';
 
 const { width, height } = Dimensions.get('window');
 
+const APP_DOWNLOAD_LINK = `
+Download the Takhrij App:
+Android: https://play.google.com/store/apps/details?id=com.yourapp.takhrij
+iOS: Coming soon
+`;
+
 const COLLECTION_KEY_MAP = {
   'Sahih Bukhari':    'bukhari',
   'Sahih Muslim':     'muslim',
@@ -38,9 +44,10 @@ const COLLECTION_KEY_MAP = {
   'Sunan ad-Darimi':  'darimi',
 };
 const glossary = [
+  { term: 'Core Concepts', definition: '', reference: '', example: '' },
   {
     "term": "Hadith",
-    "definition": "A report of the sayings, actions, approvals, or characteristics of the Prophet Muhammad (peace be upon him).",
+    "definition": "A report of the sayings, actions, approvals, or characteristics of the Prophet Muhammad ﷺ.",
     "reference": "An Introduction to the Science of Hadith by Ibn al-Salah",
     "example": "The Prophet said: 'Actions are judged by intentions.' (Bukhari & Muslim)"
   },
@@ -48,7 +55,7 @@ const glossary = [
     "term": "Isnad",
     "definition": "The chain of narrators who transmitted the Hadith.",
     "reference": "Nukhbat al-Fikr by Ibn Hajar al-Asqalani",
-    "example": "Malik → Nafi' → Ibn Umar → Prophet Muhammad (peace be upon him)"
+    "example": "Malik → Nafi' → Ibn Umar → Prophet Muhammad ﷺ"
   },
   {
     "term": "Matn",
@@ -57,14 +64,33 @@ const glossary = [
     "example": "'Actions are judged by intentions.'"
   },
   {
+        "term": "Rawi",
+        "definition": "A narrator of Hadith who is part of the chain (Isnad). Rijal criticism examines their integrity and precision.",
+        "reference": "Taqrib al-Tahdhib by Ibn Hajar al-Asqalani",
+        "example": "Imam Malik is a well-known Rawi often found in the Isnad of authentic Hadiths."
+      },
+      {
+        "term": "Tabi'i",
+        "definition": "A Successor who met at least one Companion of the Prophet ﷺ and narrated from them.",
+        "reference": "Tabaqat al-Kubra by Ibn Sa'd",
+        "example": "Nafi’, the student of Ibn Umar, is a famous Tabi'i and narrator of many Hadiths."
+      },
+      {
+  "term": "Tabi' al-Tabi'in",
+  "definition": "The third generation of Muslims who met and learned from the Tabi'in (Successors), but not the Companions themselves.",
+  "reference": "Tabaqat al-Kubra by Ibn Sa'd",
+  "example": "Sufyan al-Thawri, a renowned scholar of Hadith and Fiqh, is among the notable Tabi' al-Tabi'in. Imām al-Shāfiʿī and Imām Ahmad ibn Hanbal are also from this generation."
+},
+      { term: 'Types of Narration', definition: '', reference: '', example: '' },
+  {
     "term": "Marfu'",
-    "definition": "A narration attributed directly to the Prophet Muhammad (peace be upon him), regardless of the continuity of the chain.",
+    "definition": "A narration attributed directly to the Prophet Muhammad ﷺ, regardless of the continuity of the chain.",
     "reference": "Nukhbat al-Fikr by Ibn Hajar al-Asqalani",
     "example": "The Prophet said: 'Whoever lies upon me deliberately, let him prepare his seat in the Hellfire.'"
   },
   {
     "term": "Mawquf",
-    "definition": "A narration attributed to a Companion of the Prophet, without attributing it to the Prophet himself.",
+    "definition": "A narration attributed to a Companion of the Prophet ﷺ, without attributing it to the Prophet himself.",
     "reference": "Nukhbat al-Fikr by Ibn Hajar al-Asqalani",
     "example": "Ibn Abbas said: 'The grandfather is treated like a father.'"
   },
@@ -74,6 +100,13 @@ const glossary = [
     "reference": "Nukhbat al-Fikr by Ibn Hajar al-Asqalani",
     "example": "Ibn Sirin said: 'This knowledge is the religion, so be careful from whom you take your religion.'"
   },
+  {
+    "term": "Qudsi",
+    "definition": "A Hadith in which the Prophet Muhammad ﷺ conveys a message from Allah, but unlike the Qur'an, it is in the Prophet’s own words.",
+    "reference": "40 Hadith Qudsi, Darussalam",
+    "example": "The Prophet ﷺ said: 'Allah said: O My servants, I have forbidden oppression for Myself…'"
+  },
+  { term: 'Disconnected Chains', definition: '', reference: '', example: '' },
   {
     "term": "Mu'allaq",
     "definition": "A Hadith in which one or more narrators are omitted from the beginning of its chain by the compiler.",
@@ -86,6 +119,13 @@ const glossary = [
     "reference": "Nukhbat al-Fikr by Ibn Hajar al-Asqalani",
     "example": "A Tabi'i says: 'The Prophet said...' without mentioning the Companion."
   },
+  {
+        "term": "Mu’dal",
+        "definition": "A Hadith with two or more consecutive narrators missing in the Isnad.",
+        "reference": "Nukhbat al-Fikr by Ibn Hajar al-Asqalani",
+        "example": "A Tabi’i reports directly from the Prophet, skipping both the Companion and his teacher."
+      },
+      { term: 'Grading of Hadith', definition: '', reference: '', example: '' },
   {
     "term": "Sahih",
     "definition": "An authentic Hadith that meets all five conditions: continuous chain, upright narrators, precise memory, absence of defects, and no contradiction with stronger reports.",
@@ -105,6 +145,19 @@ const glossary = [
     "example": "The Prophet said: 'Seek knowledge even if in China.' (Weak due to chain issues)"
   },
   {
+    "term": "Da'if Jiddan",
+    "definition": "An extremely weak Hadith with severe defects in its chain or content, making it unreliable even for minor rulings or virtues.",
+    "reference": "Al-Mawdu'at by Ibn al-Jawzi",
+    "example": "A narration reported with multiple broken links and narrators declared untrustworthy."
+  },
+  {
+    "term": "Mawdu'",
+    "definition": "A fabricated Hadith falsely attributed to the Prophet ﷺ. It is rejected and impermissible to act upon.",
+    "reference": "Al-Mawdu'at by Ibn al-Jawzi",
+    "example": "The Prophet ﷺ said: 'Love of the homeland is part of faith.' (Fabricated)"
+  },
+  { term: 'Frequency of Transmission', definition: '', reference: '', example: '' },
+  {
     "term": "Mutawatir",
     "definition": "A Hadith narrated by such a large number of narrators in each generation that it is inconceivable they all agreed upon a lie.",
     "reference": "Nukhbat al-Fikr by Ibn Hajar al-Asqalani",
@@ -115,7 +168,20 @@ const glossary = [
     "definition": "A Hadith narrated by one or a few narrators in each generation, not reaching the level of Mutawatir.",
     "reference": "Nukhbat al-Fikr by Ibn Hajar al-Asqalani",
     "example": "The Prophet said: 'Actions are judged by intentions.' (Bukhari & Muslim)"
-  }
+  },
+  { term: 'Narrator Criticism', definition: '', reference: '', example: '' },
+  {
+        "term": "Jarh wa Ta'dil",
+        "definition": "The science of criticizing and accrediting Hadith narrators based on their trustworthiness and accuracy.",
+        "reference": "Sharh Nukhbat al-Fikr by Ibn Hajar al-Asqalani",
+        "example": "Al-Bukhari graded a narrator as 'Thiqah' (trustworthy), while another scholar graded him as 'Da'if' (weak)."
+      },
+      {
+        "term": "Tadlis",
+        "definition": "A narrator concealing a defect in the chain, often by omitting the immediate transmitter or using vague terms.",
+        "reference": "Sharh Nukhbat al-Fikr by Ibn Hajar",
+        "example": "A narrator says 'an fulan' (from so-and-so) without confirming he met him, making the chain possibly disconnected."
+      }
 ];
 
 export default function App() {
@@ -237,7 +303,7 @@ setNarratorBioText(raw);
             <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
             <Text style={styles.welcomeTitle}>Welcome to Takhrij</Text>
             <Text style={styles.welcomeText}>
-  {`Reviving the Sunnah, one hadith at a time.\n\n• Search across the 9 major hadith collections.\n• Learn the meaning, context, and chain of narrators.\n• Explore essential terms from the science of hadith (ʿUlūm al-Hadīth).\n• Get concise, AI-supported commentary to aid your study.\n\nStill no result? Don’t worry — our AI will generate a best-effort explanation for you!`}
+  {`Reviving the Sunnah, one hadith at a time.\n\n• Search across the 9 major hadith collections.\n• View the exact matn, grading, and source reference.\n• Learn about each narrator in the chain (birth date, teachers, reliability).\n• Understand hadith terms through our built-in glossary.\n• Get concise, AI-supported commentary to aid your study.\n\nNo match found? Don’t worry — our AI will still provide a scholarly fallback to guide your study.`}
 </Text>
             <Text style={styles.welcomeDisclaimer}>
               ⚠️ AI-generated commentary. Always verify with reliable scholars for fatwa.
@@ -315,14 +381,15 @@ setNarratorBioText(raw);
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.shareCopyButton}
-                  onPress={async () => {
-                    const textToShare = `Hadith Reference: ${commentaryData.reference}\n\nArabic Matn:\n${commentaryData.arabic}\n\nEnglish Matn:\n${commentaryData.english}\n\nCommentary:\n${commentaryData.commentary}\n\nChain of Narrators:\n${commentaryData.chain}\n\nEvaluation:\n${commentaryData.evaluation}`;
-                    await Share.share({ message: textToShare });
-                  }}
-                >
-                  <Text style={styles.shareCopyText}>Share</Text>
-                </TouchableOpacity>
+  style={styles.shareCopyButton}
+  onPress={async () => {
+    const textToShare = `Hadith Reference: ${commentaryData.reference}\n\nArabic Matn:\n${commentaryData.arabic}\n\nEnglish Matn:\n${commentaryData.english}\n\nCommentary:\n${commentaryData.commentary}\n\nChain of Narrators:\n${commentaryData.chain}\n\nEvaluation:\n${commentaryData.evaluation}\n\n${APP_DOWNLOAD_LINK}`;
+    await Share.share({ message: textToShare });
+  }}
+>
+  <Text style={styles.shareCopyText}>Share</Text>
+</TouchableOpacity>
+
               </View>
 
               <TouchableOpacity style={styles.modalCloseButton} onPress={() => setCommentaryModalVisible(false)}>
@@ -401,9 +468,16 @@ setNarratorBioText(raw);
     <View style={styles.modalContent}>
       <Text style={styles.modalHeader}>About Takhrij</Text>
       <Text style={styles.modalText}>
-        Takhrij is a tool designed to help you search, explore, and verify Hadiths from the 9 major collections of Islam. This app is a tool to assist your study, not a substitute for scholarly guidance. Always verify results with qualified scholars.{"\n\n"} 
-        AI responses may and will contain errors or inaccuracies.{"\n\n"}
-        Developed to make the science of Hadith accessible to everyone.
+        Takhrij is a hadith research tool designed to help you verify, study, and understand narrations from the 9 major Hadith collections, including Sahih al-Bukhari and Sahih Muslim.{"\n\n"}
+
+  • Search across thousands of authentic narrations.{"\n"}
+  • Access AI-generated commentary and narrator biographies.{"\n"}
+  • Learn Hadith classification, chains (Isnad), and technical terms from 'Ulūm al-Hadīth.{"\n"}
+  • Identify Mutawatir and Ahad narrations automatically.{"\n\n"}
+
+  This app is a digital aid, therefore it is not a substitute for scholarly verification. Always cross-check with trusted scholars.{"\n\n"}
+
+  AI-generated content may contain errors. Use it as a supplementary tool, not a definitive authority. Developed to make the science of Hadith accessible to everyone.
       </Text>
       <TouchableOpacity
         style={styles.modalCloseButton}
@@ -425,14 +499,31 @@ setNarratorBioText(raw);
     <View style={styles.modalContent}>
       <Text style={styles.modalHeader}>Hadith Science Glossary</Text>
       <ScrollView contentContainerStyle={styles.modalScrollContent}>
-        {glossary.map((item, index) => (
-          <View key={index} style={{ marginBottom: 15 }}>
-            <Text style={[styles.modalText, { fontWeight: '700' }]}>{item.term}</Text>
-            <Text style={styles.modalText}>Definition: {item.definition}</Text>
-            <Text style={styles.modalText}>Reference: {item.reference}</Text>
-            <Text style={styles.modalText}>Example: {item.example}</Text>
-          </View>
-        ))}
+        {glossary.map((item,index) => (
+  item.definition === '' 
+    ? (
+      // Section header
+      <Text key={index} style={styles.sectionHeader}>
+        {item.term}
+      </Text>
+    ) : (
+      // Regular entry
+      <View key={index} style={{ marginBottom: 15 }}>
+        <Text style={[styles.modalText, { fontWeight: '700' }]}>
+          {item.term}
+        </Text>
+        <Text style={styles.modalText}>
+          Definition: {item.definition}
+        </Text>
+        <Text style={styles.modalText}>
+          Reference: {item.reference}
+        </Text>
+        <Text style={styles.modalText}>
+          Example: {item.example}
+        </Text>
+      </View>
+    )
+))}
        <Text style={[styles.modalText, { marginTop: 20 }]}>
   <Text style={{ fontWeight: 'bold' }}>Important notice:</Text> <Text style={{ fontStyle: 'italic' }}>This list is not exhaustive. For a deeper study, please refer to the following books on the science of hadith (ʿUlūm al-Hadīth):</Text>
 </Text>
@@ -538,10 +629,14 @@ setNarratorBioText(raw);
               {!hasResults && !loading && !isFallback && (
               <View style={styles.helpStaticCard}>
                 <Text style={styles.helpStaticText}>
-                  📌 How to use: Enter a keyword (e.g. intention) or phrase (e.g. glad tidings to the strangers) in the search bar. The app will search the 9 major hadith collections. If no match is found, AI will generate a best-effort explanation.
-                </Text>
+  <Text style={{ fontWeight: 'bold' }}>How to use:</Text> Enter a keyword (e.g. intention) or phrase (e.g. glad tidings to the strangers) in the search bar. The app searches across 9 major hadith collections. If no match is found, AI will attempt to generate a scholarly-style explanation.
+</Text>
+<Text style={styles.helpStaticText}>
+  <Text style={{ fontWeight: 'bold' }}>Tip:</Text> For best results, use phrases found in the hadith matn on sunnah.com. Short and exact phrases work better than long or paraphrased ones.
+</Text>
+
                 <Text style={[styles.helpStaticText, styles.helpDisclaimer]}>
-                  ⚠️ Disclaimer: This app is a tool to ease your research or study, not a replacement for seeking knowledge directly from scholars. AI responses MAY and WILL contain errors. Always verify with qualified scholars.
+                  Disclaimer: This app is a tool to support your learning — not a substitute for traditional scholarship. AI-generated content MAY and WILL contain mistakes. Always verify with qualified scholars.
                 </Text>
               </View>
               )}
@@ -578,9 +673,7 @@ setNarratorBioText(raw);
         })}
 
       {/* ✅ Always show these two at the bottom of the card */}
-      <Text style={[styles.warning, { marginTop: 12 }]}>
-        Warning: This phrase/word was not found in any of the 9 primary hadith collections. Try rephrasing it more accurately or using known matn keywords.
-      </Text>
+   
 
       <Text style={styles.searchTip}>
         Search tip: Enter specific keywords (minimum 3 letters each) separated by spaces; common words like "and", "the", "of" are ignored, and fuzzy matching helps catch close spellings.
@@ -934,11 +1027,12 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   sectionHeader: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     marginTop: 12,
     marginBottom: 4,
     color: '#2c3e50',
+    textAlign: 'center',
   },
   modalText: {
     fontSize: 16,
