@@ -220,8 +220,9 @@ setNarratorBioText(raw);
   };
 
   const { extraText, hadithSections } = parseResult(result);
-  const hasResults = !loading && hadithSections.length > 0;
-  const noResults  = !loading && extraText.startsWith('❌');
+  const isFallback  = result.includes('AI Generated');
+  const hasResults  = !loading && hadithSections.length > 0 && !isFallback;
+  const noResults   = !loading && (extraText.startsWith('❌') || isFallback);
 
   if (showWelcome) {
     return (
@@ -534,7 +535,7 @@ setNarratorBioText(raw);
               </View>
 
               {/* Static Help and Disclaimer Text */}
-              {!hasResults && !loading && (
+              {!hasResults && !loading && !isFallback && (
               <View style={styles.helpStaticCard}>
                 <Text style={styles.helpStaticText}>
                   📌 How to use: Enter a keyword (e.g. intention) or phrase (e.g. glad tidings to the strangers) in the search bar. The app will search the 9 major hadith collections. If no match is found, AI will generate a best-effort explanation.
@@ -550,8 +551,46 @@ setNarratorBioText(raw);
   <Text style={styles.supportButtonText}>📚 Ulum Hadith (Sciences of Hadith) Glossary</Text>
 </TouchableOpacity>
 
+{noResults && (
+  <>
+    <Text style={styles.resultsTitle}>Results</Text>
+    <View style={[styles.noResultCard, { alignItems: 'flex-start' }]}>
+      <Text style={[styles.referenceBadge, { marginBottom: 12 }]}>
+        AI Generated
+      </Text>
+
+      {result
+        .replace(/^---\nEnglish Matn:\n/, '')
+        .trim()
+        .split(/\n\s*\n/)
+        .filter(p => !p.trim().startsWith('Reference:')) // remove Reference line
+        .map((para, idx) => {
+          const text = para.trim();
+          let style = styles.noResultText;
+          if (text.startsWith('Warning:')) style = styles.warning;
+          else if (text.startsWith('Search tip:')) style = styles.searchTip;
+
+          return (
+            <Text key={idx} style={[style, { marginBottom: 10 }]}>
+              {text}
+            </Text>
+          );
+        })}
+
+      {/* ✅ Always show these two at the bottom of the card */}
+      <Text style={[styles.warning, { marginTop: 12 }]}>
+        Warning: This phrase/word was not found in any of the 9 primary hadith collections. Try rephrasing it more accurately or using known matn keywords.
+      </Text>
+
+      <Text style={styles.searchTip}>
+        Search tip: Enter specific keywords (minimum 3 letters each) separated by spaces; common words like "and", "the", "of" are ignored, and fuzzy matching helps catch close spellings.
+      </Text>
+    </View>
+  </>
+)}
+
 {!hasResults && (
-  
+
   <>
  <TouchableOpacity style={styles.supportButton} onPress={() => setDonationVisible(true)}>
   <Text style={styles.supportButtonText}>❤️ Support our work and earn Sadaqah Jariyah</Text>
@@ -567,12 +606,6 @@ setNarratorBioText(raw);
 
   </>
 )}
-
-            {noResults && (
-              <View style={styles.noResultCard}>
-                <Text style={styles.noResultText}>{extraText}</Text>
-              </View>
-            )}
 
             {hasResults && <Text style={styles.resultsTitle}>Results</Text>}
 
@@ -781,10 +814,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     alignItems: 'center',
   },
-  noResultText: {
-    color: '#555',
-    textAlign: 'center',
-  },
+ noResultText: {
+  color: '#555',
+  textAlign: 'left',
+  lineHeight: 24,
+  marginBottom: 12,
+  fontSize: 16
+},
   resultsTitle: {
     fontSize: 18,
     fontWeight: '600',
@@ -828,6 +864,14 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     marginBottom: 8,
   },
+  fallbackText: {
+  fontSize: 16,
+  lineHeight: 26,
+  color: '#222',
+  textAlign: 'left',
+  marginVertical: 12,
+  paddingHorizontal: 12
+},
   warning: {
     fontSize: 14,
     lineHeight: 20,
@@ -937,7 +981,15 @@ supportButton: {
   borderRadius: 12,
   alignItems: 'center',
   marginBottom: 16,
-},
+  },
+  searchTip: {
+    color: '#2ecc71',       // green
+    fontSize: 14,
+    fontStyle: 'italic',
+    fontWeight: 'bold',
+    lineHeight: 20,
+    marginBottom: 8,
+  },
 supportButtonText: {
   color: '#fff',
   fontSize: 16,

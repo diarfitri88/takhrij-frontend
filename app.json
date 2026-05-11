@@ -2,15 +2,19 @@
   "expo": {
     "name": "Takhrij",
     "slug": "daleel-frontend",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
-    "icon": "./icon.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "plugins": [
+      "./plugins/withAdiRegistration"
+    ],
     "splash": {
       "image": "./assets/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
+      
     },
     "ios": {
       "supportsTablet": true
@@ -21,7 +25,8 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.diarfitri88.daleelfrontend"
+      "package": "com.diarfitri88.daleelfrontend",
+      "versionCode": 4
     },
     "web": {
       "favicon": "./assets/favicon.png"
