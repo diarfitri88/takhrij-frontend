@@ -493,14 +493,50 @@ setNarratorBioText(raw);
     <View style={styles.modalContent}>
       <Text style={styles.modalHeader}>Hadith Science Glossary</Text>
       <ScrollView contentContainerStyle={styles.modalScrollContent}>
-        {glossary.map((item, index) => (
-          <View key={index} style={{ marginBottom: 15 }}>
-            <Text style={[styles.modalText, { fontWeight: '700' }]}>{item.term}</Text>
-            <Text style={styles.modalText}>Definition: {item.definition}</Text>
-            <Text style={styles.modalText}>Reference: {item.reference}</Text>
-            <Text style={styles.modalText}>Example: {item.example}</Text>
-          </View>
-        ))}
+       {glossary.map((item, index) => {
+  const isHeader =
+    !item.definition &&
+    !item.reference &&
+    !item.example;
+
+  if (isHeader) {
+    return (
+      <Text
+        key={index}
+        style={{
+          fontSize: 20,
+          fontWeight: '700',
+          marginTop: 20,
+          marginBottom: 12,
+          color: '#16a085',
+          textAlign: 'center',
+        }}
+      >
+        {item.term}
+      </Text>
+    );
+  }
+
+  return (
+    <View key={index} style={{ marginBottom: 15 }}>
+      <Text style={[styles.modalText, { fontWeight: '700' }]}>
+        {item.term}
+      </Text>
+
+      <Text style={styles.modalText}>
+        Definition: {item.definition}
+      </Text>
+
+      <Text style={styles.modalText}>
+        Reference: {item.reference}
+      </Text>
+
+      <Text style={styles.modalText}>
+        Example: {item.example}
+      </Text>
+    </View>
+  );
+})}
        <Text style={[styles.modalText, { marginTop: 20 }]}>
   <Text style={{ fontWeight: 'bold' }}>Important notice:</Text> <Text style={{ fontStyle: 'italic' }}>This list is not exhaustive. For a deeper study, please refer to the following books on the science of hadith (ʿUlūm al-Hadīth):</Text>
 </Text>
