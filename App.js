@@ -416,10 +416,10 @@ const fetchNarratorBio = async (narratorName) => {
             <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
             <Text style={styles.welcomeTitle}>Welcome to Takhrij</Text>
             <Text style={styles.welcomeText}>
-  {`Takhrij is an educational tool designed to help users search, explore, and study hadith from the 9 major collections of Islam.\n\n• Search hadith by keywords or phrases\n• Explore chains of narrators and hadith terminology\n• Read concise AI assisted explanations to support your study\n\nThis app is intended to assist research and learning, not to replace qualified scholars or formal study.\n\nAI generated explanations may contain mistakes, inaccuracies, or incomplete information. Always verify religious matters with qualified scholars.`}
+  {`Takhrij refers to the process of tracing, identifying, and researching hadith sources and their narrations.\n\nThis app helps users search and explore hadith found in indexed datasets based on sources such as Sunnah.com collections and related reference data.\n\nFeatures include:\n• Searching hadith by keywords or phrases\n• Viewing hadith references and narrations\n• Exploring chains of narrators\n• Learning basic ulum al-hadith terminology\n• Reading concise AI assisted explanations to support study\n\nThis is a beginner-friendly educational and research tool. It is not a replacement for qualified scholars, formal study, or scholarly takhrij. AI generated explanations may contain errors or inaccuracies.`}
 </Text>
             <Text style={styles.welcomeDisclaimer}>
-              Educational research aid only. Please verify religious matters with qualified scholars.
+              Research assistance only. Please verify religious matters with qualified scholars.
             </Text>
             <Pressable style={styles.welcomeButton} onPress={() => setShowWelcome(false)}>
               <Text style={styles.welcomeButtonText}>Start Your Search</Text>
@@ -579,9 +579,9 @@ const fetchNarratorBio = async (narratorName) => {
     <View style={styles.modalContent}>
       <Text style={styles.modalHeader}>About Takhrij</Text>
       <Text style={styles.modalText}>
-        Takhrij is an educational research assistant designed to help users search, explore, and study hadith from the 9 major collections of Islam. It can support learning by surfacing references, narrator chains, terminology, and concise AI assisted explanations.{"\n\n"}
-        The app is not an authoritative scholarly source, a fatwa service, or a replacement for qualified scholars and formal study.{"\n\n"}
-        AI generated explanations may contain mistakes, inaccuracies, or incomplete information. Please verify religious matters with qualified scholars and reliable works of hadith scholarship.
+        In hadith studies, takhrij is the scholarly process of tracing narrations, identifying their sources, and researching their chains and references.{"\n\n"}
+        This app does not perform scholarly takhrij or authoritative hadith verification. It helps beginners search and explore hadith found within indexed datasets based on sources such as Sunnah.com collections and related reference data.{"\n\n"}
+        Takhrij is intended as an educational research-assistance tool for learning basic ulum al-hadith concepts, viewing references, exploring narrator chains, and reading concise AI assisted study notes. AI generated explanations may contain errors or incomplete information, so religious matters should be verified with qualified scholars and reliable works of hadith scholarship.
       </Text>
       <TouchableOpacity
         style={styles.modalCloseButton}
@@ -723,10 +723,10 @@ const fetchNarratorBio = async (narratorName) => {
               {!hasResults && !loading && (
               <View style={styles.helpStaticCard}>
                 <Text style={styles.helpStaticText}>
-                  How to use: Enter a keyword (e.g. intention) or phrase (e.g. glad tidings to the strangers) in the search bar. Takhrij will search the 9 major hadith collections and may provide AI assisted study notes when helpful.
+                  How to use: Enter a keyword (e.g. intention) or phrase (e.g. glad tidings to the strangers). The app searches available indexed hadith data based on sources such as Sunnah.com collections and related references.
                 </Text>
                 <Text style={[styles.helpStaticText, styles.helpDisclaimer]}>
-                  Disclaimer: Takhrij is an educational research aid, not an authoritative scholarly source. AI assisted explanations may contain mistakes or incomplete information. Always verify religious matters with qualified scholars.
+                  Disclaimer: Takhrij is a beginner-friendly educational research aid. It does not replace qualified scholars, formal study, or scholarly takhrij. AI assisted explanations may contain mistakes or incomplete information.
                 </Text>
               </View>
               )}
