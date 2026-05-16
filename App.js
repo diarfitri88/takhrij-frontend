@@ -38,6 +38,25 @@ const API_BASE_URL = 'https://takhrij-backend.onrender.com';
 const DEFAULT_API_TIMEOUT_MS = 30000;
 const NARRATOR_BIO_TIMEOUT_MS = 60000;
 
+const parseNarratorNames = (chain = '') => {
+  const normalizedChain = String(chain)
+    .replace(/Chain of Narrators:?/gi, '')
+    .replace(/\*\*/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!normalizedChain || /^no chain\.?$/i.test(normalizedChain)) {
+    return [];
+  }
+
+  const names = normalizedChain
+    .split(/\s*(?:→|->|⇒|،|,|;|\n)\s*/)
+    .map(name => name.replace(/^\d+\.\s*/, '').trim())
+    .filter(name => name.length > 1 && !/^unknown|unclear|not specified$/i.test(name));
+
+  return names.length ? names : [normalizedChain];
+};
+
 const postJson = async (path, payload, timeoutMs = DEFAULT_API_TIMEOUT_MS) => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -290,14 +309,19 @@ const fetchNarratorBio = async (narratorName) => {
   const cleanNarratorName = narratorName.trim();
   if (!cleanNarratorName) return;
 
+  console.log('[NarratorBio] narrator chip pressed:', cleanNarratorName);
   setSelectedNarrator(cleanNarratorName);
+  setCommentaryModalVisible(false);
   setNarratorBioVisible(true);
   setNarratorBioText('Loading biography...');
   try {
+    console.log('[NarratorBio] calling /narrator-bio with:', cleanNarratorName);
     const data = await postJson('/narrator-bio', { name: cleanNarratorName }, NARRATOR_BIO_TIMEOUT_MS);
+    console.log('[NarratorBio] /narrator-bio response:', data);
     const raw = data.bio || 'Biography not available.';
     setNarratorBioText(raw);
   } catch (error) {
+    console.log('[NarratorBio] /narrator-bio error:', error);
     setNarratorBioText(error.message || 'Error fetching biography. Please try again.');
   }
 };
@@ -491,22 +515,19 @@ const fetchNarratorBio = async (narratorName) => {
                 <Text style={styles.modalText}>{commentaryData.commentary}</Text>
                 <Text style={styles.sectionHeader}>Chain of Narrators (click to view biography)</Text>
 <View style={styles.chainContainer}>
-  {commentaryData.chain
-    .split(/\s*(?:→|->|⇒)\s*/)
-    .filter(Boolean)
-    .map((rawName, idx, arr) => {
-      const narrator = rawName.trim();
-      return (
-        <React.Fragment key={idx}>
-          <TouchableOpacity onPress={() => fetchNarratorBio(narrator)}>
-            <Text style={styles.linkText}>{narrator}</Text>
-          </TouchableOpacity>
-          {idx < arr.length - 1 && (
-            <Text style={styles.arrow}>→</Text>
-          )}
-        </React.Fragment>
-      );
-    })}
+  {parseNarratorNames(commentaryData.chain).map((narrator, idx) => (
+    <TouchableOpacity
+      key={`${narrator}-${idx}`}
+      style={styles.narratorChip}
+      onPress={() => fetchNarratorBio(narrator)}
+      activeOpacity={0.78}
+    >
+      <Text style={styles.linkText}>{narrator}</Text>
+    </TouchableOpacity>
+  ))}
+  {parseNarratorNames(commentaryData.chain).length === 0 && (
+    <Text style={styles.modalText}>No narrator chain available.</Text>
+  )}
 </View>
                 <Text style={styles.sectionHeader}>Evaluation of Hadith</Text>
                 <Text style={styles.modalText}>{commentaryData.evaluation}</Text>
@@ -1313,10 +1334,18 @@ donateLink: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginVertical: 8,
+    gap: 8,
+  },
+  narratorChip: {
+    backgroundColor: '#edf4e8',
+    borderColor: '#d7e5ce',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
   },
   linkText: {
     color: '#176b5f',
-    textDecorationLine: 'underline',
     fontWeight: '800',
   },
   background: {
