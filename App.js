@@ -416,10 +416,10 @@ const fetchNarratorBio = async (narratorName) => {
             <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
             <Text style={styles.welcomeTitle}>Welcome to Takhrij</Text>
             <Text style={styles.welcomeText}>
-  {`Reviving the Sunnah, one hadith at a time.\n\n• Search across the 9 major hadith collections.\n• Learn the meaning, context, and chain of narrators.\n• Explore essential terms from the science of hadith (ʿUlūm al-Hadīth).\n• Get concise, AI-supported commentary to aid your study.\n\nStill no result? Don’t worry — our AI will generate a best-effort explanation for you!`}
+  {`Takhrij is an educational tool designed to help users search, explore, and study hadith from the 9 major collections of Islam.\n\n• Search hadith by keywords or phrases\n• Explore chains of narrators and hadith terminology\n• Read concise AI assisted explanations to support your study\n\nThis app is intended to assist research and learning, not to replace qualified scholars or formal study.\n\nAI generated explanations may contain mistakes, inaccuracies, or incomplete information. Always verify religious matters with qualified scholars.`}
 </Text>
             <Text style={styles.welcomeDisclaimer}>
-              ⚠️ AI-generated commentary. Always verify with reliable scholars for fatwa.
+              Educational research aid only. Please verify religious matters with qualified scholars.
             </Text>
             <Pressable style={styles.welcomeButton} onPress={() => setShowWelcome(false)}>
               <Text style={styles.welcomeButtonText}>Start Your Search</Text>
@@ -479,7 +479,7 @@ const fetchNarratorBio = async (narratorName) => {
                 <Text style={styles.modalText}>{commentaryData.evaluation}</Text>
               </ScrollView>
               <Text style={styles.modalDisclaimer}>
-                ⚠️ This is an AI-generated explanation and may contain errors or inaccuracies. Always verify the information with qualified scholars.
+                This AI assisted explanation is for learning and research support only. It may contain mistakes, inaccuracies, or incomplete information. Please verify religious matters with qualified scholars.
               </Text>
               <View style={styles.shareCopyRow}>
                 <TouchableOpacity
@@ -579,9 +579,9 @@ const fetchNarratorBio = async (narratorName) => {
     <View style={styles.modalContent}>
       <Text style={styles.modalHeader}>About Takhrij</Text>
       <Text style={styles.modalText}>
-        Takhrij is a tool designed to help you search, explore, and verify Hadiths from the 9 major collections of Islam. This app is a tool to assist your study, not a substitute for scholarly guidance. Always verify results with qualified scholars.{"\n\n"} 
-        AI responses may and will contain errors or inaccuracies.{"\n\n"}
-        Developed to make the science of Hadith accessible to everyone.
+        Takhrij is an educational research assistant designed to help users search, explore, and study hadith from the 9 major collections of Islam. It can support learning by surfacing references, narrator chains, terminology, and concise AI assisted explanations.{"\n\n"}
+        The app is not an authoritative scholarly source, a fatwa service, or a replacement for qualified scholars and formal study.{"\n\n"}
+        AI generated explanations may contain mistakes, inaccuracies, or incomplete information. Please verify religious matters with qualified scholars and reliable works of hadith scholarship.
       </Text>
       <TouchableOpacity
         style={styles.modalCloseButton}
@@ -723,10 +723,10 @@ const fetchNarratorBio = async (narratorName) => {
               {!hasResults && !loading && (
               <View style={styles.helpStaticCard}>
                 <Text style={styles.helpStaticText}>
-                  📌 How to use: Enter a keyword (e.g. intention) or phrase (e.g. glad tidings to the strangers) in the search bar. The app will search the 9 major hadith collections. If no match is found, AI will generate a best-effort explanation.
+                  How to use: Enter a keyword (e.g. intention) or phrase (e.g. glad tidings to the strangers) in the search bar. Takhrij will search the 9 major hadith collections and may provide AI assisted study notes when helpful.
                 </Text>
                 <Text style={[styles.helpStaticText, styles.helpDisclaimer]}>
-                  ⚠️ Disclaimer: This app is a tool to ease your research or study, not a replacement for seeking knowledge directly from scholars. AI responses MAY and WILL contain errors. Always verify with qualified scholars.
+                  Disclaimer: Takhrij is an educational research aid, not an authoritative scholarly source. AI assisted explanations may contain mistakes or incomplete information. Always verify religious matters with qualified scholars.
                 </Text>
               </View>
               )}
