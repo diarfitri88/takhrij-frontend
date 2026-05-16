@@ -32,6 +32,29 @@ Android: https://play.google.com/store/apps/details?id=com.yourapp.takhrij
 iOS: Coming soon
 `;
 
+const API_BASE_URL = 'https://takhrij-backend.onrender.com';
+
+const postJson = async (path, payload) => {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.error || data?.message || `Request failed with status ${response.status}`);
+  }
+
+  return data || {};
+};
+
 const COLLECTION_KEY_MAP = {
   'Sahih Bukhari': 'bukhari',
   'Sahih Muslim': 'muslim',
@@ -210,14 +233,9 @@ const fetchNarratorBio = async (narratorName) => {
   setNarratorBioVisible(true);
   setNarratorBioText('Loading biography...');
   try {
-    const res = await fetch('https://takhrij-backend.onrender.com/narrator-bio', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: narratorName }),
-    });
-    const data = await res.json();
-const raw = data.bio || 'Biography not available.';
-setNarratorBioText(raw);
+    const data = await postJson('/narrator-bio', { name: narratorName });
+    const raw = data.bio || 'Biography not available.';
+    setNarratorBioText(raw);
   } catch {
     setNarratorBioText('Error fetching biography.');
   }
@@ -230,17 +248,13 @@ setNarratorBioText(raw);
     setLoading(true);
     setResult('');
     try {
-      const res = await fetch('https://takhrij-backend.onrender.com/search-hadith', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: q }),
-      });
-      const data = await res.json();
+      const data = await postJson('/search-hadith', { query: q });
       setResult(data.result || '');
     } catch {
       setResult('Error connecting to server.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const fetchCommentary = async (arabic, english, reference, collection) => {
@@ -248,12 +262,7 @@ setNarratorBioText(raw);
     const eng = english.trim() || arabic.trim();
     const collToSend = collection || reference.split(' ').slice(0, 2).join(' ');
     try {
-      const res = await fetch('https://takhrij-backend.onrender.com/gpt-commentary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ arabic, english: eng, reference, collection: collToSend }),
-      });
-      const json = await res.json();
+      const json = await postJson('/gpt-commentary', { arabic, english: eng, reference, collection: collToSend });
       setCommentaryData({
         commentary: json.commentary || 'No commentary.',
         chain: json.chain || 'No chain.',
@@ -264,8 +273,9 @@ setNarratorBioText(raw);
       });
     } catch {
       setCommentaryData({ commentary: 'Error fetching commentary.', chain: '', evaluation: '' });
+    } finally {
+      setLoadingCommentary(false);
     }
-    setLoadingCommentary(false);
     setCommentaryModalVisible(true);
     setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 100);
   };
@@ -415,34 +425,16 @@ setNarratorBioText(raw);
                   Every contribution brings us closer to making authentic hadith knowledge accessible to all.
                 </Text>
 
-        <Modal
-  visible={thankYouVisible}
-  transparent
-  animationType="slide"
-  onRequestClose={() => setThankYouVisible(false)}
->
-  <View style={styles.modalBackdrop}>
-    <View style={styles.modalContent}>
-      <Text style={styles.modalHeader}>Thank You!</Text>
-      <Text style={styles.modalText}>Your support means a lot. JazakAllahu khairan for helping us continue our work.</Text>
-      <TouchableOpacity
-        style={styles.modalCloseButton}
-        onPress={() => setThankYouVisible(false)}
-      >
-        <Text style={styles.modalCloseText}>Close</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-</Modal>
-
-
-
                 <TouchableOpacity
                   style={styles.donateButton}
-                  onPress={() => {
-                    Linking.openURL('https://www.paypal.me/takhrij');
-                    setDonationVisible(false);
-                    setThankYouVisible(true);
+                  onPress={async () => {
+                    try {
+                      await Linking.openURL('https://www.paypal.me/takhrij');
+                      setDonationVisible(false);
+                      setThankYouVisible(true);
+                    } catch {
+                      alert('Unable to open PayPal. Please try again later.');
+                    }
                   }}
                 >
                   <Text style={styles.donateButtonText}>Donate via PayPal</Text>
@@ -452,6 +444,28 @@ setNarratorBioText(raw);
               <TouchableOpacity
                 style={styles.modalCloseButton}
                 onPress={() => setDonationVisible(false)}
+              >
+                <Text style={styles.modalCloseText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal
+          visible={thankYouVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setThankYouVisible(false)}
+        >
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalHeader}>Thank You!</Text>
+              <Text style={styles.modalText}>
+                Your support means a lot. JazakAllahu khairan for helping us continue our work.
+              </Text>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setThankYouVisible(false)}
               >
                 <Text style={styles.modalCloseText}>Close</Text>
               </TouchableOpacity>
