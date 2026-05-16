@@ -414,16 +414,29 @@ const fetchNarratorBio = async (narratorName) => {
           <View style={styles.dimOverlay} />
           <SafeAreaView style={[styles.welcomeContainer, { paddingBottom: insets.bottom }]}>
             <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-            <Text style={styles.welcomeTitle}>Welcome to Takhrij</Text>
-            <Text style={styles.welcomeText}>
-  {`Takhrij refers to the process of tracing, identifying, and researching hadith sources and their narrations.\n\nThis app helps users search and explore hadith found in indexed datasets based on sources such as Sunnah.com collections and related reference data.\n\nFeatures include:\n• Searching hadith by keywords or phrases\n• Viewing hadith references and narrations\n• Exploring chains of narrators\n• Learning basic ulum al-hadith terminology\n• Reading concise AI assisted explanations to support study\n\nThis is a beginner-friendly educational and research tool. It is not a replacement for qualified scholars, formal study, or scholarly takhrij. AI generated explanations may contain errors or inaccuracies.`}
-</Text>
-            <Text style={styles.welcomeDisclaimer}>
-              Research assistance only. Please verify religious matters with qualified scholars.
-            </Text>
-            <Pressable style={styles.welcomeButton} onPress={() => setShowWelcome(false)}>
-              <Text style={styles.welcomeButtonText}>Start Your Search</Text>
-            </Pressable>
+            <View style={styles.welcomeGlassCard}>
+              <Text style={styles.welcomeEyebrow}>Educational hadith research aid</Text>
+              <Text style={styles.welcomeTitle}>Welcome to Takhrij</Text>
+              <Text style={styles.welcomeText}>
+                Takhrij refers to tracing, identifying, and researching hadith sources and their narrations.
+              </Text>
+              <Text style={styles.welcomeText}>
+                This app helps users search and explore indexed hadith data based on sources such as Sunnah.com collections and related references.
+              </Text>
+              <Text style={styles.welcomeSectionTitle}>Features include</Text>
+              <View style={styles.welcomeBulletList}>
+                <Text style={styles.welcomeBullet}>• Search by keywords or phrases</Text>
+                <Text style={styles.welcomeBullet}>• View hadith references and narrations</Text>
+                <Text style={styles.welcomeBullet}>• Explore narrator chains and terminology</Text>
+                <Text style={styles.welcomeBullet}>• Read concise AI assisted study notes</Text>
+              </View>
+              <Text style={styles.welcomeDisclaimer}>
+                Beginner-friendly research assistance only. Not a replacement for qualified scholars, formal study, or scholarly takhrij.
+              </Text>
+              <Pressable style={styles.welcomeButton} onPress={() => setShowWelcome(false)}>
+                <Text style={styles.welcomeButtonText}>Start Your Search</Text>
+              </Pressable>
+            </View>
           </SafeAreaView>
         </ImageBackground>
       </SafeAreaProvider>
@@ -805,38 +818,82 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'transparent',
     justifyContent: 'center',
-    alignItems: 'flex-start',
-    padding: 24,
+    alignItems: 'center',
+    paddingHorizontal: 18,
+    paddingVertical: 24,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
+  welcomeGlassCard: {
+    width: '100%',
+    maxWidth: 520,
+    backgroundColor: 'rgba(10, 24, 26, 0.68)',
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 24,
+    paddingHorizontal: 22,
+    shadowColor: '#000',
+    shadowOpacity: 0.28,
+    shadowOffset: { width: 0, height: 18 },
+    shadowRadius: 28,
+    elevation: 8,
+  },
+  welcomeEyebrow: {
+    color: '#d8b15a',
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    marginBottom: 10,
+  },
   welcomeTitle: {
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: '800',
     color: '#fff',
-    textAlign: 'center',
-    marginBottom: 16,
+    textAlign: 'left',
+    marginBottom: 14,
   },
   welcomeText: {
-    fontSize: 17,
+    fontSize: 15,
     color: '#ecf0f1',
     textAlign: 'left',
-    lineHeight: 27,
-    marginBottom: height * 0.1,
+    lineHeight: 23,
+    marginBottom: 12,
+  },
+  welcomeSectionTitle: {
+    color: '#f7f1df',
+    fontSize: 15,
+    fontWeight: '800',
+    marginTop: 2,
+    marginBottom: 8,
+  },
+  welcomeBulletList: {
+    marginBottom: 14,
+  },
+  welcomeBullet: {
+    color: '#ecf0f1',
+    fontSize: 15,
+    lineHeight: 24,
   },
   welcomeDisclaimer: {
-    fontSize: 14,
-    color: '#eee',
+    fontSize: 13,
+    lineHeight: 20,
+    color: '#d9e3df',
     textAlign: 'left',
     fontStyle: 'italic',
-    marginTop: 12,
+    marginTop: 2,
   },
   welcomeButton: {
-    marginTop: 24,
+    marginTop: 20,
     backgroundColor: '#d8b15a',
     paddingVertical: 14,
-    paddingHorizontal: 24,
+    paddingHorizontal: 26,
     borderRadius: 8,
-    alignSelf: 'center',
+    alignSelf: 'flex-start',
+    shadowColor: '#d8b15a',
+    shadowOpacity: 0.26,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 14,
+    elevation: 4,
   },
   welcomeButtonText: {
     color: '#132f35',
@@ -1222,6 +1279,6 @@ donateLink: {
   },
   dimOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(6, 20, 22, 0.72)',
+    backgroundColor: 'rgba(6, 20, 22, 0.42)',
   },
 });
