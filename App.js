@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import {
   StatusBar,
   KeyboardAvoidingView,
   Linking,
+  AppState,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/Feather';
@@ -225,9 +226,49 @@ export default function App() {
   const insets = useSafeAreaInsets();
   const [donationVisible, setDonationVisible] = useState(false);
   const [thankYouVisible, setThankYouVisible] = useState(false);
+  const [pendingDonationThankYou, setPendingDonationThankYou] = useState(false);
+  const appStateRef = useRef(AppState.currentState);
   const [narratorBioVisible, setNarratorBioVisible] = useState(false);
 const [narratorBioText, setNarratorBioText] = useState('');
 const [selectedNarrator, setSelectedNarrator] = useState('');
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      const wasAwayFromApp =
+        appStateRef.current === 'inactive' || appStateRef.current === 'background';
+
+      appStateRef.current = nextAppState;
+
+      if (pendingDonationThankYou && wasAwayFromApp && nextAppState === 'active') {
+        setPendingDonationThankYou(false);
+        setThankYouVisible(true);
+      }
+    });
+
+    return () => subscription.remove();
+  }, [pendingDonationThankYou]);
+
+  const showPendingDonationThankYou = () => {
+    setPendingDonationThankYou(false);
+    setThankYouVisible(true);
+  };
+
+  const handleDonationPress = async () => {
+    try {
+      await Linking.openURL('https://www.paypal.me/takhrij');
+      setDonationVisible(false);
+      setPendingDonationThankYou(true);
+
+      setTimeout(() => {
+        if (appStateRef.current === 'active') {
+          showPendingDonationThankYou();
+        }
+      }, 1500);
+    } catch {
+      setPendingDonationThankYou(false);
+      alert('Unable to open PayPal. Please try again later.');
+    }
+  };
 const fetchNarratorBio = async (narratorName) => {
   setSelectedNarrator(narratorName);
   setNarratorBioVisible(true);
@@ -427,15 +468,7 @@ const fetchNarratorBio = async (narratorName) => {
 
                 <TouchableOpacity
                   style={styles.donateButton}
-                  onPress={async () => {
-                    try {
-                      await Linking.openURL('https://www.paypal.me/takhrij');
-                      setDonationVisible(false);
-                      setThankYouVisible(true);
-                    } catch {
-                      alert('Unable to open PayPal. Please try again later.');
-                    }
-                  }}
+                  onPress={handleDonationPress}
                 >
                   <Text style={styles.donateButtonText}>Donate via PayPal</Text>
                 </TouchableOpacity>
