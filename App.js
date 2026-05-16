@@ -267,6 +267,7 @@ export default function App() {
   const [narratorBioVisible, setNarratorBioVisible] = useState(false);
 const [narratorBioText, setNarratorBioText] = useState('');
 const [selectedNarrator, setSelectedNarrator] = useState('');
+const [returnToCommentaryAfterBio, setReturnToCommentaryAfterBio] = useState(false);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
@@ -311,6 +312,7 @@ const fetchNarratorBio = async (narratorName) => {
 
   console.log('[NarratorBio] narrator chip pressed:', cleanNarratorName);
   setSelectedNarrator(cleanNarratorName);
+  setReturnToCommentaryAfterBio(commentaryModalVisible);
   setCommentaryModalVisible(false);
   setNarratorBioVisible(true);
   setNarratorBioText('Loading biography...');
@@ -323,6 +325,15 @@ const fetchNarratorBio = async (narratorName) => {
   } catch (error) {
     console.log('[NarratorBio] /narrator-bio error:', error);
     setNarratorBioText(error.message || 'Error fetching biography. Please try again.');
+  }
+};
+
+const closeNarratorBio = () => {
+  setNarratorBioVisible(false);
+
+  if (returnToCommentaryAfterBio) {
+    setReturnToCommentaryAfterBio(false);
+    setTimeout(() => setCommentaryModalVisible(true), 250);
   }
 };
 
@@ -397,7 +408,7 @@ const fetchNarratorBio = async (narratorName) => {
       }
 
       if (narratorBioVisible) {
-        setNarratorBioVisible(false);
+        closeNarratorBio();
         return true;
       }
 
@@ -515,15 +526,19 @@ const fetchNarratorBio = async (narratorName) => {
                 <Text style={styles.modalText}>{commentaryData.commentary}</Text>
                 <Text style={styles.sectionHeader}>Chain of Narrators (click to view biography)</Text>
 <View style={styles.chainContainer}>
-  {parseNarratorNames(commentaryData.chain).map((narrator, idx) => (
-    <TouchableOpacity
-      key={`${narrator}-${idx}`}
-      style={styles.narratorChip}
-      onPress={() => fetchNarratorBio(narrator)}
-      activeOpacity={0.78}
-    >
-      <Text style={styles.linkText}>{narrator}</Text>
-    </TouchableOpacity>
+  {parseNarratorNames(commentaryData.chain).map((narrator, idx, arr) => (
+    <React.Fragment key={`${narrator}-${idx}`}>
+      <TouchableOpacity
+        style={styles.narratorChip}
+        onPress={() => fetchNarratorBio(narrator)}
+        activeOpacity={0.78}
+      >
+        <Text style={styles.linkText}>{narrator}</Text>
+      </TouchableOpacity>
+      {idx < arr.length - 1 && (
+        <Text style={styles.chainArrow}>→</Text>
+      )}
+    </React.Fragment>
   ))}
   {parseNarratorNames(commentaryData.chain).length === 0 && (
     <Text style={styles.modalText}>No narrator chain available.</Text>
@@ -570,7 +585,7 @@ const fetchNarratorBio = async (narratorName) => {
           visible={narratorBioVisible}
           transparent
           animationType="slide"
-          onRequestClose={() => setNarratorBioVisible(false)}
+          onRequestClose={closeNarratorBio}
         >
           <View style={styles.modalBackdrop}>
             <View style={styles.modalContent}>
@@ -581,9 +596,12 @@ const fetchNarratorBio = async (narratorName) => {
               >
                 <Markdown style={markdownStyles}>{narratorBioText}</Markdown>
               </ScrollView>
+              <Text style={styles.modalDisclaimer}>
+                AI generated narrator information may contain errors. Please verify with classical rijāl sources such as Tahdhīb al-Tahdhīb, Taqrīb al-Tahdhīb, Siyar Aʿlām al-Nubalāʾ, and Mīzān al-Iʿtidāl.
+              </Text>
               <TouchableOpacity
                 style={styles.modalCloseButton}
-                onPress={() => setNarratorBioVisible(false)}
+                onPress={closeNarratorBio}
               >
                 <Text style={styles.modalCloseText}>Close</Text>
               </TouchableOpacity>
@@ -1333,8 +1351,8 @@ donateLink: {
   chainContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    alignItems: 'center',
     marginVertical: 8,
-    gap: 8,
   },
   narratorChip: {
     backgroundColor: '#edf4e8',
@@ -1343,6 +1361,15 @@ donateLink: {
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 7,
+    marginRight: 6,
+    marginBottom: 8,
+  },
+  chainArrow: {
+    color: '#8aa5a0',
+    fontSize: 16,
+    fontWeight: '800',
+    marginRight: 6,
+    marginBottom: 8,
   },
   linkText: {
     color: '#176b5f',
