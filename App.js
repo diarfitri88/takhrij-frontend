@@ -415,20 +415,20 @@ const fetchNarratorBio = async (narratorName) => {
           <SafeAreaView style={[styles.welcomeContainer, { paddingBottom: insets.bottom }]}>
             <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
             <View style={styles.welcomeGlassCard}>
-              <Text style={styles.welcomeEyebrow}>Educational hadith research aid</Text>
+              <Text style={styles.welcomeEyebrow}>A beginner friendly hadith learning app</Text>
               <Text style={styles.welcomeTitle}>Welcome to Takhrij</Text>
               <Text style={styles.welcomeText}>
                 Takhrij refers to tracing, identifying, and researching hadith sources and their narrations.
               </Text>
               <Text style={styles.welcomeText}>
-                This app helps users search and explore indexed hadith data based on sources such as Sunnah.com collections and related references.
+                This app helps users search and explore hadith from the collections available on Sunnah.com.
               </Text>
               <Text style={styles.welcomeSectionTitle}>Features include</Text>
               <View style={styles.welcomeBulletList}>
                 <Text style={styles.welcomeBullet}>• Search by keywords or phrases</Text>
                 <Text style={styles.welcomeBullet}>• View hadith references and narrations</Text>
-                <Text style={styles.welcomeBullet}>• Explore narrator chains and terminology</Text>
-                <Text style={styles.welcomeBullet}>• Read concise AI assisted study notes</Text>
+                <Text style={styles.welcomeBullet}>• Learn basic hadith terminology and narrator information</Text>
+                <Text style={styles.welcomeBullet}>• Read concise AI assisted explanations</Text>
               </View>
               <Text style={styles.welcomeDisclaimer}>
                 Beginner-friendly research assistance only. Not a replacement for qualified scholars, formal study, or scholarly takhrij.
