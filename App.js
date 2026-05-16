@@ -17,6 +17,7 @@ import {
   KeyboardAvoidingView,
   Linking,
   AppState,
+  BackHandler,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/Feather';
@@ -339,6 +340,68 @@ const fetchNarratorBio = async (narratorName) => {
   const { extraText, hadithSections } = parseResult(result);
   const hasResults = !loading && hadithSections.length > 0;
   const noResults  = !loading && extraText.startsWith('❌');
+  const hasSearchOutput = !loading && result.trim().length > 0;
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') {
+      return undefined;
+    }
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (loadingCommentary) {
+        setLoadingCommentary(false);
+        return true;
+      }
+
+      if (narratorBioVisible) {
+        setNarratorBioVisible(false);
+        return true;
+      }
+
+      if (commentaryModalVisible) {
+        setCommentaryModalVisible(false);
+        return true;
+      }
+
+      if (thankYouVisible) {
+        setThankYouVisible(false);
+        return true;
+      }
+
+      if (donationVisible) {
+        setDonationVisible(false);
+        return true;
+      }
+
+      if (glossaryModalVisible) {
+        setGlossaryModalVisible(false);
+        return true;
+      }
+
+      if (aboutVisible) {
+        setAboutVisible(false);
+        return true;
+      }
+
+      if (hasSearchOutput) {
+        setResult('');
+        return true;
+      }
+
+      return false;
+    });
+
+    return () => subscription.remove();
+  }, [
+    aboutVisible,
+    commentaryModalVisible,
+    donationVisible,
+    glossaryModalVisible,
+    hasSearchOutput,
+    loadingCommentary,
+    narratorBioVisible,
+    thankYouVisible,
+  ]);
 
   if (showWelcome) {
     return (
