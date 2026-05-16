@@ -35,13 +35,29 @@ iOS: Coming soon
 `;
 
 const API_BASE_URL = 'https://takhrij-backend.onrender.com';
+const DEFAULT_API_TIMEOUT_MS = 30000;
+const NARRATOR_BIO_TIMEOUT_MS = 60000;
 
-const postJson = async (path, payload) => {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
+const postJson = async (path, payload, timeoutMs = DEFAULT_API_TIMEOUT_MS) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('Request timed out. Please try again.');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   let data = null;
   try {
@@ -271,15 +287,18 @@ const [selectedNarrator, setSelectedNarrator] = useState('');
     }
   };
 const fetchNarratorBio = async (narratorName) => {
-  setSelectedNarrator(narratorName);
+  const cleanNarratorName = narratorName.trim();
+  if (!cleanNarratorName) return;
+
+  setSelectedNarrator(cleanNarratorName);
   setNarratorBioVisible(true);
   setNarratorBioText('Loading biography...');
   try {
-    const data = await postJson('/narrator-bio', { name: narratorName });
+    const data = await postJson('/narrator-bio', { name: cleanNarratorName }, NARRATOR_BIO_TIMEOUT_MS);
     const raw = data.bio || 'Biography not available.';
     setNarratorBioText(raw);
-  } catch {
-    setNarratorBioText('Error fetching biography.');
+  } catch (error) {
+    setNarratorBioText(error.message || 'Error fetching biography. Please try again.');
   }
 };
 
@@ -473,7 +492,8 @@ const fetchNarratorBio = async (narratorName) => {
                 <Text style={styles.sectionHeader}>Chain of Narrators (click to view biography)</Text>
 <View style={styles.chainContainer}>
   {commentaryData.chain
-    .split('→')
+    .split(/\s*(?:→|->|⇒)\s*/)
+    .filter(Boolean)
     .map((rawName, idx, arr) => {
       const narrator = rawName.trim();
       return (
@@ -519,6 +539,31 @@ const fetchNarratorBio = async (narratorName) => {
               </View>
 
               <TouchableOpacity style={styles.modalCloseButton} onPress={() => setCommentaryModalVisible(false)}>
+                <Text style={styles.modalCloseText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal
+          visible={narratorBioVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setNarratorBioVisible(false)}
+        >
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalHeader}>{selectedNarrator || 'Narrator Biography'}</Text>
+              <ScrollView
+                style={styles.modalScroll}
+                contentContainerStyle={styles.modalScrollContent}
+              >
+                <Markdown style={markdownStyles}>{narratorBioText}</Markdown>
+              </ScrollView>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setNarratorBioVisible(false)}
+              >
                 <Text style={styles.modalCloseText}>Close</Text>
               </TouchableOpacity>
             </View>
@@ -1282,3 +1327,19 @@ donateLink: {
     backgroundColor: 'rgba(6, 20, 22, 0.42)',
   },
 });
+
+const markdownStyles = {
+  body: {
+    color: '#2f3d40',
+    fontSize: 16,
+    lineHeight: 25,
+  },
+  strong: {
+    color: '#132f35',
+    fontWeight: '800',
+  },
+  paragraph: {
+    marginTop: 0,
+    marginBottom: 12,
+  },
+};
