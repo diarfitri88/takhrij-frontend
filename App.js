@@ -524,7 +524,8 @@ const closeNarratorBio = () => {
       const rawAuthenticityStatus = (s.match(/Authenticity Status:\s*(.*?)$/im) || [])[1]?.trim() || '';
       const warning = (s.match(/Warning:\s*(.*?)$/im) || [])[1]?.trim() || '';
       const collection = getCollectionFromReference(reference);
-      const authenticityStatus = normalizeAuthenticityStatus(rawAuthenticityStatus, reference, collection);
+      const isAiFallback = reference === 'AI Generated';
+      const authenticityStatus = isAiFallback ? '' : normalizeAuthenticityStatus(rawAuthenticityStatus, reference, collection);
       return { arabic, english, reference, authenticityStatus, warning, collection };
     }).filter(o => o.arabic || o.english);
     return { extraText: extraText.trim(), hadithSections };
@@ -1012,7 +1013,7 @@ const closeNarratorBio = () => {
                     <Text style={styles.referenceBadgeText}>{h.reference}</Text>
                   </View>
                 )}
-                {h.authenticityStatus && (
+                {h.reference !== 'AI Generated' && h.authenticityStatus && (
                   <View style={styles.resultAuthenticityBadge}>
                     <Text style={styles.resultAuthenticityText}>Authenticity: {h.authenticityStatus}</Text>
                   </View>
