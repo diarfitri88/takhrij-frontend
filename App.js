@@ -528,13 +528,15 @@ const closeNarratorBio = () => {
     const [extraText, ...blocks] = raw.split('---');
     const hadithSections = blocks.map(s => {
       const arabic = (s.match(/Arabic Matn:\s*([\s\S]*?)(?=\r?\nEnglish Matn:|$)/i) || [])[1]?.trim() || '';
-      let english = (s.match(/English Matn:\s*([\s\S]*?)(?=\r?\nReference:|$)/i) || [])[1]?.trim() || '';
-      english = english.replace(/[\r\n]+/g, ' ').replace(/[*_]/g, '').trim();
       const reference = (s.match(/Reference:\s*(.*?)$/im) || [])[1]?.trim() || '';
+      const isAiFallback = reference === 'AI Generated';
+      let english = (s.match(/English Matn:\s*([\s\S]*?)(?=\r?\nReference:|$)/i) || [])[1]?.trim() || '';
+      english = isAiFallback
+        ? english.replace(/[*_]/g, '').replace(/\n{3,}/g, '\n\n').trim()
+        : english.replace(/[\r\n]+/g, ' ').replace(/[*_]/g, '').trim();
       const rawAuthenticityStatus = (s.match(/Authenticity Status:\s*(.*?)$/im) || [])[1]?.trim() || '';
       const warning = (s.match(/Warning:\s*(.*?)$/im) || [])[1]?.trim() || '';
       const collection = getCollectionFromReference(reference);
-      const isAiFallback = reference === 'AI Generated';
       const authenticityStatus = isAiFallback ? '' : normalizeAuthenticityStatus(rawAuthenticityStatus, reference, collection);
       return { arabic, english, reference, authenticityStatus, warning, collection };
     }).filter(o => o.arabic || o.english);
