@@ -45,16 +45,26 @@ const parseNarratorNames = (chain = '') => {
     .replace(/\s+/g, ' ')
     .trim();
 
-  if (!normalizedChain || /^no chain\.?$/i.test(normalizedChain)) {
+  if (!normalizedChain || /^(?:no chain|chain not available)\.?$/i.test(normalizedChain)) {
     return [];
   }
 
+  if (!/(?:â†’|->|â‡’|ØŒ|,|;)/.test(normalizedChain)) {
+    return [];
+  }
+
+  const sentencePattern = /[.!?]|\b(?:hadith|narration|report|meaning|lesson|benefit|reader|practice|authenticity|source|reward|virtue|specific|claim|commentary)\b/i;
   const names = normalizedChain
     .split(/\s*(?:→|->|⇒|،|,|;|\n)\s*/)
     .map(name => name.replace(/^\d+\.\s*/, '').trim())
-    .filter(name => name.length > 1 && !/^unknown|unclear|not specified$/i.test(name));
+    .filter(name =>
+      name.length > 1 &&
+      name.length <= 55 &&
+      !sentencePattern.test(name) &&
+      !/^unknown|unclear|not specified$/i.test(name)
+    );
 
-  return names.length ? names : [normalizedChain];
+  return names.length >= 2 ? names : [];
 };
 
 const postJson = async (path, payload, timeoutMs = DEFAULT_API_TIMEOUT_MS) => {
@@ -689,7 +699,7 @@ const closeNarratorBio = () => {
     </React.Fragment>
   ))}
   {parseNarratorNames(commentaryData.chain).length === 0 && (
-    <Text style={styles.modalText}>No narrator chain available.</Text>
+    <Text style={styles.modalText}>Chain not available.</Text>
   )}
 </View>
               </ScrollView>
