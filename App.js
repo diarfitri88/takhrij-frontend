@@ -122,6 +122,57 @@ const normalizeAuthenticityStatus = (status, reference = '', collection = '') =>
   return status || 'Not specified in source';
 };
 
+const sanitizeNarratorBioText = (rawBio = '') => {
+  const forbiddenPattern = /\b(scholarly remarks|jarh|ta['‘’]?dil|grading|grade|graded|authenticity|trustworthy|reliable|unreliable|weak|thiqah|liar|fabricator|majhul|abandoned|criticism|dispute|disputed)\b/i;
+  const allowedLabels = [
+    'era/generation',
+    'teachers',
+    'students',
+    'collections',
+    'known for',
+    'educational importance'
+  ];
+  const sectionValues = new Map();
+  let currentLabel = null;
+
+  String(rawBio)
+    .replace(/```[\s\S]*?```/g, '')
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .forEach(line => {
+      const labelMatch = line.match(/^\*\*([^:*]+):\*\*/);
+      if (labelMatch) {
+        const label = labelMatch[1].trim().toLowerCase();
+        currentLabel = allowedLabels.includes(label) ? label : null;
+
+        if (currentLabel) {
+          const value = line.replace(/^\*\*[^:*]+:\*\*\s*/, '').trim();
+          if (value && !forbiddenPattern.test(value)) {
+            sectionValues.set(currentLabel, value);
+          }
+        }
+        return;
+      }
+
+      if (currentLabel && !forbiddenPattern.test(line)) {
+        const existing = sectionValues.get(currentLabel);
+        sectionValues.set(currentLabel, existing ? `${existing} ${line}` : line);
+      }
+    });
+
+  const knownFor = sectionValues.get('known for') || sectionValues.get('educational importance');
+  return [
+    ['Era/Generation', sectionValues.get('era/generation') || 'Not specified in this summary'],
+    ['Teachers', sectionValues.get('teachers') || 'Not listed in this summary'],
+    ['Students', sectionValues.get('students') || 'Not listed in this summary'],
+    ['Collections', sectionValues.get('collections') || 'Not specified in this summary'],
+    ['Known For', knownFor || 'Educational role not specified in this summary']
+  ]
+    .map(([label, value]) => `**${label}:** ${value}`)
+    .join('\n');
+};
+
 const glossary = [
   { term: 'Core Concepts', definition: '', reference: '', example: '' },
   {
@@ -343,7 +394,7 @@ const fetchNarratorBio = async (narratorName) => {
     const data = await postJson('/narrator-bio', { name: cleanNarratorName }, NARRATOR_BIO_TIMEOUT_MS);
     console.log('[NarratorBio] /narrator-bio response:', data);
     const raw = data.bio || 'Biography not available.';
-    setNarratorBioText(raw);
+    setNarratorBioText(sanitizeNarratorBioText(raw));
   } catch (error) {
     console.log('[NarratorBio] /narrator-bio error:', error);
     setNarratorBioText(error.message || 'Error fetching biography. Please try again.');
