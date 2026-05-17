@@ -195,6 +195,14 @@ const sanitizeNarratorBioText = (rawBio = '') => {
     .join('\n');
 };
 
+const getSafeCommentaryText = (text = '') => {
+  const trimmed = String(text || '').trim();
+  if (!trimmed || /^no commentary\.?$/i.test(trimmed)) {
+    return 'Commentary was not available for this hadith. Please refer to qualified scholars for detailed explanation.';
+  }
+  return trimmed;
+};
+
 const glossary = [
   { term: 'Core Concepts', definition: '', reference: '', example: '' },
   {
@@ -456,7 +464,7 @@ const closeNarratorBio = () => {
       const json = await postJson('/gpt-commentary', { arabic, english: eng, reference, collection: collToSend });
       const authenticityStatus = normalizeAuthenticityStatus(json.authenticityStatus, reference, collToSend);
       setCommentaryData({
-        commentary: json.commentary || 'No commentary.',
+        commentary: getSafeCommentaryText(json.commentary),
         chain: json.chain || 'No chain.',
         evaluation: json.evaluation || '',
         authenticityStatus,
