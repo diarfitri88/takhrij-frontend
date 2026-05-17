@@ -65,8 +65,16 @@ const postJson = async (path, payload, timeoutMs = DEFAULT_API_TIMEOUT_MS) => {
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
+      },
+      cache: 'no-store',
+      body: JSON.stringify({
+        ...payload,
+        _clientCacheBust: Date.now(),
+      }),
       signal: controller.signal,
     });
   } catch (error) {
@@ -161,14 +169,21 @@ const sanitizeNarratorBioText = (rawBio = '') => {
       }
     });
 
+  const isPlaceholder = value => /^(not listed|not specified|unknown|unclear|n\/a|none)\b/i.test(String(value).trim());
   const knownFor = sectionValues.get('known for') || sectionValues.get('educational importance');
-  return [
-    ['Era/Generation', sectionValues.get('era/generation') || 'Not specified in this summary'],
-    ['Teachers', sectionValues.get('teachers') || 'Not listed in this summary'],
-    ['Students', sectionValues.get('students') || 'Not listed in this summary'],
-    ['Collections', sectionValues.get('collections') || 'Not specified in this summary'],
-    ['Known For', knownFor || 'Educational role not specified in this summary']
-  ]
+  const safeSections = [
+    ['Era/Generation', sectionValues.get('era/generation')],
+    ['Teachers', sectionValues.get('teachers')],
+    ['Students', sectionValues.get('students')],
+    ['Collections', sectionValues.get('collections')],
+    ['Known For', knownFor]
+  ].filter(([, value]) => value && !isPlaceholder(value));
+
+  if (!safeSections.length) {
+    return '**Known For:** Beginner-level historical information for this narrator is not available in this brief summary.';
+  }
+
+  return safeSections
     .map(([label, value]) => `**${label}:** ${value}`)
     .join('\n');
 };
