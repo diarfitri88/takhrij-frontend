@@ -130,6 +130,30 @@ const normalizeAuthenticityStatus = (status, reference = '', collection = '') =>
   return status || 'Not specified in source';
 };
 
+const getAuthenticitySourceLabel = (status = '', source = '') => {
+  const normalizedStatus = String(status || '').toLowerCase();
+  const normalizedSource = String(source || '').toLowerCase();
+
+  if (!status || normalizedStatus.includes('not specified')) {
+    return '';
+  }
+
+  if (normalizedStatus.includes('by collection')) {
+    return 'Based on collection';
+  }
+
+  if (
+    normalizedStatus.includes('mentioned in source text') ||
+    normalizedStatus.includes('caution noted') ||
+    normalizedSource.includes('source text') ||
+    normalizedSource.includes('structured source field')
+  ) {
+    return 'Based on source wording';
+  }
+
+  return '';
+};
+
 const sanitizeNarratorBioText = (rawBio = '') => {
   const forbiddenPattern = /\b(scholarly remarks|jarh|ta['‘’]?dil|grading|grade|graded|authenticity|trustworthy|reliable|unreliable|weak|thiqah|liar|fabricator|majhul|abandoned|criticism|dispute|disputed)\b/i;
   const allowedLabels = [
@@ -468,7 +492,7 @@ const closeNarratorBio = () => {
         chain: json.chain || 'No chain.',
         evaluation: json.evaluation || '',
         authenticityStatus,
-        authenticitySource: json.authenticitySource || '',
+        authenticitySource: getAuthenticitySourceLabel(authenticityStatus, json.authenticitySource),
         sourceCaution: json.sourceCaution || '',
         arabic: arabic || '',
         english: english || '',
@@ -640,7 +664,7 @@ const closeNarratorBio = () => {
                 <Text style={styles.sectionHeader}>Authenticity Status</Text>
                 <Text style={styles.authenticityStatusText}>{commentaryData.authenticityStatus || 'Not specified in source'}</Text>
                 {!!commentaryData.authenticitySource && (
-                  <Text style={styles.authenticitySourceText}>Source: {commentaryData.authenticitySource}</Text>
+                  <Text style={styles.authenticitySourceText}>{commentaryData.authenticitySource}</Text>
                 )}
                 {!!commentaryData.sourceCaution && (
                   <Text style={styles.authenticityCautionText}>{commentaryData.sourceCaution}</Text>
