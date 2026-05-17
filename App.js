@@ -256,7 +256,10 @@ export default function App() {
   const [commentaryData, setCommentaryData] = useState({
     commentary: '',
     chain: '',
-    evaluation: ''
+    evaluation: '',
+    authenticityStatus: 'Not specified in source',
+    authenticitySource: '',
+    sourceCaution: ''
   });
   const scrollRef = useRef(null);
   const insets = useSafeAreaInsets();
@@ -363,12 +366,22 @@ const closeNarratorBio = () => {
         commentary: json.commentary || 'No commentary.',
         chain: json.chain || 'No chain.',
         evaluation: json.evaluation || '',
+        authenticityStatus: json.authenticityStatus || 'Not specified in source',
+        authenticitySource: json.authenticitySource || '',
+        sourceCaution: json.sourceCaution || '',
         arabic: arabic || '',
         english: english || '',
         reference: reference || ''
       });
     } catch {
-      setCommentaryData({ commentary: 'Error fetching commentary.', chain: '', evaluation: '' });
+      setCommentaryData({
+        commentary: 'Error fetching commentary.',
+        chain: '',
+        evaluation: '',
+        authenticityStatus: 'Not specified in source',
+        authenticitySource: '',
+        sourceCaution: ''
+      });
     } finally {
       setLoadingCommentary(false);
     }
@@ -383,10 +396,11 @@ const closeNarratorBio = () => {
       let english = (s.match(/English Matn:\s*([\s\S]*?)(?=\r?\nReference:|$)/i) || [])[1]?.trim() || '';
       english = english.replace(/[\r\n]+/g, ' ').replace(/[*_]/g, '').trim();
       const reference = (s.match(/Reference:\s*(.*?)$/im) || [])[1]?.trim() || '';
+      const authenticityStatus = (s.match(/Authenticity Status:\s*(.*?)$/im) || [])[1]?.trim() || 'Not specified in source';
       const warning = (s.match(/Warning:\s*(.*?)$/im) || [])[1]?.trim() || '';
       const nameParts = reference.split(' ').slice(0, 2).join(' ');
       const collection = COLLECTION_KEY_MAP[nameParts] || '';
-      return { arabic, english, reference, warning, collection };
+      return { arabic, english, reference, authenticityStatus, warning, collection };
     }).filter(o => o.arabic || o.english);
     return { extraText: extraText.trim(), hadithSections };
   };
@@ -522,6 +536,14 @@ const closeNarratorBio = () => {
                 style={styles.modalScroll}
                 contentContainerStyle={styles.modalScrollContent}
               >
+                <Text style={styles.sectionHeader}>Authenticity Status</Text>
+                <Text style={styles.authenticityStatusText}>{commentaryData.authenticityStatus || 'Not specified in source'}</Text>
+                {!!commentaryData.authenticitySource && (
+                  <Text style={styles.authenticitySourceText}>Source: {commentaryData.authenticitySource}</Text>
+                )}
+                {!!commentaryData.sourceCaution && (
+                  <Text style={styles.authenticityCautionText}>{commentaryData.sourceCaution}</Text>
+                )}
                 <Text style={styles.sectionHeader}>Commentary</Text>
                 <Text style={styles.modalText}>{commentaryData.commentary}</Text>
                 <Text style={styles.sectionHeader}>Chain of Narrators (click to view biography)</Text>
@@ -552,7 +574,7 @@ const closeNarratorBio = () => {
                 <TouchableOpacity
                   style={styles.shareCopyButton}
                   onPress={async () => {
-                    const textToCopy = `Hadith Reference: ${commentaryData.reference}\n\nArabic Matn:\n${commentaryData.arabic}\n\nEnglish Matn:\n${commentaryData.english}\n\nCommentary:\n${commentaryData.commentary}\n\nChain of Narrators:\n${commentaryData.chain}`;
+                    const textToCopy = `Hadith Reference: ${commentaryData.reference}\n\nArabic Matn:\n${commentaryData.arabic}\n\nEnglish Matn:\n${commentaryData.english}\n\nAuthenticity Status:\n${commentaryData.authenticityStatus || 'Not specified in source'}\n\nCommentary:\n${commentaryData.commentary}\n\nChain of Narrators:\n${commentaryData.chain}`;
                     await Clipboard.setStringAsync(textToCopy);
                     alert('Copied to clipboard!');
                   }}
@@ -563,7 +585,7 @@ const closeNarratorBio = () => {
                 <TouchableOpacity
   style={styles.shareCopyButton}
   onPress={async () => {
-    const textToShare = `Hadith Reference: ${commentaryData.reference}\n\nArabic Matn:\n${commentaryData.arabic}\n\nEnglish Matn:\n${commentaryData.english}\n\nCommentary:\n${commentaryData.commentary}\n\nChain of Narrators:\n${commentaryData.chain}\n\n${APP_DOWNLOAD_LINK}`;
+    const textToShare = `Hadith Reference: ${commentaryData.reference}\n\nArabic Matn:\n${commentaryData.arabic}\n\nEnglish Matn:\n${commentaryData.english}\n\nAuthenticity Status:\n${commentaryData.authenticityStatus || 'Not specified in source'}\n\nCommentary:\n${commentaryData.commentary}\n\nChain of Narrators:\n${commentaryData.chain}\n\n${APP_DOWNLOAD_LINK}`;
     await Share.share({ message: textToShare });
   }}
 >
@@ -865,6 +887,11 @@ const closeNarratorBio = () => {
                     <Text style={styles.referenceBadgeText}>{h.reference}</Text>
                   </View>
                 )}
+                {h.authenticityStatus && (
+                  <View style={styles.resultAuthenticityBadge}>
+                    <Text style={styles.resultAuthenticityText}>Authenticity: {h.authenticityStatus}</Text>
+                  </View>
+                )}
                 {h.arabic    && <Text style={styles.arabicMatn}>{h.arabic}</Text>}
                 {h.english && h.english.split('\n').map((para, index) => (
   <Text key={`english-${index}`} style={styles.englishMatn}>{para.trim()}</Text>
@@ -1159,6 +1186,22 @@ const styles = StyleSheet.create({
     color: '#1b433f',
     marginLeft: 6,
   },
+  resultAuthenticityBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#f8f5e9',
+    borderWidth: 1,
+    borderColor: '#e7d9a8',
+    borderRadius: 8,
+    paddingVertical: 5,
+    paddingHorizontal: 9,
+    marginTop: -6,
+    marginBottom: 14,
+  },
+  resultAuthenticityText: {
+    color: '#6f5a17',
+    fontSize: 12,
+    fontWeight: '700',
+  },
   arabicMatn: {
     fontSize: 21,
     lineHeight: 34,
@@ -1264,6 +1307,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 25,
     color: '#2f3d40',
+  },
+  authenticityStatusText: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#132f35',
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  authenticitySourceText: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: '#607174',
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  authenticityCautionText: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: '#8a3a32',
+    backgroundColor: 'rgba(138, 58, 50, 0.08)',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 10,
   },
   modalDisclaimer: {
     fontSize: 12,
