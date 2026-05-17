@@ -103,6 +103,25 @@ const COLLECTION_KEY_MAP = {
   'Sunan Abu Dawood': 'abudawud',
   'Sunan ad-Darimi': 'darimi',
 };
+
+const getCollectionFromReference = (reference = '') => {
+  const normalized = String(reference).toLowerCase();
+  if (normalized.includes('bukhari')) return 'bukhari';
+  if (normalized.includes('muslim')) return 'muslim';
+
+  const nameParts = String(reference).split(' ').slice(0, 2).join(' ');
+  return COLLECTION_KEY_MAP[nameParts] || '';
+};
+
+const normalizeAuthenticityStatus = (status, reference = '', collection = '') => {
+  const collectionKey = collection || getCollectionFromReference(reference);
+  if (collectionKey === 'bukhari' || collectionKey === 'muslim') {
+    return 'Sahih by collection';
+  }
+
+  return status || 'Not specified in source';
+};
+
 const glossary = [
   { term: 'Core Concepts', definition: '', reference: '', example: '' },
   {
@@ -359,14 +378,15 @@ const closeNarratorBio = () => {
   const fetchCommentary = async (arabic, english, reference, collection) => {
     setLoadingCommentary(true);
     const eng = english.trim() || arabic.trim();
-    const collToSend = collection || reference.split(' ').slice(0, 2).join(' ');
+    const collToSend = collection || getCollectionFromReference(reference) || reference.split(' ').slice(0, 2).join(' ');
     try {
       const json = await postJson('/gpt-commentary', { arabic, english: eng, reference, collection: collToSend });
+      const authenticityStatus = normalizeAuthenticityStatus(json.authenticityStatus, reference, collToSend);
       setCommentaryData({
         commentary: json.commentary || 'No commentary.',
         chain: json.chain || 'No chain.',
         evaluation: json.evaluation || '',
-        authenticityStatus: json.authenticityStatus || 'Not specified in source',
+        authenticityStatus,
         authenticitySource: json.authenticitySource || '',
         sourceCaution: json.sourceCaution || '',
         arabic: arabic || '',
@@ -396,10 +416,10 @@ const closeNarratorBio = () => {
       let english = (s.match(/English Matn:\s*([\s\S]*?)(?=\r?\nReference:|$)/i) || [])[1]?.trim() || '';
       english = english.replace(/[\r\n]+/g, ' ').replace(/[*_]/g, '').trim();
       const reference = (s.match(/Reference:\s*(.*?)$/im) || [])[1]?.trim() || '';
-      const authenticityStatus = (s.match(/Authenticity Status:\s*(.*?)$/im) || [])[1]?.trim() || 'Not specified in source';
+      const rawAuthenticityStatus = (s.match(/Authenticity Status:\s*(.*?)$/im) || [])[1]?.trim() || '';
       const warning = (s.match(/Warning:\s*(.*?)$/im) || [])[1]?.trim() || '';
-      const nameParts = reference.split(' ').slice(0, 2).join(' ');
-      const collection = COLLECTION_KEY_MAP[nameParts] || '';
+      const collection = getCollectionFromReference(reference);
+      const authenticityStatus = normalizeAuthenticityStatus(rawAuthenticityStatus, reference, collection);
       return { arabic, english, reference, authenticityStatus, warning, collection };
     }).filter(o => o.arabic || o.english);
     return { extraText: extraText.trim(), hadithSections };
