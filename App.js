@@ -134,10 +134,14 @@ const sanitizeNarratorBioText = (rawBio = '') => {
   const forbiddenPattern = /\b(scholarly remarks|jarh|ta['‘’]?dil|grading|grade|graded|authenticity|trustworthy|reliable|unreliable|weak|thiqah|liar|fabricator|majhul|abandoned|criticism|dispute|disputed)\b/i;
   const allowedLabels = [
     'era/generation',
+    'place/region',
+    'region',
     'teachers',
     'students',
     'collections',
     'known for',
+    'role in hadith transmission',
+    'educational note',
     'educational importance'
   ];
   const sectionValues = new Map();
@@ -173,14 +177,17 @@ const sanitizeNarratorBioText = (rawBio = '') => {
   const knownFor = sectionValues.get('known for') || sectionValues.get('educational importance');
   const safeSections = [
     ['Era/Generation', sectionValues.get('era/generation')],
+    ['Place/Region', sectionValues.get('place/region') || sectionValues.get('region')],
+    ['Known For', knownFor],
+    ['Role in Hadith Transmission', sectionValues.get('role in hadith transmission')],
     ['Teachers', sectionValues.get('teachers')],
     ['Students', sectionValues.get('students')],
     ['Collections', sectionValues.get('collections')],
-    ['Known For', knownFor]
+    ['Educational Note', sectionValues.get('educational note')]
   ].filter(([, value]) => value && !isPlaceholder(value));
 
   if (!safeSections.length) {
-    return '**Known For:** Beginner-level historical information for this narrator is not available in this brief summary.';
+    return '**Educational Note:** Beginner-level historical information for this narrator is not available in this brief summary.';
   }
 
   return safeSections
