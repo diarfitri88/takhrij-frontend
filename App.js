@@ -362,7 +362,7 @@ const closeNarratorBio = () => {
       setCommentaryData({
         commentary: json.commentary || 'No commentary.',
         chain: json.chain || 'No chain.',
-        evaluation: json.evaluation || 'No evaluation.',
+        evaluation: json.evaluation || '',
         arabic: arabic || '',
         english: english || '',
         reference: reference || ''
@@ -544,8 +544,6 @@ const closeNarratorBio = () => {
     <Text style={styles.modalText}>No narrator chain available.</Text>
   )}
 </View>
-                <Text style={styles.sectionHeader}>Evaluation of Hadith</Text>
-                <Text style={styles.modalText}>{commentaryData.evaluation}</Text>
               </ScrollView>
               <Text style={styles.modalDisclaimer}>
                 This AI assisted explanation is for learning and research support only. It may contain mistakes, inaccuracies, or incomplete information. Please verify religious matters with qualified scholars.
@@ -554,7 +552,7 @@ const closeNarratorBio = () => {
                 <TouchableOpacity
                   style={styles.shareCopyButton}
                   onPress={async () => {
-                    const textToCopy = `Hadith Reference: ${commentaryData.reference}\n\nArabic Matn:\n${commentaryData.arabic}\n\nEnglish Matn:\n${commentaryData.english}\n\nCommentary:\n${commentaryData.commentary}\n\nChain of Narrators:\n${commentaryData.chain}\n\nEvaluation:\n${commentaryData.evaluation}`;
+                    const textToCopy = `Hadith Reference: ${commentaryData.reference}\n\nArabic Matn:\n${commentaryData.arabic}\n\nEnglish Matn:\n${commentaryData.english}\n\nCommentary:\n${commentaryData.commentary}\n\nChain of Narrators:\n${commentaryData.chain}`;
                     await Clipboard.setStringAsync(textToCopy);
                     alert('Copied to clipboard!');
                   }}
@@ -565,7 +563,7 @@ const closeNarratorBio = () => {
                 <TouchableOpacity
   style={styles.shareCopyButton}
   onPress={async () => {
-    const textToShare = `Hadith Reference: ${commentaryData.reference}\n\nArabic Matn:\n${commentaryData.arabic}\n\nEnglish Matn:\n${commentaryData.english}\n\nCommentary:\n${commentaryData.commentary}\n\nChain of Narrators:\n${commentaryData.chain}\n\nEvaluation:\n${commentaryData.evaluation}\n\n${APP_DOWNLOAD_LINK}`;
+    const textToShare = `Hadith Reference: ${commentaryData.reference}\n\nArabic Matn:\n${commentaryData.arabic}\n\nEnglish Matn:\n${commentaryData.english}\n\nCommentary:\n${commentaryData.commentary}\n\nChain of Narrators:\n${commentaryData.chain}\n\n${APP_DOWNLOAD_LINK}`;
     await Share.share({ message: textToShare });
   }}
 >
@@ -597,7 +595,7 @@ const closeNarratorBio = () => {
                 <Markdown style={markdownStyles}>{narratorBioText}</Markdown>
               </ScrollView>
               <Text style={styles.modalDisclaimer}>
-                AI generated narrator information may contain errors. Please verify with classical rijāl sources such as Tahdhīb al-Tahdhīb, Taqrīb al-Tahdhīb, Siyar Aʿlām al-Nubalāʾ, and Mīzān al-Iʿtidāl.
+                Narrator summaries are educational and may not be complete scholarly biographies. AI generated narrator information may contain errors. Please verify with classical rijāl sources such as Tahdhīb al-Tahdhīb, Taqrīb al-Tahdhīb, Siyar Aʿlām al-Nubalāʾ, and Mīzān al-Iʿtidāl.
               </Text>
               <TouchableOpacity
                 style={styles.modalCloseButton}
