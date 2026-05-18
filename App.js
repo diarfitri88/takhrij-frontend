@@ -18,6 +18,7 @@ import {
   Linking,
   AppState,
   BackHandler,
+  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/Feather';
@@ -437,6 +438,17 @@ export default function App() {
 const [narratorBioText, setNarratorBioText] = useState('');
 const [selectedNarrator, setSelectedNarrator] = useState('');
 const [returnToCommentaryAfterBio, setReturnToCommentaryAfterBio] = useState(false);
+const cardFadeAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (!learnFlowMode) return;
+    cardFadeAnim.setValue(0.85);
+    Animated.timing(cardFadeAnim, {
+      toValue: 1,
+      duration: 160,
+      useNativeDriver: true,
+    }).start();
+  }, [activeLessonIndex, activeQuizIndex, learnFlowMode, cardFadeAnim]);
 
   useEffect(() => {
     const loadLocalProgress = async () => {
@@ -788,6 +800,8 @@ const closeNarratorBio = () => {
     const quizAnswer = learnProgress.quizAnswers?.[quiz.id];
     const quizTriedCount = Object.keys(learnProgress.quizAnswers || {}).length;
     const quizCorrectCount = Object.values(learnProgress.quizAnswers || {}).filter(answer => answer?.correct).length;
+    const lessonProgress = ((activeLessonIndex + 1) / lessons.length) * 100;
+    const quizProgress = ((activeQuizIndex + 1) / quizzes.length) * 100;
 
     return (
       <>
@@ -802,10 +816,13 @@ const closeNarratorBio = () => {
           </Pressable>
         </View>
 
-        <View style={styles.learnCard}>
+        <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim }]}>
           <View style={styles.learnCardHeader}>
             <Text style={styles.lessonLevel}>Lesson {activeLessonIndex + 1} of {lessons.length}</Text>
             {lessonCompleted && <Text style={styles.completedBadge}>Completed</Text>}
+          </View>
+          <View style={styles.flowProgressTrack}>
+            <View style={[styles.flowProgressFill, { width: `${lessonProgress}%` }]} />
           </View>
           <Text style={styles.lessonTitle}>{lesson.title}</Text>
           <Text style={styles.lessonSummary}>{lesson.summary}</Text>
@@ -835,12 +852,15 @@ const closeNarratorBio = () => {
               <Text style={styles.flowButtonText}>Next</Text>
             </Pressable>
           </View>
-        </View>
+        </Animated.View>
 
-        <View style={styles.learnCard}>
+        <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim }]}>
           <View style={styles.learnCardHeader}>
             <Text style={styles.lessonLevel}>Quiz {activeQuizIndex + 1} of {quizzes.length}</Text>
             <Text style={styles.completedBadge}>{quizCorrectCount}/{quizTriedCount || 0} correct</Text>
+          </View>
+          <View style={styles.flowProgressTrack}>
+            <View style={[styles.flowProgressFill, { width: `${quizProgress}%` }]} />
           </View>
           <Text style={styles.quizTitle}>{quiz.title}</Text>
           <Text style={styles.quizQuestion}>{quiz.question}</Text>
@@ -891,7 +911,7 @@ const closeNarratorBio = () => {
           <Text style={styles.flowSummary}>
             Quizzes tried: {quizTriedCount}/{quizzes.length} • Correct: {quizCorrectCount}/{quizTriedCount || 0}
           </Text>
-        </View>
+        </Animated.View>
       </>
     );
   };
@@ -1909,11 +1929,27 @@ const styles = StyleSheet.create({
     shadowRadius: 14,
     elevation: 2,
   },
+  flowCard: {
+    padding: 18,
+    marginBottom: 16,
+  },
   learnCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
+  },
+  flowProgressTrack: {
+    height: 6,
+    backgroundColor: '#e7eee5',
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  flowProgressFill: {
+    height: '100%',
+    backgroundColor: '#d8b15a',
+    borderRadius: 8,
   },
   lessonLevel: {
     color: '#176b5f',
@@ -1932,21 +1968,21 @@ const styles = StyleSheet.create({
   },
   lessonTitle: {
     color: '#132f35',
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: '800',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   lessonSummary: {
     color: '#2f3d40',
-    fontSize: 15,
-    lineHeight: 23,
-    marginBottom: 10,
+    fontSize: 16,
+    lineHeight: 25,
+    marginBottom: 12,
   },
   lessonPoint: {
     color: '#41504d',
-    fontSize: 14,
-    lineHeight: 22,
-    marginBottom: 4,
+    fontSize: 15,
+    lineHeight: 23,
+    marginBottom: 6,
   },
   nawawiReference: {
     color: '#607174',
@@ -1995,9 +2031,9 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     backgroundColor: '#176b5f',
     borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    marginTop: 12,
+    paddingVertical: 11,
+    paddingHorizontal: 15,
+    marginTop: 14,
   },
   learnActionButtonSecondary: {
     backgroundColor: '#8aa5a0',
@@ -2009,7 +2045,7 @@ const styles = StyleSheet.create({
   flowControls: {
     flexDirection: 'row',
     gap: 10,
-    marginTop: 14,
+    marginTop: 16,
   },
   flowButton: {
     flex: 1,
@@ -2048,19 +2084,19 @@ const styles = StyleSheet.create({
   },
   quizQuestion: {
     color: '#132f35',
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '800',
-    lineHeight: 23,
-    marginBottom: 12,
+    lineHeight: 25,
+    marginBottom: 14,
   },
   quizOption: {
     borderWidth: 1,
     borderColor: '#d7dfd5',
     backgroundColor: '#f7faf7',
     borderRadius: 8,
-    paddingVertical: 11,
-    paddingHorizontal: 12,
-    marginBottom: 8,
+    paddingVertical: 13,
+    paddingHorizontal: 13,
+    marginBottom: 10,
   },
   quizOptionSelected: {
     borderColor: '#d8b15a',
