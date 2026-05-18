@@ -1,0 +1,38 @@
+[
+  {
+    "id": "hadith-basics-1",
+    "title": "Hadith Basics",
+    "question": "What are the two main parts commonly discussed when studying a hadith?",
+    "options": [
+      "Isnad and matn",
+      "Chapter and page",
+      "Author and publisher"
+    ],
+    "answerIndex": 0,
+    "explanation": "The isnad is the chain of narrators, and the matn is the text of the report."
+  },
+  {
+    "id": "source-awareness-1",
+    "title": "Source Awareness",
+    "question": "What should a beginner do before relying on a specific virtue or reward narration?",
+    "options": [
+      "Check the source wording and qualified scholarship",
+      "Assume every popular narration is authentic",
+      "Only search by one vague word"
+    ],
+    "answerIndex": 0,
+    "explanation": "Virtue and reward narrations should be checked carefully with reliable sources and qualified scholars."
+  },
+  {
+    "id": "learning-tool-1",
+    "title": "Using Takhrij Responsibly",
+    "question": "What is this app intended to be?",
+    "options": [
+      "A beginner-friendly educational research aid",
+      "A replacement for scholars",
+      "An automatic hadith grading authority"
+    ],
+    "answerIndex": 0,
+    "explanation": "Takhrij helps with searching and learning, but religious matters should be verified with qualified scholars."
+  }
+]

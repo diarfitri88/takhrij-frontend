@@ -1,0 +1,35 @@
+[
+  {
+    "id": "what-is-hadith",
+    "title": "What Is a Hadith?",
+    "level": "Beginner",
+    "summary": "A hadith is a report about the Prophet Muhammad's words, actions, approvals, or character.",
+    "points": [
+      "Hadith reports help Muslims learn the Sunnah.",
+      "A hadith usually has a chain of narrators and a text.",
+      "Students should learn with care and verify religious matters with qualified scholars."
+    ]
+  },
+  {
+    "id": "isnad-and-matn",
+    "title": "Isnad and Matn",
+    "level": "Beginner",
+    "summary": "The isnad is the chain of narrators. The matn is the wording being narrated.",
+    "points": [
+      "The isnad shows who transmitted the report.",
+      "The matn is the actual statement or event being reported.",
+      "Hadith scholars study both the chain and the text."
+    ]
+  },
+  {
+    "id": "why-sources-matter",
+    "title": "Why Sources Matter",
+    "level": "Beginner",
+    "summary": "Learning where a narration is found helps students study it responsibly.",
+    "points": [
+      "References help users locate a narration in a collection.",
+      "Source wording may include important notes about authenticity.",
+      "Apps can assist study, but they do not replace scholars or formal learning."
+    ]
+  }
+]

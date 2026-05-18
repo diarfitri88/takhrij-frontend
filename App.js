@@ -25,6 +25,10 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import * as Clipboard from 'expo-clipboard';
 import { Share } from 'react-native';
 import Markdown from 'react-native-markdown-display';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const lessons = require('./data/lessons.json');
+const quizzes = require('./data/quizzes.json');
 
 const { width, height } = Dimensions.get('window');
 
@@ -37,6 +41,11 @@ iOS: Coming soon
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://takhrij-backend.onrender.com';
 const DEFAULT_API_TIMEOUT_MS = 30000;
 const NARRATOR_BIO_TIMEOUT_MS = 60000;
+const DAILY_FREE_SEARCH_LIMIT = 5;
+const SEARCH_LIMIT_STORAGE_KEY = 'takhrij.dailySearchCounter';
+const LEARN_PROGRESS_STORAGE_KEY = 'takhrij.learnProgress';
+
+const getTodayKey = () => new Date().toISOString().slice(0, 10);
 
 const parseNarratorNames = (chain = '') => {
   const normalizedChain = String(chain)
@@ -383,9 +392,12 @@ const glossary = [
 
 export default function App() {
   const [showWelcome, setShowWelcome] = useState(true);
+  const [activeSection, setActiveSection] = useState('search');
   const [query, setQuery] = useState('');
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
+  const [dailySearchCounter, setDailySearchCounter] = useState({ date: getTodayKey(), count: 0 });
+  const [learnProgress, setLearnProgress] = useState({ completedLessons: {}, quizAnswers: {} });
   const [loadingCommentary, setLoadingCommentary] = useState(false);
   const [commentaryModalVisible, setCommentaryModalVisible] = useState(false);
   const [aboutVisible, setAboutVisible] = useState(false);
@@ -408,6 +420,77 @@ export default function App() {
 const [narratorBioText, setNarratorBioText] = useState('');
 const [selectedNarrator, setSelectedNarrator] = useState('');
 const [returnToCommentaryAfterBio, setReturnToCommentaryAfterBio] = useState(false);
+
+  useEffect(() => {
+    const loadLocalProgress = async () => {
+      try {
+        const [storedCounter, storedProgress] = await Promise.all([
+          AsyncStorage.getItem(SEARCH_LIMIT_STORAGE_KEY),
+          AsyncStorage.getItem(LEARN_PROGRESS_STORAGE_KEY),
+        ]);
+        const today = getTodayKey();
+        const parsedCounter = storedCounter ? JSON.parse(storedCounter) : null;
+        setDailySearchCounter(
+          parsedCounter?.date === today
+            ? parsedCounter
+            : { date: today, count: 0 }
+        );
+        if (storedProgress) {
+          setLearnProgress(JSON.parse(storedProgress));
+        }
+      } catch {
+        setDailySearchCounter({ date: getTodayKey(), count: 0 });
+      }
+    };
+
+    loadLocalProgress();
+  }, []);
+
+  const saveLearnProgress = async nextProgress => {
+    setLearnProgress(nextProgress);
+    try {
+      await AsyncStorage.setItem(LEARN_PROGRESS_STORAGE_KEY, JSON.stringify(nextProgress));
+    } catch {
+      // Local progress is helpful but should never block the app.
+    }
+  };
+
+  const markLessonComplete = lessonId => {
+    saveLearnProgress({
+      ...learnProgress,
+      completedLessons: {
+        ...learnProgress.completedLessons,
+        [lessonId]: true,
+      },
+    });
+  };
+
+  const answerQuiz = (quizId, selectedIndex, answerIndex) => {
+    saveLearnProgress({
+      ...learnProgress,
+      quizAnswers: {
+        ...learnProgress.quizAnswers,
+        [quizId]: {
+          selectedIndex,
+          correct: selectedIndex === answerIndex,
+        },
+      },
+    });
+  };
+
+  const incrementDailySearchCounter = async () => {
+    const today = getTodayKey();
+    const nextCounter = {
+      date: today,
+      count: dailySearchCounter.date === today ? dailySearchCounter.count + 1 : 1,
+    };
+    setDailySearchCounter(nextCounter);
+    try {
+      await AsyncStorage.setItem(SEARCH_LIMIT_STORAGE_KEY, JSON.stringify(nextCounter));
+    } catch {
+      // Search should continue even if local storage is unavailable.
+    }
+  };
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
@@ -481,6 +564,15 @@ const closeNarratorBio = () => {
     setCommentaryModalVisible(false);
     const q = query.trim();
     if (!q) return;
+    const today = getTodayKey();
+    const searchesUsed = dailySearchCounter.date === today ? dailySearchCounter.count : 0;
+    if (searchesUsed >= DAILY_FREE_SEARCH_LIMIT) {
+      setResult(
+        `---\nEnglish Matn:\nYou have used your ${DAILY_FREE_SEARCH_LIMIT} free searches for today.\n\nCome back tomorrow for more free searches, or continue learning in the Learn section.\n\nReference: No Local Match\nNote: Daily free search limit reached.`
+      );
+      return;
+    }
+    await incrementDailySearchCounter();
     setLoading(true);
     setResult('');
     try {
@@ -611,6 +703,101 @@ const closeNarratorBio = () => {
     narratorBioVisible,
     thankYouVisible,
   ]);
+
+  const premiumFeatures = [
+    '40 Hadith Nawawi memorisation tracker',
+    'Quiz and test mode for each hadith',
+    'Memorisation progress',
+    'Sahih Bukhari and Sahih Muslim pathway',
+    'Narrator and rijal learning cards',
+  ];
+
+  const renderLearnSection = () => (
+    <>
+      <View style={styles.learnHeroCard}>
+        <Text style={styles.learnEyebrow}>Beginner learning path</Text>
+        <Text style={styles.learnTitle}>Learn Hadith Step by Step</Text>
+        <Text style={styles.learnIntro}>
+          Short lessons, simple quizzes, and glossary access to help you build confidence before deeper study.
+        </Text>
+      </View>
+
+      <Text style={styles.learnSectionTitle}>Basic Ulum Hadith Lessons</Text>
+      {lessons.map(lesson => {
+        const completed = !!learnProgress.completedLessons?.[lesson.id];
+        return (
+          <View key={lesson.id} style={styles.learnCard}>
+            <View style={styles.learnCardHeader}>
+              <Text style={styles.lessonLevel}>{lesson.level}</Text>
+              {completed && <Text style={styles.completedBadge}>Completed</Text>}
+            </View>
+            <Text style={styles.lessonTitle}>{lesson.title}</Text>
+            <Text style={styles.lessonSummary}>{lesson.summary}</Text>
+            {lesson.points.map(point => (
+              <Text key={point} style={styles.lessonPoint}>• {point}</Text>
+            ))}
+            <Pressable
+              style={[styles.learnActionButton, completed && styles.learnActionButtonSecondary]}
+              onPress={() => markLessonComplete(lesson.id)}
+            >
+              <Text style={styles.learnActionText}>{completed ? 'Review Complete' : 'Mark Complete'}</Text>
+            </Pressable>
+          </View>
+        );
+      })}
+
+      <Text style={styles.learnSectionTitle}>Basic Quizzes</Text>
+      {quizzes.map(quiz => {
+        const quizAnswer = learnProgress.quizAnswers?.[quiz.id];
+        return (
+          <View key={quiz.id} style={styles.learnCard}>
+            <Text style={styles.quizTitle}>{quiz.title}</Text>
+            <Text style={styles.quizQuestion}>{quiz.question}</Text>
+            {quiz.options.map((option, index) => {
+              const selected = quizAnswer?.selectedIndex === index;
+              const correctOption = quizAnswer && index === quiz.answerIndex;
+              return (
+                <Pressable
+                  key={option}
+                  style={[
+                    styles.quizOption,
+                    selected && styles.quizOptionSelected,
+                    correctOption && styles.quizOptionCorrect,
+                  ]}
+                  onPress={() => answerQuiz(quiz.id, index, quiz.answerIndex)}
+                >
+                  <Text style={styles.quizOptionText}>{option}</Text>
+                </Pressable>
+              );
+            })}
+            {quizAnswer && (
+              <Text style={quizAnswer.correct ? styles.quizFeedbackCorrect : styles.quizFeedbackWrong}>
+                {quizAnswer.correct ? 'Correct. ' : 'Not quite. '}
+                {quiz.explanation}
+              </Text>
+            )}
+          </View>
+        );
+      })}
+
+      <TouchableOpacity style={styles.supportButton} onPress={() => setGlossaryModalVisible(true)}>
+        <Text style={styles.supportButtonText}>Open Glossary</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.learnSectionTitle}>Future Premium Features</Text>
+      {premiumFeatures.map(feature => (
+        <View key={feature} style={styles.lockedCard}>
+          <View style={styles.lockedIcon}>
+            <Icon name="lock" size={18} color="#d8b15a" />
+          </View>
+          <View style={styles.lockedCopy}>
+            <Text style={styles.lockedTitle}>{feature}</Text>
+            <Text style={styles.lockedText}>Premium placeholder. Coming later.</Text>
+          </View>
+        </View>
+      ))}
+    </>
+  );
 
   if (showWelcome) {
     return (
@@ -946,8 +1133,34 @@ const closeNarratorBio = () => {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+            <View style={styles.sectionTabs}>
+              <Pressable
+                style={[styles.sectionTab, activeSection === 'search' && styles.sectionTabActive]}
+                onPress={() => setActiveSection('search')}
+              >
+                <Icon name="search" size={17} color={activeSection === 'search' ? '#fff' : '#176b5f'} />
+                <Text style={[styles.sectionTabText, activeSection === 'search' && styles.sectionTabTextActive]}>
+                  Search
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[styles.sectionTab, activeSection === 'learn' && styles.sectionTabActive]}
+                onPress={() => setActiveSection('learn')}
+              >
+                <Icon name="book-open" size={17} color={activeSection === 'learn' ? '#fff' : '#176b5f'} />
+                <Text style={[styles.sectionTabText, activeSection === 'learn' && styles.sectionTabTextActive]}>
+                  Learn
+                </Text>
+              </Pressable>
+            </View>
+
+            {activeSection === 'search' ? (
+            <>
             <View style={styles.searchCard}>
               <Text style={styles.searchTitle}>Find a Hadith</Text>
+              <Text style={styles.searchLimitText}>
+                Free searches today: {Math.min(dailySearchCounter.date === getTodayKey() ? dailySearchCounter.count : 0, DAILY_FREE_SEARCH_LIMIT)}/{DAILY_FREE_SEARCH_LIMIT}
+              </Text>
               <View style={styles.searchRow}>
                 <View style={styles.searchInputWrapper}>
                   <Icon name="search" size={20} color="#888" style={styles.searchIcon} />
@@ -1056,6 +1269,10 @@ const closeNarratorBio = () => {
     <Text style={styles.supportButtonText}>❤️ Support our work and earn Sadaqah Jariyah</Text>
   </TouchableOpacity>
 )}
+            </>
+            ) : (
+              renderLearnSection()
+            )}
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -1186,6 +1403,35 @@ const styles = StyleSheet.create({
     padding: 18,
     paddingBottom: 42,
   },
+  sectionTabs: {
+    flexDirection: 'row',
+    backgroundColor: '#e7eee5',
+    borderRadius: 8,
+    padding: 4,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#d7dfd5',
+  },
+  sectionTab: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  sectionTabActive: {
+    backgroundColor: '#176b5f',
+  },
+  sectionTabText: {
+    color: '#176b5f',
+    fontWeight: '800',
+    fontSize: 15,
+  },
+  sectionTabTextActive: {
+    color: '#fff',
+  },
   searchCard: {
     backgroundColor: '#fff',
     borderRadius: 8,
@@ -1202,8 +1448,14 @@ const styles = StyleSheet.create({
   searchTitle: {
     fontSize: 20,
     fontWeight: '800',
-    marginBottom: 14,
+    marginBottom: 6,
     color: '#132f35',
+  },
+  searchLimitText: {
+    color: '#607174',
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 14,
   },
   searchRow: {
     flexDirection: 'row',
@@ -1366,6 +1618,189 @@ const styles = StyleSheet.create({
   marginVertical: 12,
   paddingHorizontal: 12
 },
+  learnHeroCard: {
+    backgroundColor: '#132f35',
+    borderRadius: 8,
+    padding: 20,
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: '#24474d',
+  },
+  learnEyebrow: {
+    color: '#d8b15a',
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  learnTitle: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: '800',
+    marginBottom: 10,
+  },
+  learnIntro: {
+    color: '#d9e3df',
+    fontSize: 15,
+    lineHeight: 23,
+  },
+  learnSectionTitle: {
+    color: '#132f35',
+    fontSize: 20,
+    fontWeight: '800',
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  learnCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#e0e7dc',
+    shadowColor: '#102a2e',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 14,
+    elevation: 2,
+  },
+  learnCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  lessonLevel: {
+    color: '#176b5f',
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+  },
+  completedBadge: {
+    color: '#176b5f',
+    backgroundColor: '#edf4e8',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  lessonTitle: {
+    color: '#132f35',
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 8,
+  },
+  lessonSummary: {
+    color: '#2f3d40',
+    fontSize: 15,
+    lineHeight: 23,
+    marginBottom: 10,
+  },
+  lessonPoint: {
+    color: '#41504d',
+    fontSize: 14,
+    lineHeight: 22,
+    marginBottom: 4,
+  },
+  learnActionButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#176b5f',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginTop: 12,
+  },
+  learnActionButtonSecondary: {
+    backgroundColor: '#8aa5a0',
+  },
+  learnActionText: {
+    color: '#fff',
+    fontWeight: '800',
+  },
+  quizTitle: {
+    color: '#176b5f',
+    fontSize: 13,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  quizQuestion: {
+    color: '#132f35',
+    fontSize: 16,
+    fontWeight: '800',
+    lineHeight: 23,
+    marginBottom: 12,
+  },
+  quizOption: {
+    borderWidth: 1,
+    borderColor: '#d7dfd5',
+    backgroundColor: '#f7faf7',
+    borderRadius: 8,
+    paddingVertical: 11,
+    paddingHorizontal: 12,
+    marginBottom: 8,
+  },
+  quizOptionSelected: {
+    borderColor: '#d8b15a',
+    backgroundColor: '#fbf7ea',
+  },
+  quizOptionCorrect: {
+    borderColor: '#176b5f',
+    backgroundColor: '#edf4e8',
+  },
+  quizOptionText: {
+    color: '#2f3d40',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  quizFeedbackCorrect: {
+    color: '#176b5f',
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: '700',
+    marginTop: 6,
+  },
+  quizFeedbackWrong: {
+    color: '#8a3a32',
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: '700',
+    marginTop: 6,
+  },
+  lockedCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e7d9a8',
+    padding: 14,
+    marginBottom: 10,
+  },
+  lockedIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: '#132f35',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  lockedCopy: {
+    flex: 1,
+  },
+  lockedTitle: {
+    color: '#132f35',
+    fontSize: 15,
+    fontWeight: '800',
+    marginBottom: 3,
+  },
+  lockedText: {
+    color: '#607174',
+    fontSize: 13,
+    lineHeight: 19,
+  },
   warning: {
     fontSize: 14,
     lineHeight: 21,
