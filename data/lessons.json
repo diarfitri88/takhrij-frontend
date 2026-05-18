@@ -2,7 +2,7 @@
   {
     "id": "ulum-intro",
     "title": "Welcome to Ulum al-Hadith",
-    "level": "Intro",
+    "level": "Beginner",
     "summary": "Ulum al-Hadith means the sciences used to study hadith carefully.",
     "points": [
       "This path introduces simple terms step by step.",
@@ -101,7 +101,7 @@
   {
     "id": "classification-overview",
     "title": "How Hadith Are Classified",
-    "level": "Basic",
+    "level": "Beginner",
     "summary": "Hadith can be classified by narrator type, number of narrators, and level of acceptance.",
     "points": [
       "Narrator type includes qudsi, marfu, mawquf, and maqtu.",
@@ -112,7 +112,7 @@
   {
     "id": "ahad-categories",
     "title": "Ahad: Mashhur, Aziz, Gharib",
-    "level": "Basic",
+    "level": "Beginner",
     "summary": "Ahad reports do not reach the large transmission level of mutawatir reports.",
     "points": [
       "Mashhur has three or more narrators at each level, without reaching mutawatir.",
@@ -123,7 +123,7 @@
   {
     "id": "mutawatir-basics",
     "title": "Mutawatir Reports",
-    "level": "Basic",
+    "level": "Beginner",
     "summary": "Mutawatir refers to a report transmitted by many narrators in each generation.",
     "points": [
       "The number is so large that agreement upon a lie is normally impossible.",
@@ -134,7 +134,7 @@
   {
     "id": "sahih-and-hasan",
     "title": "Sahih and Hasan",
-    "level": "Basic",
+    "level": "Beginner",
     "summary": "Sahih and hasan are terms scholars use for accepted hadith reports.",
     "points": [
       "Sahih includes a connected chain, upright and precise narrators, and no serious defect.",
@@ -145,7 +145,7 @@
   {
     "id": "daif-basics",
     "title": "Da'if Reports",
-    "level": "Basic",
+    "level": "Beginner",
     "summary": "Da'if means a report is weak because it lacks one or more conditions of acceptance.",
     "points": [
       "Weakness may relate to the chain or narrator information.",
@@ -156,7 +156,7 @@
   {
     "id": "ulum-recap",
     "title": "Recap: Study with Care",
-    "level": "Recap",
+    "level": "Beginner",
     "summary": "You have learned the basic language of hadith study and why careful transmission matters.",
     "points": [
       "Know the report: matn, sanad, and narrator.",

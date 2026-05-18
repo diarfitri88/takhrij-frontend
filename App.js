@@ -906,10 +906,10 @@ const closeNarratorBio = () => {
   const renderLearnSection = () => (
     <>
       <View style={styles.learnHeroCard}>
-        <Text style={styles.learnEyebrow}>Beginner learning path</Text>
-        <Text style={styles.learnTitle}>Learn the Sciences of Hadith Step by Step</Text>
+        <Text style={styles.learnEyebrow}>Lessons 1-10</Text>
+        <Text style={styles.learnTitle}>Beginner Pathway: Introduction to the Sciences of Hadith</Text>
         <Text style={styles.learnIntro}>
-          Short lessons, simple quizzes, and glossary access to help you build confidence before deeper study.
+          Short lessons, simple quizzes, and glossary access to help you build confidence before deeper study. Lessons 11-20 are reserved for future Intermediate or Advanced pathways.
         </Text>
         <Text style={styles.learnProgressSummary}>
           Lessons completed: {Object.keys(learnProgress.completedLessons || {}).length}/{lessons.length} • Quizzes tried: {Object.keys(learnProgress.quizAnswers || {}).length}/{quizzes.length}
