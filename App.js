@@ -34,7 +34,7 @@ Android: https://play.google.com/store/apps/details?id=com.yourapp.takhrij
 iOS: Coming soon
 `;
 
-const API_BASE_URL = 'https://takhrij-backend.onrender.com';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://takhrij-backend.onrender.com';
 const DEFAULT_API_TIMEOUT_MS = 30000;
 const NARRATOR_BIO_TIMEOUT_MS = 60000;
 
