@@ -1,74 +1,122 @@
 [
   {
-    "id": "hadith-basics-1",
+    "id": "hadith-meaning-1",
     "title": "Hadith Basics",
-    "question": "What are the two main parts commonly discussed when studying a hadith?",
+    "question": "What is a hadith?",
     "options": [
-      "Isnad and matn",
-      "Chapter and page",
-      "Author and publisher"
+      "A report attributed to the Prophet",
+      "Only a chapter title",
+      "A modern opinion"
     ],
     "answerIndex": 0,
-    "explanation": "The isnad is the chain of narrators, and the matn is the text of the report."
+    "explanation": "A hadith reports the Prophet's words, actions, approvals, or qualities."
   },
   {
-    "id": "source-awareness-1",
-    "title": "Source Awareness",
-    "question": "What should a beginner do before relying on a specific virtue or reward narration?",
+    "id": "sunnah-meaning-1",
+    "title": "Sunnah Basics",
+    "question": "What does Sunnah commonly refer to?",
     "options": [
-      "Check the source wording and qualified scholarship",
-      "Assume every popular narration is authentic",
-      "Only search by one vague word"
+      "The Prophet's way and example",
+      "Any random custom",
+      "Only book names"
     ],
     "answerIndex": 0,
-    "explanation": "Virtue and reward narrations should be checked carefully with reliable sources and qualified scholars."
+    "explanation": "Sunnah commonly refers to the Prophet's teachings, actions, approvals, and example."
   },
   {
-    "id": "learning-tool-1",
-    "title": "Using Takhrij Responsibly",
-    "question": "What is this app intended to be?",
+    "id": "qudsi-quran-1",
+    "title": "Qur'an and Hadith Qudsi",
+    "question": "Which statement is correct?",
     "options": [
-      "A beginner-friendly educational research aid",
-      "A replacement for scholars",
-      "An automatic hadith grading authority"
+      "The Qur'an is Allah's exact revealed wording",
+      "Hadith Qudsi is recited as Qur'an in prayer",
+      "Hadith Qudsi has 114 surahs"
     ],
     "answerIndex": 0,
-    "explanation": "Takhrij helps with searching and learning, but religious matters should be verified with qualified scholars."
+    "explanation": "The Qur'an is Allah's exact revealed wording and is recited in prayer."
   },
   {
-    "id": "collections-1",
-    "title": "Hadith Collections",
-    "question": "Why is a hadith reference useful?",
+    "id": "matn-sanad-1",
+    "title": "Matn and Sanad",
+    "question": "What is the sanad?",
     "options": [
-      "It helps locate the narration in its source",
-      "It automatically proves every narration is strong",
-      "It replaces the need to study context"
+      "The chain of narrators",
+      "The book cover",
+      "The page number"
     ],
     "answerIndex": 0,
-    "explanation": "References help students find and study narrations in their sources, but they do not replace careful learning."
+    "explanation": "The sanad is the chain of people who transmitted the report."
   },
   {
-    "id": "authenticity-terms-1",
-    "title": "Authenticity Terms",
-    "question": "What should beginners avoid doing with hadith authenticity?",
+    "id": "rawi-1",
+    "title": "Narrator Terms",
+    "question": "What is a rawi?",
     "options": [
-      "Grading narrations independently",
-      "Reading source notes carefully",
-      "Asking qualified teachers"
+      "A hadith narrator",
+      "A prayer direction",
+      "A legal chapter"
     ],
     "answerIndex": 0,
-    "explanation": "Hadith grading is a scholarly task. Beginners should learn the terms and verify with reliable scholarship."
+    "explanation": "A rawi is a narrator mentioned in the chain of transmission."
   },
   {
-    "id": "adab-1",
-    "title": "Learning Etiquette",
-    "question": "What is a responsible way to use a hadith learning app?",
+    "id": "hadith-quran-1",
+    "title": "Hadith and Qur'an",
+    "question": "How can hadith help with Qur'anic guidance?",
     "options": [
-      "Use it as a study aid and verify important matters",
-      "Treat every app explanation as final",
-      "Skip source references"
+      "By explaining and clarifying practice",
+      "By replacing the Qur'an",
+      "By removing the need for teachers"
     ],
     "answerIndex": 0,
-    "explanation": "Apps can support study, but important religious matters should be verified through qualified scholars and reliable sources."
+    "explanation": "Hadith helps explain and apply Qur'anic guidance, while learning should remain careful and guided."
+  },
+  {
+    "id": "sama-1",
+    "title": "Receiving Hadith",
+    "question": "What does al-sama refer to?",
+    "options": [
+      "Hearing directly from a teacher",
+      "Guessing a source",
+      "Reading without checking"
+    ],
+    "answerIndex": 0,
+    "explanation": "Al-sama is a direct hearing method used in classical transmission."
+  },
+  {
+    "id": "ahad-1",
+    "title": "Ahad Categories",
+    "question": "Which group belongs under ahad reports?",
+    "options": [
+      "Mashhur, aziz, and gharib",
+      "Prayer, fasting, and zakat",
+      "Makkah, Madinah, and Ta'if"
+    ],
+    "answerIndex": 0,
+    "explanation": "Ahad reports are commonly discussed through categories such as mashhur, aziz, and gharib."
+  },
+  {
+    "id": "mutawatir-1",
+    "title": "Mutawatir",
+    "question": "What is a basic idea of mutawatir?",
+    "options": [
+      "Many narrators transmit it across generations",
+      "Only one person reports it",
+      "It has no chain"
+    ],
+    "answerIndex": 0,
+    "explanation": "Mutawatir reports are transmitted by many narrators at each level."
+  },
+  {
+    "id": "daif-1",
+    "title": "Da'if Reports",
+    "question": "What should be made clear when a report is weak?",
+    "options": [
+      "That it is da'if",
+      "That it is automatically accepted",
+      "That no source is needed"
+    ],
+    "answerIndex": 0,
+    "explanation": "If a report is weak, readers should be told clearly and should not rely on it casually."
   }
 ]
