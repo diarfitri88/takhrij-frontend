@@ -34,5 +34,41 @@
     ],
     "answerIndex": 0,
     "explanation": "Takhrij helps with searching and learning, but religious matters should be verified with qualified scholars."
+  },
+  {
+    "id": "collections-1",
+    "title": "Hadith Collections",
+    "question": "Why is a hadith reference useful?",
+    "options": [
+      "It helps locate the narration in its source",
+      "It automatically proves every narration is strong",
+      "It replaces the need to study context"
+    ],
+    "answerIndex": 0,
+    "explanation": "References help students find and study narrations in their sources, but they do not replace careful learning."
+  },
+  {
+    "id": "authenticity-terms-1",
+    "title": "Authenticity Terms",
+    "question": "What should beginners avoid doing with hadith authenticity?",
+    "options": [
+      "Grading narrations independently",
+      "Reading source notes carefully",
+      "Asking qualified teachers"
+    ],
+    "answerIndex": 0,
+    "explanation": "Hadith grading is a scholarly task. Beginners should learn the terms and verify with reliable scholarship."
+  },
+  {
+    "id": "adab-1",
+    "title": "Learning Etiquette",
+    "question": "What is a responsible way to use a hadith learning app?",
+    "options": [
+      "Use it as a study aid and verify important matters",
+      "Treat every app explanation as final",
+      "Skip source references"
+    ],
+    "answerIndex": 0,
+    "explanation": "Apps can support study, but important religious matters should be verified through qualified scholars and reliable sources."
   }
 ]

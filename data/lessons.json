@@ -31,5 +31,38 @@
       "Source wording may include important notes about authenticity.",
       "Apps can assist study, but they do not replace scholars or formal learning."
     ]
+  },
+  {
+    "id": "hadith-collections",
+    "title": "Hadith Collections",
+    "level": "Beginner",
+    "summary": "Hadith collections are books where scholars gathered narrations with references and chapters.",
+    "points": [
+      "Different collections may arrange narrations by topic, legal chapter, or narrator.",
+      "A reference helps students find the narration in its source.",
+      "Collection names alone do not replace careful study of the report and its context."
+    ]
+  },
+  {
+    "id": "authenticity-terms",
+    "title": "Basic Authenticity Terms",
+    "level": "Beginner",
+    "summary": "Students often see terms such as Sahih, Hasan, and Da'if when reading about hadith.",
+    "points": [
+      "These terms are used by scholars when discussing the strength of reports.",
+      "Beginners should avoid grading narrations independently.",
+      "When a source includes a grading note, read it carefully and ask qualified teachers when unsure."
+    ]
+  },
+  {
+    "id": "learning-etiquette",
+    "title": "Learning with Adab",
+    "level": "Beginner",
+    "summary": "Hadith study should be approached with humility, care, and respect for scholarship.",
+    "points": [
+      "Use apps as study aids, not as final religious authorities.",
+      "Write down questions to ask qualified scholars or teachers.",
+      "Move slowly: learn terms, sources, and context before making conclusions."
+    ]
   }
 ]

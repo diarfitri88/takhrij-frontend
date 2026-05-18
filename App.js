@@ -44,6 +44,14 @@ const NARRATOR_BIO_TIMEOUT_MS = 60000;
 const DAILY_FREE_SEARCH_LIMIT = 5;
 const SEARCH_LIMIT_STORAGE_KEY = 'takhrij.dailySearchCounter';
 const LEARN_PROGRESS_STORAGE_KEY = 'takhrij.learnProgress';
+const NAWAWI_HADITH_1 = {
+  id: 'nawawi-hadith-1',
+  title: 'Hadith 1: Intentions',
+  reference: 'Sahih al-Bukhari 1; Sahih Muslim 1907',
+  arabic: 'إنما الأعمال بالنيات',
+  english: 'Actions are only by intentions.',
+  stages: ['Read', 'Understand', 'Memorise', 'Review'],
+};
 
 const getTodayKey = () => {
   const now = new Date();
@@ -484,6 +492,20 @@ const [returnToCommentaryAfterBio, setReturnToCommentaryAfterBio] = useState(fal
     });
   };
 
+  const toggleMemorisationStage = stage => {
+    const currentTracker = learnProgress.memorisation?.[NAWAWI_HADITH_1.id] || {};
+    saveLearnProgress({
+      ...learnProgress,
+      memorisation: {
+        ...learnProgress.memorisation,
+        [NAWAWI_HADITH_1.id]: {
+          ...currentTracker,
+          [stage]: !currentTracker[stage],
+        },
+      },
+    });
+  };
+
   const incrementDailySearchCounter = async () => {
     const today = getTodayKey();
     const nextCounter = {
@@ -711,12 +733,50 @@ const closeNarratorBio = () => {
   ]);
 
   const premiumFeatures = [
-    '40 Hadith Nawawi memorisation tracker',
+    'Full 40 Hadith Nawawi pathway',
     'Quiz and test mode for each hadith',
-    'Memorisation progress',
+    'Advanced memorisation progress',
     'Sahih Bukhari and Sahih Muslim pathway',
     'Narrator and rijal learning cards',
   ];
+
+  const renderNawawiPrototype = () => {
+    const tracker = learnProgress.memorisation?.[NAWAWI_HADITH_1.id] || {};
+    const completedStages = NAWAWI_HADITH_1.stages.filter(stage => tracker[stage]).length;
+
+    return (
+      <View style={styles.learnCard}>
+        <View style={styles.learnCardHeader}>
+          <Text style={styles.lessonLevel}>Preview</Text>
+          <Text style={styles.completedBadge}>{completedStages}/{NAWAWI_HADITH_1.stages.length}</Text>
+        </View>
+        <Text style={styles.lessonTitle}>{NAWAWI_HADITH_1.title}</Text>
+        <Text style={styles.nawawiReference}>{NAWAWI_HADITH_1.reference}</Text>
+        <Text style={styles.nawawiArabic}>{NAWAWI_HADITH_1.arabic}</Text>
+        <Text style={styles.lessonSummary}>{NAWAWI_HADITH_1.english}</Text>
+        <Text style={styles.lessonPoint}>
+          Prototype tracker only. The full 40 Hadith Nawawi pathway is planned for a future release.
+        </Text>
+        <View style={styles.memorisationGrid}>
+          {NAWAWI_HADITH_1.stages.map(stage => {
+            const done = !!tracker[stage];
+            return (
+              <Pressable
+                key={stage}
+                style={[styles.memorisationStep, done && styles.memorisationStepDone]}
+                onPress={() => toggleMemorisationStage(stage)}
+              >
+                <Icon name={done ? 'check-circle' : 'circle'} size={16} color={done ? '#fff' : '#176b5f'} />
+                <Text style={[styles.memorisationStepText, done && styles.memorisationStepTextDone]}>
+                  {stage}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+    );
+  };
 
   const renderLearnSection = () => (
     <>
@@ -795,6 +855,9 @@ const closeNarratorBio = () => {
       <TouchableOpacity style={styles.supportButton} onPress={() => setGlossaryModalVisible(true)}>
         <Text style={styles.supportButtonText}>Open Glossary</Text>
       </TouchableOpacity>
+
+      <Text style={styles.learnSectionTitle}>40 Hadith Nawawi Preview</Text>
+      {renderNawawiPrototype()}
 
       <Text style={styles.learnSectionTitle}>Future Premium Features</Text>
       <Text style={styles.premiumIntro}>Premium learning paths are planned for a future release.</Text>
@@ -1730,6 +1793,49 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 22,
     marginBottom: 4,
+  },
+  nawawiReference: {
+    color: '#607174',
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 10,
+  },
+  nawawiArabic: {
+    color: '#132f35',
+    fontSize: 22,
+    lineHeight: 34,
+    fontWeight: '800',
+    textAlign: 'right',
+    marginBottom: 10,
+  },
+  memorisationGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 12,
+  },
+  memorisationStep: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#d7dfd5',
+    backgroundColor: '#f7faf7',
+    borderRadius: 8,
+    paddingVertical: 9,
+    paddingHorizontal: 11,
+  },
+  memorisationStepDone: {
+    backgroundColor: '#176b5f',
+    borderColor: '#176b5f',
+  },
+  memorisationStepText: {
+    color: '#176b5f',
+    fontSize: 13,
+    fontWeight: '800',
+    marginLeft: 6,
+  },
+  memorisationStepTextDone: {
+    color: '#fff',
   },
   learnActionButton: {
     alignSelf: 'flex-start',
