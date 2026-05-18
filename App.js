@@ -782,7 +782,7 @@ const closeNarratorBio = () => {
     <>
       <View style={styles.learnHeroCard}>
         <Text style={styles.learnEyebrow}>Beginner learning path</Text>
-        <Text style={styles.learnTitle}>Learn Hadith Step by Step</Text>
+        <Text style={styles.learnTitle}>Learn the Sciences of Hadith Step by Step</Text>
         <Text style={styles.learnIntro}>
           Short lessons, simple quizzes, and glossary access to help you build confidence before deeper study.
         </Text>
