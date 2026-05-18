@@ -413,7 +413,6 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [dailySearchCounter, setDailySearchCounter] = useState({ date: getTodayKey(), count: 0 });
   const [learnProgress, setLearnProgress] = useState({ completedLessons: {}, quizAnswers: {} });
-  const [learnFlowMode, setLearnFlowMode] = useState(false);
   const [activeLessonIndex, setActiveLessonIndex] = useState(0);
   const [activeQuizIndex, setActiveQuizIndex] = useState(0);
   const [loadingCommentary, setLoadingCommentary] = useState(false);
@@ -441,14 +440,13 @@ const [returnToCommentaryAfterBio, setReturnToCommentaryAfterBio] = useState(fal
 const cardFadeAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    if (!learnFlowMode) return;
     cardFadeAnim.setValue(0.85);
     Animated.timing(cardFadeAnim, {
       toValue: 1,
       duration: 160,
       useNativeDriver: true,
     }).start();
-  }, [activeLessonIndex, activeQuizIndex, learnFlowMode, cardFadeAnim]);
+  }, [activeLessonIndex, activeQuizIndex, cardFadeAnim]);
 
   useEffect(() => {
     const loadLocalProgress = async () => {
@@ -805,17 +803,6 @@ const closeNarratorBio = () => {
 
     return (
       <>
-        <View style={styles.learnHeroCard}>
-          <Text style={styles.learnEyebrow}>Card learning prototype</Text>
-          <Text style={styles.learnTitle}>One Step at a Time</Text>
-          <Text style={styles.learnIntro}>
-            Move through one lesson and one quiz question at a time. This prototype reuses the same local progress.
-          </Text>
-          <Pressable style={styles.exitFlowButton} onPress={() => setLearnFlowMode(false)}>
-            <Text style={styles.exitFlowText}>Exit Card Mode</Text>
-          </Pressable>
-        </View>
-
         <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim }]}>
           <View style={styles.learnCardHeader}>
             <Text style={styles.lessonLevel}>Lesson {activeLessonIndex + 1} of {lessons.length}</Text>
@@ -918,10 +905,6 @@ const closeNarratorBio = () => {
 
   const renderLearnSection = () => (
     <>
-      {learnFlowMode ? (
-        renderCardLearningFlow()
-      ) : (
-      <>
       <View style={styles.learnHeroCard}>
         <Text style={styles.learnEyebrow}>Beginner learning path</Text>
         <Text style={styles.learnTitle}>Learn the Sciences of Hadith Step by Step</Text>
@@ -931,71 +914,9 @@ const closeNarratorBio = () => {
         <Text style={styles.learnProgressSummary}>
           Lessons completed: {Object.keys(learnProgress.completedLessons || {}).length}/{lessons.length} • Quizzes tried: {Object.keys(learnProgress.quizAnswers || {}).length}/{quizzes.length}
         </Text>
-        <Pressable style={styles.cardModeButton} onPress={() => setLearnFlowMode(true)}>
-          <Text style={styles.cardModeButtonText}>Try Card Learning Mode</Text>
-        </Pressable>
       </View>
 
-      <Text style={styles.learnSectionTitle}>Basic Ulum Hadith Lessons</Text>
-      {lessons.map(lesson => {
-        const completed = !!learnProgress.completedLessons?.[lesson.id];
-        return (
-          <View key={lesson.id} style={styles.learnCard}>
-            <View style={styles.learnCardHeader}>
-              <Text style={styles.lessonLevel}>{lesson.level}</Text>
-              {completed && <Text style={styles.completedBadge}>Completed</Text>}
-            </View>
-            <Text style={styles.lessonTitle}>{lesson.title}</Text>
-            <Text style={styles.lessonSummary}>{lesson.summary}</Text>
-            {lesson.points.map(point => (
-              <Text key={point} style={styles.lessonPoint}>• {point}</Text>
-            ))}
-            <Pressable
-              style={[styles.learnActionButton, completed && styles.learnActionButtonSecondary]}
-              onPress={() => markLessonComplete(lesson.id)}
-              disabled={completed}
-            >
-              <Text style={styles.learnActionText}>{completed ? 'Completed' : 'Mark Complete'}</Text>
-            </Pressable>
-          </View>
-        );
-      })}
-
-      <Text style={styles.learnSectionTitle}>Basic Quizzes</Text>
-      {quizzes.map(quiz => {
-        const quizAnswer = learnProgress.quizAnswers?.[quiz.id];
-        return (
-          <View key={quiz.id} style={styles.learnCard}>
-            <Text style={styles.quizTitle}>{quiz.title}</Text>
-            <Text style={styles.quizQuestion}>{quiz.question}</Text>
-            {quiz.options.map((option, index) => {
-              const selected = quizAnswer?.selectedIndex === index;
-              const correctOption = quizAnswer && index === quiz.answerIndex;
-              const selectedWrong = selected && quizAnswer && !quizAnswer.correct;
-              return (
-                <Pressable
-                  key={option}
-                  style={[
-                    styles.quizOption,
-                    selected && styles.quizOptionSelected,
-                    selectedWrong && styles.quizOptionWrong,
-                    correctOption && styles.quizOptionCorrect,
-                  ]}
-                  onPress={() => answerQuiz(quiz.id, index, quiz.answerIndex)}
-                >
-                  <Text style={styles.quizOptionText}>{option}</Text>
-                </Pressable>
-              );
-            })}
-            {quizAnswer && (
-              <Text style={quizAnswer.correct ? styles.quizFeedbackCorrect : styles.quizFeedbackWrong}>
-                {quizAnswer.correct ? 'Correct. ' : 'Not quite. '}
-                {quiz.explanation}
-              </Text>
-            )}
-          </View>
-        );
-      })}
+      {renderCardLearningFlow()}
 
       <TouchableOpacity style={styles.supportButton} onPress={() => setGlossaryModalVisible(true)}>
         <Text style={styles.supportButtonText}>Open Glossary</Text>
@@ -1017,8 +938,6 @@ const closeNarratorBio = () => {
           </View>
         </View>
       ))}
-      </>
-      )}
     </>
   );
 
@@ -1881,33 +1800,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     marginTop: 14,
-  },
-  cardModeButton: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#d8b15a',
-    borderRadius: 8,
-    paddingVertical: 11,
-    paddingHorizontal: 14,
-    marginTop: 16,
-  },
-  cardModeButtonText: {
-    color: '#132f35',
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  exitFlowButton: {
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#d8b15a',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    marginTop: 16,
-  },
-  exitFlowText: {
-    color: '#f7f1df',
-    fontSize: 14,
-    fontWeight: '800',
   },
   learnSectionTitle: {
     color: '#132f35',
