@@ -45,6 +45,11 @@ const NARRATOR_BIO_TIMEOUT_MS = 60000;
 const DAILY_FREE_SEARCH_LIMIT = 5;
 const SEARCH_LIMIT_STORAGE_KEY = 'takhrij.dailySearchCounter';
 const LEARN_PROGRESS_STORAGE_KEY = 'takhrij.learnProgress';
+const clampLearningIndex = (value, length) => {
+  const index = Number(value);
+  if (!Number.isFinite(index)) return 0;
+  return Math.min(Math.max(Math.floor(index), 0), Math.max(length - 1, 0));
+};
 const NAWAWI_HADITH_1 = {
   id: 'nawawi-hadith-1',
   title: 'Hadith 1: Intentions',
@@ -463,7 +468,10 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
             : { date: today, count: 0 }
         );
         if (storedProgress) {
-          setLearnProgress(JSON.parse(storedProgress));
+          const parsedProgress = JSON.parse(storedProgress);
+          setLearnProgress(parsedProgress);
+          setActiveLessonIndex(clampLearningIndex(parsedProgress.currentLessonIndex, lessons.length));
+          setActiveQuizIndex(clampLearningIndex(parsedProgress.currentQuizIndex, quizzes.length));
         }
       } catch {
         setDailySearchCounter({ date: getTodayKey(), count: 0 });
@@ -482,9 +490,19 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
     }
   };
 
+  const saveLearningPosition = (nextLessonIndex, nextQuizIndex) => {
+    saveLearnProgress({
+      ...learnProgress,
+      currentLessonIndex: clampLearningIndex(nextLessonIndex, lessons.length),
+      currentQuizIndex: clampLearningIndex(nextQuizIndex, quizzes.length),
+    });
+  };
+
   const markLessonComplete = lessonId => {
     saveLearnProgress({
       ...learnProgress,
+      currentLessonIndex: activeLessonIndex,
+      currentQuizIndex: activeQuizIndex,
       completedLessons: {
         ...learnProgress.completedLessons,
         [lessonId]: true,
@@ -495,6 +513,8 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
   const answerQuiz = (quizId, selectedIndex, answerIndex) => {
     saveLearnProgress({
       ...learnProgress,
+      currentLessonIndex: activeLessonIndex,
+      currentQuizIndex: activeQuizIndex,
       quizAnswers: {
         ...learnProgress.quizAnswers,
         [quizId]: {
@@ -509,6 +529,8 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
     const currentTracker = learnProgress.memorisation?.[NAWAWI_HADITH_1.id] || {};
     saveLearnProgress({
       ...learnProgress,
+      currentLessonIndex: activeLessonIndex,
+      currentQuizIndex: activeQuizIndex,
       memorisation: {
         ...learnProgress.memorisation,
         [NAWAWI_HADITH_1.id]: {
@@ -827,14 +849,22 @@ const closeNarratorBio = () => {
             <Pressable
               style={[styles.flowButton, activeLessonIndex === 0 && styles.flowButtonDisabled]}
               disabled={activeLessonIndex === 0}
-              onPress={() => setActiveLessonIndex(index => Math.max(0, index - 1))}
+              onPress={() => {
+                const nextIndex = Math.max(0, activeLessonIndex - 1);
+                setActiveLessonIndex(nextIndex);
+                saveLearningPosition(nextIndex, activeQuizIndex);
+              }}
             >
               <Text style={styles.flowButtonText}>Previous</Text>
             </Pressable>
             <Pressable
               style={[styles.flowButton, activeLessonIndex === lessons.length - 1 && styles.flowButtonDisabled]}
               disabled={activeLessonIndex === lessons.length - 1}
-              onPress={() => setActiveLessonIndex(index => Math.min(lessons.length - 1, index + 1))}
+              onPress={() => {
+                const nextIndex = Math.min(lessons.length - 1, activeLessonIndex + 1);
+                setActiveLessonIndex(nextIndex);
+                saveLearningPosition(nextIndex, activeQuizIndex);
+              }}
             >
               <Text style={styles.flowButtonText}>Next</Text>
             </Pressable>
@@ -883,14 +913,22 @@ const closeNarratorBio = () => {
             <Pressable
               style={[styles.flowButton, activeQuizIndex === 0 && styles.flowButtonDisabled]}
               disabled={activeQuizIndex === 0}
-              onPress={() => setActiveQuizIndex(index => Math.max(0, index - 1))}
+              onPress={() => {
+                const nextIndex = Math.max(0, activeQuizIndex - 1);
+                setActiveQuizIndex(nextIndex);
+                saveLearningPosition(activeLessonIndex, nextIndex);
+              }}
             >
               <Text style={styles.flowButtonText}>Previous</Text>
             </Pressable>
             <Pressable
               style={[styles.flowButton, (!quizAnswer || activeQuizIndex === quizzes.length - 1) && styles.flowButtonDisabled]}
               disabled={!quizAnswer || activeQuizIndex === quizzes.length - 1}
-              onPress={() => setActiveQuizIndex(index => Math.min(quizzes.length - 1, index + 1))}
+              onPress={() => {
+                const nextIndex = Math.min(quizzes.length - 1, activeQuizIndex + 1);
+                setActiveQuizIndex(nextIndex);
+                saveLearningPosition(activeLessonIndex, nextIndex);
+              }}
             >
               <Text style={styles.flowButtonText}>Next</Text>
             </Pressable>
@@ -903,7 +941,12 @@ const closeNarratorBio = () => {
     );
   };
 
-  const renderLearnSection = () => (
+  const renderLearnSection = () => {
+    const completedLessonCount = Object.keys(learnProgress.completedLessons || {}).length;
+    const quizTriedCount = Object.keys(learnProgress.quizAnswers || {}).length;
+    const pathwayProgress = Math.round(((activeLessonIndex + 1) / lessons.length) * 100);
+
+    return (
     <>
       <View style={styles.learnHeroCard}>
         <Text style={styles.learnEyebrow}>Lessons 1-10</Text>
@@ -911,8 +954,13 @@ const closeNarratorBio = () => {
         <Text style={styles.learnIntro}>
           Short lessons, simple quizzes, and glossary access to help you build confidence before deeper study. Lessons 11-20 are reserved for future Intermediate or Advanced pathways.
         </Text>
+        <View style={styles.continueLearningCard}>
+          <Text style={styles.continueLearningLabel}>Continue Learning</Text>
+          <Text style={styles.continueLearningText}>Current lesson: {activeLessonIndex + 1} of {lessons.length}</Text>
+          <Text style={styles.continueLearningMeta}>Beginner Pathway progress: {pathwayProgress}%</Text>
+        </View>
         <Text style={styles.learnProgressSummary}>
-          Lessons completed: {Object.keys(learnProgress.completedLessons || {}).length}/{lessons.length} • Quizzes tried: {Object.keys(learnProgress.quizAnswers || {}).length}/{quizzes.length}
+          Lessons completed: {completedLessonCount}/{lessons.length} • Quizzes tried: {quizTriedCount}/{quizzes.length}
         </Text>
       </View>
 
@@ -935,7 +983,8 @@ const closeNarratorBio = () => {
         </View>
       ))}
     </>
-  );
+    );
+  };
 
   if (showWelcome) {
     return (
@@ -1790,6 +1839,32 @@ const styles = StyleSheet.create({
     color: '#d9e3df',
     fontSize: 15,
     lineHeight: 23,
+  },
+  continueLearningCard: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(216,177,90,0.35)',
+    padding: 12,
+    marginTop: 16,
+  },
+  continueLearningLabel: {
+    color: '#d8b15a',
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    marginBottom: 6,
+  },
+  continueLearningText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  continueLearningMeta: {
+    color: '#d9e3df',
+    fontSize: 13,
+    lineHeight: 19,
   },
   learnProgressSummary: {
     color: '#f7f1df',
