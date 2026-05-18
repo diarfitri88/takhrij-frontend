@@ -45,7 +45,13 @@ const DAILY_FREE_SEARCH_LIMIT = 5;
 const SEARCH_LIMIT_STORAGE_KEY = 'takhrij.dailySearchCounter';
 const LEARN_PROGRESS_STORAGE_KEY = 'takhrij.learnProgress';
 
-const getTodayKey = () => new Date().toISOString().slice(0, 10);
+const getTodayKey = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 const parseNarratorNames = (chain = '') => {
   const normalizedChain = String(chain)
@@ -572,12 +578,12 @@ const closeNarratorBio = () => {
       );
       return;
     }
-    await incrementDailySearchCounter();
     setLoading(true);
     setResult('');
     try {
       const data = await postJson('/search-hadith', { query: q });
       setResult(data.result || '');
+      await incrementDailySearchCounter();
     } catch {
       setResult('Error connecting to server.');
     } finally {
@@ -720,6 +726,9 @@ const closeNarratorBio = () => {
         <Text style={styles.learnIntro}>
           Short lessons, simple quizzes, and glossary access to help you build confidence before deeper study.
         </Text>
+        <Text style={styles.learnProgressSummary}>
+          Lessons completed: {Object.keys(learnProgress.completedLessons || {}).length}/{lessons.length} • Quizzes tried: {Object.keys(learnProgress.quizAnswers || {}).length}/{quizzes.length}
+        </Text>
       </View>
 
       <Text style={styles.learnSectionTitle}>Basic Ulum Hadith Lessons</Text>
@@ -739,8 +748,9 @@ const closeNarratorBio = () => {
             <Pressable
               style={[styles.learnActionButton, completed && styles.learnActionButtonSecondary]}
               onPress={() => markLessonComplete(lesson.id)}
+              disabled={completed}
             >
-              <Text style={styles.learnActionText}>{completed ? 'Review Complete' : 'Mark Complete'}</Text>
+              <Text style={styles.learnActionText}>{completed ? 'Completed' : 'Mark Complete'}</Text>
             </Pressable>
           </View>
         );
@@ -756,12 +766,14 @@ const closeNarratorBio = () => {
             {quiz.options.map((option, index) => {
               const selected = quizAnswer?.selectedIndex === index;
               const correctOption = quizAnswer && index === quiz.answerIndex;
+              const selectedWrong = selected && quizAnswer && !quizAnswer.correct;
               return (
                 <Pressable
                   key={option}
                   style={[
                     styles.quizOption,
                     selected && styles.quizOptionSelected,
+                    selectedWrong && styles.quizOptionWrong,
                     correctOption && styles.quizOptionCorrect,
                   ]}
                   onPress={() => answerQuiz(quiz.id, index, quiz.answerIndex)}
@@ -785,6 +797,7 @@ const closeNarratorBio = () => {
       </TouchableOpacity>
 
       <Text style={styles.learnSectionTitle}>Future Premium Features</Text>
+      <Text style={styles.premiumIntro}>Premium learning paths are planned for a future release.</Text>
       {premiumFeatures.map(feature => (
         <View key={feature} style={styles.lockedCard}>
           <View style={styles.lockedIcon}>
@@ -792,7 +805,7 @@ const closeNarratorBio = () => {
           </View>
           <View style={styles.lockedCopy}>
             <Text style={styles.lockedTitle}>{feature}</Text>
-            <Text style={styles.lockedText}>Premium placeholder. Coming later.</Text>
+            <Text style={styles.lockedText}>Locked for future release.</Text>
           </View>
         </View>
       ))}
@@ -1161,6 +1174,9 @@ const closeNarratorBio = () => {
               <Text style={styles.searchLimitText}>
                 Free searches today: {Math.min(dailySearchCounter.date === getTodayKey() ? dailySearchCounter.count : 0, DAILY_FREE_SEARCH_LIMIT)}/{DAILY_FREE_SEARCH_LIMIT}
               </Text>
+              <Text style={styles.searchLimitHelp}>
+                Free searches reset daily at midnight. Learn, quizzes, and glossary remain free.
+              </Text>
               <View style={styles.searchRow}>
                 <View style={styles.searchInputWrapper}>
                   <Icon name="search" size={20} color="#888" style={styles.searchIcon} />
@@ -1455,6 +1471,12 @@ const styles = StyleSheet.create({
     color: '#607174',
     fontSize: 13,
     fontWeight: '700',
+    marginBottom: 4,
+  },
+  searchLimitHelp: {
+    color: '#607174',
+    fontSize: 12,
+    lineHeight: 18,
     marginBottom: 14,
   },
   searchRow: {
@@ -1644,6 +1666,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 23,
   },
+  learnProgressSummary: {
+    color: '#f7f1df',
+    fontSize: 13,
+    fontWeight: '800',
+    marginTop: 14,
+  },
   learnSectionTitle: {
     color: '#132f35',
     fontSize: 20,
@@ -1745,6 +1773,10 @@ const styles = StyleSheet.create({
     borderColor: '#d8b15a',
     backgroundColor: '#fbf7ea',
   },
+  quizOptionWrong: {
+    borderColor: '#b85c4d',
+    backgroundColor: '#fff1ef',
+  },
   quizOptionCorrect: {
     borderColor: '#176b5f',
     backgroundColor: '#edf4e8',
@@ -1777,6 +1809,12 @@ const styles = StyleSheet.create({
     borderColor: '#e7d9a8',
     padding: 14,
     marginBottom: 10,
+  },
+  premiumIntro: {
+    color: '#607174',
+    fontSize: 14,
+    lineHeight: 21,
+    marginBottom: 12,
   },
   lockedIcon: {
     width: 36,
