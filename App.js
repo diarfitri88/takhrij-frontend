@@ -918,10 +918,6 @@ const closeNarratorBio = () => {
 
       {renderCardLearningFlow()}
 
-      <TouchableOpacity style={styles.supportButton} onPress={() => setGlossaryModalVisible(true)}>
-        <Text style={styles.supportButtonText}>Open Glossary</Text>
-      </TouchableOpacity>
-
       <Text style={styles.learnSectionTitle}>40 Hadith Nawawi Preview</Text>
       {renderNawawiPrototype()}
 
