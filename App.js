@@ -34,7 +34,7 @@ Android: https://play.google.com/store/apps/details?id=com.yourapp.takhrij
 iOS: Coming soon
 `;
 
-const API_BASE_URL = 'https://takhrij-backend.onrender.com';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://takhrij-backend.onrender.com';
 const DEFAULT_API_TIMEOUT_MS = 30000;
 const NARRATOR_BIO_TIMEOUT_MS = 60000;
 
@@ -45,16 +45,26 @@ const parseNarratorNames = (chain = '') => {
     .replace(/\s+/g, ' ')
     .trim();
 
-  if (!normalizedChain || /^no chain\.?$/i.test(normalizedChain)) {
+  if (!normalizedChain || /^(?:no chain|chain not available)\.?$/i.test(normalizedChain)) {
     return [];
   }
 
+  if (!/(?:â†’|->|â‡’|ØŒ|,|;)/.test(normalizedChain)) {
+    return [];
+  }
+
+  const sentencePattern = /[.!?]|\b(?:hadith|narration|report|meaning|lesson|benefit|reader|practice|authenticity|source|reward|virtue|specific|claim|commentary)\b/i;
   const names = normalizedChain
     .split(/\s*(?:→|->|⇒|،|,|;|\n)\s*/)
     .map(name => name.replace(/^\d+\.\s*/, '').trim())
-    .filter(name => name.length > 1 && !/^unknown|unclear|not specified$/i.test(name));
+    .filter(name =>
+      name.length > 1 &&
+      name.length <= 55 &&
+      !sentencePattern.test(name) &&
+      !/^unknown|unclear|not specified$/i.test(name)
+    );
 
-  return names.length ? names : [normalizedChain];
+  return names.length >= 2 ? names : [];
 };
 
 const postJson = async (path, payload, timeoutMs = DEFAULT_API_TIMEOUT_MS) => {
@@ -65,8 +75,16 @@ const postJson = async (path, payload, timeoutMs = DEFAULT_API_TIMEOUT_MS) => {
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
+      },
+      cache: 'no-store',
+      body: JSON.stringify({
+        ...payload,
+        _clientCacheBust: Date.now(),
+      }),
       signal: controller.signal,
     });
   } catch (error) {
@@ -103,6 +121,125 @@ const COLLECTION_KEY_MAP = {
   'Sunan Abu Dawood': 'abudawud',
   'Sunan ad-Darimi': 'darimi',
 };
+
+const getCollectionFromReference = (reference = '') => {
+  const normalized = String(reference).toLowerCase();
+  if (normalized.includes('bukhari')) return 'bukhari';
+  if (normalized.includes('muslim')) return 'muslim';
+
+  const nameParts = String(reference).split(' ').slice(0, 2).join(' ');
+  return COLLECTION_KEY_MAP[nameParts] || '';
+};
+
+const normalizeAuthenticityStatus = (status, reference = '', collection = '') => {
+  const collectionKey = collection || getCollectionFromReference(reference);
+  if (collectionKey === 'bukhari' || collectionKey === 'muslim') {
+    return 'Sahih by collection';
+  }
+
+  return status || 'Not specified in source';
+};
+
+const isSearchSuggestionReference = reference =>
+  ['Search Suggestions', 'Suggested Searches', 'No Local Match', 'AI Generated'].includes(String(reference || '').trim());
+
+const getAuthenticitySourceLabel = (status = '', source = '') => {
+  const normalizedStatus = String(status || '').toLowerCase();
+  const normalizedSource = String(source || '').toLowerCase();
+
+  if (!status || normalizedStatus.includes('not specified')) {
+    return '';
+  }
+
+  if (normalizedStatus.includes('by collection')) {
+    return 'Based on collection';
+  }
+
+  if (
+    normalizedStatus.includes('mentioned in source text') ||
+    normalizedStatus.includes('caution noted') ||
+    normalizedSource.includes('source text') ||
+    normalizedSource.includes('structured source field')
+  ) {
+    return 'Based on source wording';
+  }
+
+  return '';
+};
+
+const sanitizeNarratorBioText = (rawBio = '') => {
+  const forbiddenPattern = /\b(scholarly remarks|jarh|ta['‘’]?dil|grading|grade|graded|authenticity|trustworthy|reliable|unreliable|weak|thiqah|liar|fabricator|majhul|abandoned|criticism|dispute|disputed)\b/i;
+  const allowedLabels = [
+    'era/generation',
+    'place/region',
+    'region',
+    'teachers',
+    'students',
+    'collections',
+    'known for',
+    'role in hadith transmission',
+    'educational note',
+    'educational importance'
+  ];
+  const sectionValues = new Map();
+  let currentLabel = null;
+
+  String(rawBio)
+    .replace(/```[\s\S]*?```/g, '')
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .forEach(line => {
+      const labelMatch = line.match(/^\*\*([^:*]+):\*\*/);
+      if (labelMatch) {
+        const label = labelMatch[1].trim().toLowerCase();
+        currentLabel = allowedLabels.includes(label) ? label : null;
+
+        if (currentLabel) {
+          const value = line.replace(/^\*\*[^:*]+:\*\*\s*/, '').trim();
+          if (value && !forbiddenPattern.test(value)) {
+            sectionValues.set(currentLabel, value);
+          }
+        }
+        return;
+      }
+
+      if (currentLabel && !forbiddenPattern.test(line)) {
+        const existing = sectionValues.get(currentLabel);
+        sectionValues.set(currentLabel, existing ? `${existing} ${line}` : line);
+      }
+    });
+
+  const isPlaceholder = value => /^(not listed|not specified|unknown|unclear|n\/a|none)\b/i.test(String(value).trim());
+  const knownFor = sectionValues.get('known for') || sectionValues.get('educational importance');
+  const safeSections = [
+    ['Era/Generation', sectionValues.get('era/generation')],
+    ['Place/Region', sectionValues.get('place/region') || sectionValues.get('region')],
+    ['Known For', knownFor],
+    ['Role in Hadith Transmission', sectionValues.get('role in hadith transmission')],
+    ['Teachers', sectionValues.get('teachers')],
+    ['Students', sectionValues.get('students')],
+    ['Collections', sectionValues.get('collections')],
+    ['Educational Note', sectionValues.get('educational note')]
+  ].filter(([, value]) => value && !isPlaceholder(value));
+
+  if (!safeSections.length) {
+    return '**Educational Note:** Beginner-level historical information for this narrator is not available in this brief summary.';
+  }
+
+  return safeSections
+    .map(([label, value]) => `**${label}:** ${value}`)
+    .join('\n');
+};
+
+const getSafeCommentaryText = (text = '') => {
+  const trimmed = String(text || '').trim();
+  if (!trimmed || /^no commentary\.?$/i.test(trimmed)) {
+    return 'Commentary was not available for this hadith. Please refer to qualified scholars for detailed explanation.';
+  }
+  return trimmed;
+};
+
 const glossary = [
   { term: 'Core Concepts', definition: '', reference: '', example: '' },
   {
@@ -256,7 +393,10 @@ export default function App() {
   const [commentaryData, setCommentaryData] = useState({
     commentary: '',
     chain: '',
-    evaluation: ''
+    evaluation: '',
+    authenticityStatus: 'Not specified in source',
+    authenticitySource: '',
+    sourceCaution: ''
   });
   const scrollRef = useRef(null);
   const insets = useSafeAreaInsets();
@@ -321,7 +461,7 @@ const fetchNarratorBio = async (narratorName) => {
     const data = await postJson('/narrator-bio', { name: cleanNarratorName }, NARRATOR_BIO_TIMEOUT_MS);
     console.log('[NarratorBio] /narrator-bio response:', data);
     const raw = data.bio || 'Biography not available.';
-    setNarratorBioText(raw);
+    setNarratorBioText(sanitizeNarratorBioText(raw));
   } catch (error) {
     console.log('[NarratorBio] /narrator-bio error:', error);
     setNarratorBioText(error.message || 'Error fetching biography. Please try again.');
@@ -356,19 +496,30 @@ const closeNarratorBio = () => {
   const fetchCommentary = async (arabic, english, reference, collection) => {
     setLoadingCommentary(true);
     const eng = english.trim() || arabic.trim();
-    const collToSend = collection || reference.split(' ').slice(0, 2).join(' ');
+    const collToSend = collection || getCollectionFromReference(reference) || reference.split(' ').slice(0, 2).join(' ');
     try {
       const json = await postJson('/gpt-commentary', { arabic, english: eng, reference, collection: collToSend });
+      const authenticityStatus = normalizeAuthenticityStatus(json.authenticityStatus, reference, collToSend);
       setCommentaryData({
-        commentary: json.commentary || 'No commentary.',
+        commentary: getSafeCommentaryText(json.commentary),
         chain: json.chain || 'No chain.',
-        evaluation: json.evaluation || 'No evaluation.',
+        evaluation: json.evaluation || '',
+        authenticityStatus,
+        authenticitySource: getAuthenticitySourceLabel(authenticityStatus, json.authenticitySource),
+        sourceCaution: json.sourceCaution || '',
         arabic: arabic || '',
         english: english || '',
         reference: reference || ''
       });
     } catch {
-      setCommentaryData({ commentary: 'Error fetching commentary.', chain: '', evaluation: '' });
+      setCommentaryData({
+        commentary: 'Error fetching commentary.',
+        chain: '',
+        evaluation: '',
+        authenticityStatus: 'Not specified in source',
+        authenticitySource: '',
+        sourceCaution: ''
+      });
     } finally {
       setLoadingCommentary(false);
     }
@@ -380,13 +531,17 @@ const closeNarratorBio = () => {
     const [extraText, ...blocks] = raw.split('---');
     const hadithSections = blocks.map(s => {
       const arabic = (s.match(/Arabic Matn:\s*([\s\S]*?)(?=\r?\nEnglish Matn:|$)/i) || [])[1]?.trim() || '';
-      let english = (s.match(/English Matn:\s*([\s\S]*?)(?=\r?\nReference:|$)/i) || [])[1]?.trim() || '';
-      english = english.replace(/[\r\n]+/g, ' ').replace(/[*_]/g, '').trim();
       const reference = (s.match(/Reference:\s*(.*?)$/im) || [])[1]?.trim() || '';
+      const isSuggestionFallback = isSearchSuggestionReference(reference);
+      let english = (s.match(/English Matn:\s*([\s\S]*?)(?=\r?\nReference:|$)/i) || [])[1]?.trim() || '';
+      english = isSuggestionFallback
+        ? english.replace(/[*_]/g, '').replace(/\n{3,}/g, '\n\n').trim()
+        : english.replace(/[\r\n]+/g, ' ').replace(/[*_]/g, '').trim();
+      const rawAuthenticityStatus = (s.match(/Authenticity Status:\s*(.*?)$/im) || [])[1]?.trim() || '';
       const warning = (s.match(/Warning:\s*(.*?)$/im) || [])[1]?.trim() || '';
-      const nameParts = reference.split(' ').slice(0, 2).join(' ');
-      const collection = COLLECTION_KEY_MAP[nameParts] || '';
-      return { arabic, english, reference, warning, collection };
+      const collection = getCollectionFromReference(reference);
+      const authenticityStatus = isSuggestionFallback ? '' : normalizeAuthenticityStatus(rawAuthenticityStatus, reference, collection);
+      return { arabic, english, reference, authenticityStatus, warning, collection };
     }).filter(o => o.arabic || o.english);
     return { extraText: extraText.trim(), hadithSections };
   };
@@ -522,6 +677,14 @@ const closeNarratorBio = () => {
                 style={styles.modalScroll}
                 contentContainerStyle={styles.modalScrollContent}
               >
+                <Text style={styles.sectionHeader}>Authenticity Status</Text>
+                <Text style={styles.authenticityStatusText}>{commentaryData.authenticityStatus || 'Not specified in source'}</Text>
+                {!!commentaryData.authenticitySource && (
+                  <Text style={styles.authenticitySourceText}>{commentaryData.authenticitySource}</Text>
+                )}
+                {!!commentaryData.sourceCaution && (
+                  <Text style={styles.authenticityCautionText}>{commentaryData.sourceCaution}</Text>
+                )}
                 <Text style={styles.sectionHeader}>Commentary</Text>
                 <Text style={styles.modalText}>{commentaryData.commentary}</Text>
                 <Text style={styles.sectionHeader}>Chain of Narrators (click to view biography)</Text>
@@ -541,11 +704,9 @@ const closeNarratorBio = () => {
     </React.Fragment>
   ))}
   {parseNarratorNames(commentaryData.chain).length === 0 && (
-    <Text style={styles.modalText}>No narrator chain available.</Text>
+    <Text style={styles.modalText}>Chain not available.</Text>
   )}
 </View>
-                <Text style={styles.sectionHeader}>Evaluation of Hadith</Text>
-                <Text style={styles.modalText}>{commentaryData.evaluation}</Text>
               </ScrollView>
               <Text style={styles.modalDisclaimer}>
                 This AI assisted explanation is for learning and research support only. It may contain mistakes, inaccuracies, or incomplete information. Please verify religious matters with qualified scholars.
@@ -554,7 +715,7 @@ const closeNarratorBio = () => {
                 <TouchableOpacity
                   style={styles.shareCopyButton}
                   onPress={async () => {
-                    const textToCopy = `Hadith Reference: ${commentaryData.reference}\n\nArabic Matn:\n${commentaryData.arabic}\n\nEnglish Matn:\n${commentaryData.english}\n\nCommentary:\n${commentaryData.commentary}\n\nChain of Narrators:\n${commentaryData.chain}\n\nEvaluation:\n${commentaryData.evaluation}`;
+                    const textToCopy = `Hadith Reference: ${commentaryData.reference}\n\nArabic Matn:\n${commentaryData.arabic}\n\nEnglish Matn:\n${commentaryData.english}\n\nAuthenticity Status:\n${commentaryData.authenticityStatus || 'Not specified in source'}\n\nCommentary:\n${commentaryData.commentary}\n\nChain of Narrators:\n${commentaryData.chain}`;
                     await Clipboard.setStringAsync(textToCopy);
                     alert('Copied to clipboard!');
                   }}
@@ -565,7 +726,7 @@ const closeNarratorBio = () => {
                 <TouchableOpacity
   style={styles.shareCopyButton}
   onPress={async () => {
-    const textToShare = `Hadith Reference: ${commentaryData.reference}\n\nArabic Matn:\n${commentaryData.arabic}\n\nEnglish Matn:\n${commentaryData.english}\n\nCommentary:\n${commentaryData.commentary}\n\nChain of Narrators:\n${commentaryData.chain}\n\nEvaluation:\n${commentaryData.evaluation}\n\n${APP_DOWNLOAD_LINK}`;
+    const textToShare = `Hadith Reference: ${commentaryData.reference}\n\nArabic Matn:\n${commentaryData.arabic}\n\nEnglish Matn:\n${commentaryData.english}\n\nAuthenticity Status:\n${commentaryData.authenticityStatus || 'Not specified in source'}\n\nCommentary:\n${commentaryData.commentary}\n\nChain of Narrators:\n${commentaryData.chain}\n\n${APP_DOWNLOAD_LINK}`;
     await Share.share({ message: textToShare });
   }}
 >
@@ -597,7 +758,7 @@ const closeNarratorBio = () => {
                 <Markdown style={markdownStyles}>{narratorBioText}</Markdown>
               </ScrollView>
               <Text style={styles.modalDisclaimer}>
-                AI generated narrator information may contain errors. Please verify with classical rijāl sources such as Tahdhīb al-Tahdhīb, Taqrīb al-Tahdhīb, Siyar Aʿlām al-Nubalāʾ, and Mīzān al-Iʿtidāl.
+                Narrator summaries are educational and may not be complete scholarly biographies. AI generated narrator information may contain errors. Please verify with classical rijāl sources such as Tahdhīb al-Tahdhīb, Taqrīb al-Tahdhīb, Siyar Aʿlām al-Nubalāʾ, and Mīzān al-Iʿtidāl.
               </Text>
               <TouchableOpacity
                 style={styles.modalCloseButton}
@@ -867,12 +1028,17 @@ const closeNarratorBio = () => {
                     <Text style={styles.referenceBadgeText}>{h.reference}</Text>
                   </View>
                 )}
+                {!isSearchSuggestionReference(h.reference) && h.authenticityStatus && (
+                  <View style={styles.resultAuthenticityBadge}>
+                    <Text style={styles.resultAuthenticityText}>Authenticity: {h.authenticityStatus}</Text>
+                  </View>
+                )}
                 {h.arabic    && <Text style={styles.arabicMatn}>{h.arabic}</Text>}
                 {h.english && h.english.split('\n').map((para, index) => (
   <Text key={`english-${index}`} style={styles.englishMatn}>{para.trim()}</Text>
 ))}
                 {h.warning   && <Text style={styles.warning}>{h.warning}</Text>}
-                {h.reference !== 'AI Generated' && (
+                {!isSearchSuggestionReference(h.reference) && (
                   <Pressable
                     style={styles.commentaryButton}
                     onPress={() => fetchCommentary(h.arabic, h.english, h.reference, h.collection)}
@@ -1161,6 +1327,22 @@ const styles = StyleSheet.create({
     color: '#1b433f',
     marginLeft: 6,
   },
+  resultAuthenticityBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#f8f5e9',
+    borderWidth: 1,
+    borderColor: '#e7d9a8',
+    borderRadius: 8,
+    paddingVertical: 5,
+    paddingHorizontal: 9,
+    marginTop: -6,
+    marginBottom: 14,
+  },
+  resultAuthenticityText: {
+    color: '#6f5a17',
+    fontSize: 12,
+    fontWeight: '700',
+  },
   arabicMatn: {
     fontSize: 21,
     lineHeight: 34,
@@ -1266,6 +1448,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 25,
     color: '#2f3d40',
+  },
+  authenticityStatusText: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#132f35',
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  authenticitySourceText: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: '#607174',
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  authenticityCautionText: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: '#8a3a32',
+    backgroundColor: 'rgba(138, 58, 50, 0.08)',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 10,
   },
   modalDisclaimer: {
     fontSize: 12,
