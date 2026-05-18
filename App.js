@@ -45,6 +45,7 @@ const NARRATOR_BIO_TIMEOUT_MS = 60000;
 const DAILY_FREE_SEARCH_LIMIT = 5;
 const SEARCH_LIMIT_STORAGE_KEY = 'takhrij.dailySearchCounter';
 const LEARN_PROGRESS_STORAGE_KEY = 'takhrij.learnProgress';
+const DEFAULT_LEARN_PROGRESS = { completedLessons: {}, quizAnswers: {} };
 const clampLearningIndex = (value, length) => {
   const index = Number(value);
   if (!Number.isFinite(index)) return 0;
@@ -417,7 +418,8 @@ export default function App() {
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [dailySearchCounter, setDailySearchCounter] = useState({ date: getTodayKey(), count: 0 });
-  const [learnProgress, setLearnProgress] = useState({ completedLessons: {}, quizAnswers: {} });
+  const [learnProgress, setLearnProgress] = useState(DEFAULT_LEARN_PROGRESS);
+  const learnProgressRef = useRef(DEFAULT_LEARN_PROGRESS);
   const [activeLessonIndex, setActiveLessonIndex] = useState(0);
   const [activeQuizIndex, setActiveQuizIndex] = useState(0);
   const [loadingCommentary, setLoadingCommentary] = useState(false);
@@ -461,28 +463,45 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
           AsyncStorage.getItem(LEARN_PROGRESS_STORAGE_KEY),
         ]);
         const today = getTodayKey();
-        const parsedCounter = storedCounter ? JSON.parse(storedCounter) : null;
-        setDailySearchCounter(
-          parsedCounter?.date === today
-            ? parsedCounter
-            : { date: today, count: 0 }
-        );
-        if (storedProgress) {
-          const parsedProgress = JSON.parse(storedProgress);
-          setLearnProgress(parsedProgress);
-          setActiveLessonIndex(clampLearningIndex(parsedProgress.currentLessonIndex, lessons.length));
-          setActiveQuizIndex(clampLearningIndex(parsedProgress.currentQuizIndex, quizzes.length));
+        try {
+          const parsedCounter = storedCounter ? JSON.parse(storedCounter) : null;
+          setDailySearchCounter(
+            parsedCounter?.date === today
+              ? parsedCounter
+              : { date: today, count: 0 }
+          );
+        } catch {
+          setDailySearchCounter({ date: today, count: 0 });
+        }
+        try {
+          const parsedProgress = storedProgress ? JSON.parse(storedProgress) : DEFAULT_LEARN_PROGRESS;
+          const safeProgress = {
+            ...DEFAULT_LEARN_PROGRESS,
+            ...parsedProgress,
+            completedLessons: parsedProgress?.completedLessons || {},
+            quizAnswers: parsedProgress?.quizAnswers || {},
+          };
+          learnProgressRef.current = safeProgress;
+          setLearnProgress(safeProgress);
+          setActiveLessonIndex(clampLearningIndex(safeProgress.currentLessonIndex, lessons.length));
+          setActiveQuizIndex(clampLearningIndex(safeProgress.currentQuizIndex, quizzes.length));
+        } catch {
+          learnProgressRef.current = DEFAULT_LEARN_PROGRESS;
+          setLearnProgress(DEFAULT_LEARN_PROGRESS);
+          setActiveLessonIndex(0);
+          setActiveQuizIndex(0);
         }
       } catch {
         setDailySearchCounter({ date: getTodayKey(), count: 0 });
+        learnProgressRef.current = DEFAULT_LEARN_PROGRESS;
+        setLearnProgress(DEFAULT_LEARN_PROGRESS);
       }
     };
 
     loadLocalProgress();
   }, []);
 
-  const saveLearnProgress = async nextProgress => {
-    setLearnProgress(nextProgress);
+  const persistLearnProgress = async nextProgress => {
     try {
       await AsyncStorage.setItem(LEARN_PROGRESS_STORAGE_KEY, JSON.stringify(nextProgress));
     } catch {
@@ -490,54 +509,69 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
     }
   };
 
+  const updateLearnProgress = updater => {
+    const currentProgress = learnProgressRef.current || DEFAULT_LEARN_PROGRESS;
+    const nextProgress = updater({
+      ...DEFAULT_LEARN_PROGRESS,
+      ...currentProgress,
+      completedLessons: currentProgress?.completedLessons || {},
+      quizAnswers: currentProgress?.quizAnswers || {},
+    });
+    learnProgressRef.current = nextProgress;
+    setLearnProgress(nextProgress);
+    persistLearnProgress(nextProgress);
+  };
+
   const saveLearningPosition = (nextLessonIndex, nextQuizIndex) => {
-    saveLearnProgress({
-      ...learnProgress,
+    updateLearnProgress(previousProgress => ({
+      ...previousProgress,
       currentLessonIndex: clampLearningIndex(nextLessonIndex, lessons.length),
       currentQuizIndex: clampLearningIndex(nextQuizIndex, quizzes.length),
-    });
+    }));
   };
 
   const markLessonComplete = lessonId => {
-    saveLearnProgress({
-      ...learnProgress,
+    updateLearnProgress(previousProgress => ({
+      ...previousProgress,
       currentLessonIndex: activeLessonIndex,
       currentQuizIndex: activeQuizIndex,
       completedLessons: {
-        ...learnProgress.completedLessons,
+        ...previousProgress.completedLessons,
         [lessonId]: true,
       },
-    });
+    }));
   };
 
   const answerQuiz = (quizId, selectedIndex, answerIndex) => {
-    saveLearnProgress({
-      ...learnProgress,
+    updateLearnProgress(previousProgress => ({
+      ...previousProgress,
       currentLessonIndex: activeLessonIndex,
       currentQuizIndex: activeQuizIndex,
       quizAnswers: {
-        ...learnProgress.quizAnswers,
+        ...previousProgress.quizAnswers,
         [quizId]: {
           selectedIndex,
           correct: selectedIndex === answerIndex,
         },
       },
-    });
+    }));
   };
 
   const toggleMemorisationStage = stage => {
-    const currentTracker = learnProgress.memorisation?.[NAWAWI_HADITH_1.id] || {};
-    saveLearnProgress({
-      ...learnProgress,
-      currentLessonIndex: activeLessonIndex,
-      currentQuizIndex: activeQuizIndex,
-      memorisation: {
-        ...learnProgress.memorisation,
-        [NAWAWI_HADITH_1.id]: {
-          ...currentTracker,
-          [stage]: !currentTracker[stage],
+    updateLearnProgress(previousProgress => {
+      const currentTracker = previousProgress.memorisation?.[NAWAWI_HADITH_1.id] || {};
+      return {
+        ...previousProgress,
+        currentLessonIndex: activeLessonIndex,
+        currentQuizIndex: activeQuizIndex,
+        memorisation: {
+          ...previousProgress.memorisation,
+          [NAWAWI_HADITH_1.id]: {
+            ...currentTracker,
+            [stage]: !currentTracker[stage],
+          },
         },
-      },
+      };
     });
   };
 
@@ -624,6 +658,7 @@ const closeNarratorBio = () => {
 };
 
   const verifyHadith = async () => {
+    if (loading) return;
     setCommentaryModalVisible(false);
     const q = query.trim();
     if (!q) return;
@@ -816,6 +851,14 @@ const closeNarratorBio = () => {
   const renderCardLearningFlow = () => {
     const lesson = lessons[activeLessonIndex];
     const quiz = quizzes[activeQuizIndex];
+    if (!lesson || !quiz) {
+      return (
+        <View style={styles.learnCard}>
+          <Text style={styles.lessonTitle}>Learning content unavailable</Text>
+          <Text style={styles.lessonSummary}>Please try again after restarting the app.</Text>
+        </View>
+      );
+    }
     const lessonCompleted = !!learnProgress.completedLessons?.[lesson.id];
     const quizAnswer = learnProgress.quizAnswers?.[quiz.id];
     const quizTriedCount = Object.keys(learnProgress.quizAnswers || {}).length;
@@ -944,7 +987,9 @@ const closeNarratorBio = () => {
   const renderLearnSection = () => {
     const completedLessonCount = Object.keys(learnProgress.completedLessons || {}).length;
     const quizTriedCount = Object.keys(learnProgress.quizAnswers || {}).length;
-    const pathwayProgress = Math.round(((activeLessonIndex + 1) / lessons.length) * 100);
+    const pathwayProgress = lessons.length
+      ? Math.round((completedLessonCount / lessons.length) * 100)
+      : 0;
 
     return (
     <>
