@@ -140,6 +140,9 @@ const normalizeAuthenticityStatus = (status, reference = '', collection = '') =>
   return status || 'Not specified in source';
 };
 
+const isSearchSuggestionReference = reference =>
+  ['Search Suggestions', 'Suggested Searches', 'No Local Match', 'AI Generated'].includes(String(reference || '').trim());
+
 const getAuthenticitySourceLabel = (status = '', source = '') => {
   const normalizedStatus = String(status || '').toLowerCase();
   const normalizedSource = String(source || '').toLowerCase();
@@ -529,15 +532,15 @@ const closeNarratorBio = () => {
     const hadithSections = blocks.map(s => {
       const arabic = (s.match(/Arabic Matn:\s*([\s\S]*?)(?=\r?\nEnglish Matn:|$)/i) || [])[1]?.trim() || '';
       const reference = (s.match(/Reference:\s*(.*?)$/im) || [])[1]?.trim() || '';
-      const isAiFallback = reference === 'AI Generated';
+      const isSuggestionFallback = isSearchSuggestionReference(reference);
       let english = (s.match(/English Matn:\s*([\s\S]*?)(?=\r?\nReference:|$)/i) || [])[1]?.trim() || '';
-      english = isAiFallback
+      english = isSuggestionFallback
         ? english.replace(/[*_]/g, '').replace(/\n{3,}/g, '\n\n').trim()
         : english.replace(/[\r\n]+/g, ' ').replace(/[*_]/g, '').trim();
       const rawAuthenticityStatus = (s.match(/Authenticity Status:\s*(.*?)$/im) || [])[1]?.trim() || '';
       const warning = (s.match(/Warning:\s*(.*?)$/im) || [])[1]?.trim() || '';
       const collection = getCollectionFromReference(reference);
-      const authenticityStatus = isAiFallback ? '' : normalizeAuthenticityStatus(rawAuthenticityStatus, reference, collection);
+      const authenticityStatus = isSuggestionFallback ? '' : normalizeAuthenticityStatus(rawAuthenticityStatus, reference, collection);
       return { arabic, english, reference, authenticityStatus, warning, collection };
     }).filter(o => o.arabic || o.english);
     return { extraText: extraText.trim(), hadithSections };
@@ -1025,7 +1028,7 @@ const closeNarratorBio = () => {
                     <Text style={styles.referenceBadgeText}>{h.reference}</Text>
                   </View>
                 )}
-                {h.reference !== 'AI Generated' && h.authenticityStatus && (
+                {!isSearchSuggestionReference(h.reference) && h.authenticityStatus && (
                   <View style={styles.resultAuthenticityBadge}>
                     <Text style={styles.resultAuthenticityText}>Authenticity: {h.authenticityStatus}</Text>
                   </View>
@@ -1035,7 +1038,7 @@ const closeNarratorBio = () => {
   <Text key={`english-${index}`} style={styles.englishMatn}>{para.trim()}</Text>
 ))}
                 {h.warning   && <Text style={styles.warning}>{h.warning}</Text>}
-                {h.reference !== 'AI Generated' && (
+                {!isSearchSuggestionReference(h.reference) && (
                   <Pressable
                     style={styles.commentaryButton}
                     onPress={() => fetchCommentary(h.arabic, h.english, h.reference, h.collection)}
