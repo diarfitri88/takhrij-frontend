@@ -4,8 +4,8 @@
     "title": "Hadith 1: Intentions",
     "narrator": "Umar ibn al-Khattab",
     "reference": "Sahih al-Bukhari 1; Sahih Muslim 1907",
-    "arabic": "إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ",
-    "english": "Actions are judged by intentions.",
+    "arabic": "إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى، فَمَنْ كَانَتْ هِجْرَتُهُ إِلَى اللَّهِ وَرَسُولِهِ فَهِجْرَتُهُ إِلَى اللَّهِ وَرَسُولِهِ، وَمَنْ كَانَتْ هِجْرَتُهُ لِدُنْيَا يُصِيبُهَا أَوِ امْرَأَةٍ يَنْكِحُهَا فَهِجْرَتُهُ إِلَى مَا هَاجَرَ إِلَيْهِ",
+    "english": "Actions are judged by intentions, and every person receives according to what they intended.",
     "stages": ["Read", "Understand", "Memorise", "Review"],
     "questions": [
       "Who is the narrator?",
@@ -19,8 +19,8 @@
     "title": "Hadith 2: Islam, Iman, Ihsan",
     "narrator": "Umar ibn al-Khattab",
     "reference": "Sahih Muslim 8",
-    "arabic": "أَنْ تَعْبُدَ اللَّهَ كَأَنَّكَ تَرَاهُ",
-    "english": "Ihsan is to worship Allah as though you see Him.",
+    "arabic": "أَنْ تَشْهَدَ أَنْ لَا إِلَهَ إِلَّا اللَّهُ وَأَنَّ مُحَمَّدًا رَسُولُ اللَّهِ، وَتُقِيمَ الصَّلَاةَ، وَتُؤْتِيَ الزَّكَاةَ، وَتَصُومَ رَمَضَانَ، وَتَحُجَّ الْبَيْتَ إِنِ اسْتَطَعْتَ إِلَيْهِ سَبِيلًا... أَنْ تَعْبُدَ اللَّهَ كَأَنَّكَ تَرَاهُ، فَإِنْ لَمْ تَكُنْ تَرَاهُ فَإِنَّهُ يَرَاكَ",
+    "english": "The hadith teaches Islam, Iman, Ihsan, and that Allah sees His servants.",
     "stages": ["Read", "Understand", "Memorise", "Review"],
     "questions": [
       "Who is the narrator?",
@@ -34,8 +34,8 @@
     "title": "Hadith 3: The Pillars of Islam",
     "narrator": "Abdullah ibn Umar",
     "reference": "Sahih al-Bukhari 8; Sahih Muslim 16",
-    "arabic": "بُنِيَ الإِسْلَامُ عَلَى خَمْسٍ",
-    "english": "Islam is built upon five foundations.",
+    "arabic": "بُنِيَ الإِسْلَامُ عَلَى خَمْسٍ: شَهَادَةِ أَنْ لَا إِلَهَ إِلَّا اللَّهُ وَأَنَّ مُحَمَّدًا رَسُولُ اللَّهِ، وَإِقَامِ الصَّلَاةِ، وَإِيتَاءِ الزَّكَاةِ، وَحَجِّ الْبَيْتِ، وَصَوْمِ رَمَضَانَ",
+    "english": "Islam is built upon five foundations: testimony, prayer, zakat, Hajj, and fasting Ramadan.",
     "stages": ["Read", "Understand", "Memorise", "Review"],
     "questions": [
       "Who is the narrator?",
@@ -49,8 +49,8 @@
     "title": "Hadith 4: Human Creation",
     "narrator": "Abdullah ibn Mas'ud",
     "reference": "Sahih al-Bukhari 3208; Sahih Muslim 2643",
-    "arabic": "إِنَّ أَحَدَكُمْ يُجْمَعُ خَلْقُهُ فِي بَطْنِ أُمِّهِ",
-    "english": "A person's creation is formed by Allah in the mother's womb.",
+    "arabic": "إِنَّ أَحَدَكُمْ يُجْمَعُ خَلْقُهُ فِي بَطْنِ أُمِّهِ أَرْبَعِينَ يَوْمًا نُطْفَةً، ثُمَّ يَكُونُ عَلَقَةً مِثْلَ ذَلِكَ، ثُمَّ يَكُونُ مُضْغَةً مِثْلَ ذَلِكَ، ثُمَّ يُرْسَلُ إِلَيْهِ الْمَلَكُ فَيَنْفُخُ فِيهِ الرُّوحَ",
+    "english": "A person's creation is formed by Allah in stages, and Allah knows each person's decree.",
     "stages": ["Read", "Understand", "Memorise", "Review"],
     "questions": [
       "Who is the narrator?",
@@ -65,7 +65,7 @@
     "narrator": "Aisha bint Abi Bakr",
     "reference": "Sahih al-Bukhari 2697; Sahih Muslim 1718",
     "arabic": "مَنْ أَحْدَثَ فِي أَمْرِنَا هَذَا مَا لَيْسَ مِنْهُ فَهُوَ رَدٌّ",
-    "english": "A religious matter introduced without basis is rejected.",
+    "english": "A religious matter introduced without basis in the religion is rejected.",
     "stages": ["Read", "Understand", "Memorise", "Review"],
     "questions": [
       "Who is the narrator?",

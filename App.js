@@ -433,8 +433,13 @@ export default function App() {
   const [dailySearchCounter, setDailySearchCounter] = useState({ date: getTodayKey(), count: 0 });
   const [learnProgress, setLearnProgress] = useState(DEFAULT_LEARN_PROGRESS);
   const learnProgressRef = useRef(DEFAULT_LEARN_PROGRESS);
-  const [activeLessonIndex, setActiveLessonIndex] = useState(0);
-  const [activeQuizIndex, setActiveQuizIndex] = useState(0);
+  const [learnMode, setLearnMode] = useState('overview');
+  const [selectedPathwayId, setSelectedPathwayId] = useState('beginner');
+  const [activePathwayPreviewIndex, setActivePathwayPreviewIndex] = useState(0);
+  const [activePathwayCardIndex, setActivePathwayCardIndex] = useState(0);
+  const [selectedNawawiId, setSelectedNawawiId] = useState(null);
+  const [activeNawawiPreviewIndex, setActiveNawawiPreviewIndex] = useState(0);
+  const [activeNawawiCardIndex, setActiveNawawiCardIndex] = useState(0);
   const [loadingCommentary, setLoadingCommentary] = useState(false);
   const [commentaryModalVisible, setCommentaryModalVisible] = useState(false);
   const [aboutVisible, setAboutVisible] = useState(false);
@@ -466,7 +471,7 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
       duration: 160,
       useNativeDriver: true,
     }).start();
-  }, [activeLessonIndex, activeQuizIndex, cardFadeAnim]);
+  }, [learnMode, activePathwayCardIndex, activeNawawiCardIndex, cardFadeAnim]);
 
   useEffect(() => {
     const loadLocalProgress = async () => {
@@ -496,13 +501,13 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
           };
           learnProgressRef.current = safeProgress;
           setLearnProgress(safeProgress);
-          setActiveLessonIndex(clampLearningIndex(safeProgress.currentLessonIndex, lessons.length));
-          setActiveQuizIndex(clampLearningIndex(safeProgress.currentQuizIndex, quizzes.length));
+          if (safeProgress.currentPathwayId) {
+            setSelectedPathwayId(safeProgress.currentPathwayId);
+            setActivePathwayCardIndex(clampLearningIndex(safeProgress.currentPathwayCardIndex, lessons.length + quizzes.length));
+          }
         } catch {
           learnProgressRef.current = DEFAULT_LEARN_PROGRESS;
           setLearnProgress(DEFAULT_LEARN_PROGRESS);
-          setActiveLessonIndex(0);
-          setActiveQuizIndex(0);
         }
       } catch {
         setDailySearchCounter({ date: getTodayKey(), count: 0 });
@@ -535,19 +540,11 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
     persistLearnProgress(nextProgress);
   };
 
-  const saveLearningPosition = (nextLessonIndex, nextQuizIndex) => {
-    updateLearnProgress(previousProgress => ({
-      ...previousProgress,
-      currentLessonIndex: clampLearningIndex(nextLessonIndex, lessons.length),
-      currentQuizIndex: clampLearningIndex(nextQuizIndex, quizzes.length),
-    }));
-  };
-
   const markLessonComplete = lessonId => {
     updateLearnProgress(previousProgress => ({
       ...previousProgress,
-      currentLessonIndex: activeLessonIndex,
-      currentQuizIndex: activeQuizIndex,
+      currentPathwayId: selectedPathwayId,
+      currentPathwayCardIndex: activePathwayCardIndex,
       completedLessons: {
         ...previousProgress.completedLessons,
         [lessonId]: true,
@@ -558,8 +555,8 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
   const answerQuiz = (quizId, selectedIndex, answerIndex) => {
     updateLearnProgress(previousProgress => ({
       ...previousProgress,
-      currentLessonIndex: activeLessonIndex,
-      currentQuizIndex: activeQuizIndex,
+      currentPathwayId: selectedPathwayId,
+      currentPathwayCardIndex: activePathwayCardIndex,
       quizAnswers: {
         ...previousProgress.quizAnswers,
         [quizId]: {
@@ -575,8 +572,8 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
       const currentTracker = previousProgress.memorisation?.[hadithId] || {};
       return {
         ...previousProgress,
-        currentLessonIndex: activeLessonIndex,
-        currentQuizIndex: activeQuizIndex,
+        currentPathwayId: selectedPathwayId,
+        currentPathwayCardIndex: activePathwayCardIndex,
         memorisation: {
           ...previousProgress.memorisation,
           [hadithId]: {
@@ -824,9 +821,22 @@ const closeNarratorBio = () => {
     'Rijal learning system',
   ];
 
+  const openPathway = pathwayId => {
+    setSelectedPathwayId(pathwayId);
+    setActivePathwayCardIndex(0);
+    setLearnMode('pathway');
+  };
+
+  const openNawawiItem = hadithId => {
+    setSelectedNawawiId(hadithId);
+    setActiveNawawiCardIndex(0);
+    setLearnMode('nawawi');
+  };
+
   const renderPathwayPreviews = () => (
-    <>
-      {LEARNING_PATHWAYS.map(pathway => {
+    <View>
+      {(() => {
+        const pathway = LEARNING_PATHWAYS[activePathwayPreviewIndex] || LEARNING_PATHWAYS[0];
         const pathwayLessons = lessons.filter(lesson => lesson.pathway === pathway.id);
         const completedCount = pathwayLessons.filter(lesson => learnProgress.completedLessons?.[lesson.id]).length;
         const progress = pathwayLessons.length
@@ -834,34 +844,201 @@ const closeNarratorBio = () => {
           : 0;
 
         return (
-          <View key={pathway.id} style={styles.learnCard}>
+          <Pressable style={styles.learnCard} onPress={() => openPathway(pathway.id)}>
             <View style={styles.learnCardHeader}>
               <Text style={styles.lessonLevel}>{pathway.range}</Text>
-              <Text style={styles.completedBadge}>Free preview</Text>
+              <Text style={styles.completedBadge}>{activePathwayPreviewIndex + 1}/{LEARNING_PATHWAYS.length}</Text>
             </View>
             <Text style={styles.lessonTitle}>{pathway.title}</Text>
             <Text style={styles.lessonSummary}>{pathway.description}</Text>
             <Text style={styles.lessonPoint}>
               Progress: {completedCount}/{pathwayLessons.length} lessons • {progress}%
             </Text>
-          </View>
+            <Text style={styles.flowHint}>Tap to start this pathway.</Text>
+          </Pressable>
         );
-      })}
-    </>
+      })()}
+      <View style={styles.flowControls}>
+        <Pressable
+          style={[styles.flowButton, activePathwayPreviewIndex === 0 && styles.flowButtonDisabled]}
+          disabled={activePathwayPreviewIndex === 0}
+          onPress={() => setActivePathwayPreviewIndex(index => Math.max(0, index - 1))}
+        >
+          <Text style={styles.flowButtonText}>Previous</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.flowButton, activePathwayPreviewIndex === LEARNING_PATHWAYS.length - 1 && styles.flowButtonDisabled]}
+          disabled={activePathwayPreviewIndex === LEARNING_PATHWAYS.length - 1}
+          onPress={() => setActivePathwayPreviewIndex(index => Math.min(LEARNING_PATHWAYS.length - 1, index + 1))}
+        >
+          <Text style={styles.flowButtonText}>Next</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 
-  const renderNawawiPrototype = () => (
-    <>
-      {nawawiPreview.map(hadith => {
+  const renderNawawiOverview = () => (
+    <View>
+      {(() => {
+        const hadith = nawawiPreview[activeNawawiPreviewIndex] || nawawiPreview[0];
         const tracker = learnProgress.memorisation?.[hadith.id] || {};
         const completedStages = hadith.stages.filter(stage => tracker[stage]).length;
 
         return (
-          <View key={hadith.id} style={styles.learnCard}>
+          <Pressable style={styles.learnCard} onPress={() => openNawawiItem(hadith.id)}>
             <View style={styles.learnCardHeader}>
               <Text style={styles.lessonLevel}>Free Arbain Preview</Text>
-              <Text style={styles.completedBadge}>{completedStages}/{hadith.stages.length}</Text>
+              <Text style={styles.completedBadge}>{activeNawawiPreviewIndex + 1}/{nawawiPreview.length}</Text>
             </View>
+            <Text style={styles.lessonTitle}>{hadith.title}</Text>
+            <Text style={styles.nawawiReference}>{hadith.reference}</Text>
+            <Text style={styles.nawawiReference}>Narrator: {hadith.narrator}</Text>
+            <Text style={styles.lessonSummary}>{hadith.english}</Text>
+            <Text style={styles.lessonPoint}>Checklist progress: {completedStages}/{hadith.stages.length}</Text>
+            <Text style={styles.flowHint}>Tap to open hadith card and questions.</Text>
+          </Pressable>
+        );
+      })()}
+      <View style={styles.flowControls}>
+        <Pressable
+          style={[styles.flowButton, activeNawawiPreviewIndex === 0 && styles.flowButtonDisabled]}
+          disabled={activeNawawiPreviewIndex === 0}
+          onPress={() => setActiveNawawiPreviewIndex(index => Math.max(0, index - 1))}
+        >
+          <Text style={styles.flowButtonText}>Previous</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.flowButton, activeNawawiPreviewIndex === nawawiPreview.length - 1 && styles.flowButtonDisabled]}
+          disabled={activeNawawiPreviewIndex === nawawiPreview.length - 1}
+          onPress={() => setActiveNawawiPreviewIndex(index => Math.min(nawawiPreview.length - 1, index + 1))}
+        >
+          <Text style={styles.flowButtonText}>Next</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+
+  const renderPathwayFlow = () => {
+    const pathway = LEARNING_PATHWAYS.find(item => item.id === selectedPathwayId) || LEARNING_PATHWAYS[0];
+    const pathwayLessons = lessons.filter(lesson => lesson.pathway === pathway.id);
+    const pathwayQuizzes = quizzes.filter(quiz => quiz.pathway === pathway.id);
+    const totalCards = pathwayLessons.length + pathwayQuizzes.length;
+    const isQuizCard = activePathwayCardIndex >= pathwayLessons.length;
+    const lesson = pathwayLessons[activePathwayCardIndex];
+    const quiz = pathwayQuizzes[activePathwayCardIndex - pathwayLessons.length];
+    const progress = totalCards ? ((activePathwayCardIndex + 1) / totalCards) * 100 : 0;
+
+    if (!totalCards) {
+      return (
+        <View style={styles.learnCard}>
+          <Text style={styles.lessonTitle}>Pathway unavailable</Text>
+          <Text style={styles.lessonSummary}>Please return to Learn and try another pathway.</Text>
+        </View>
+      );
+    }
+
+    return (
+      <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim }]}>
+        <View style={styles.learnCardHeader}>
+          <Text style={styles.lessonLevel}>{pathway.title}</Text>
+          <Text style={styles.completedBadge}>{activePathwayCardIndex + 1}/{totalCards}</Text>
+        </View>
+        <View style={styles.flowProgressTrack}>
+          <View style={[styles.flowProgressFill, { width: `${progress}%` }]} />
+        </View>
+        {!isQuizCard && lesson && (
+          <>
+            <Text style={styles.lessonTitle}>{lesson.title}</Text>
+            <Text style={styles.lessonSummary}>{lesson.summary}</Text>
+            {lesson.points.map(point => (
+              <Text key={point} style={styles.lessonPoint}>• {point}</Text>
+            ))}
+            <Pressable
+              style={[styles.learnActionButton, learnProgress.completedLessons?.[lesson.id] && styles.learnActionButtonSecondary]}
+              onPress={() => markLessonComplete(lesson.id)}
+              disabled={!!learnProgress.completedLessons?.[lesson.id]}
+            >
+              <Text style={styles.learnActionText}>{learnProgress.completedLessons?.[lesson.id] ? 'Completed' : 'Mark Complete'}</Text>
+            </Pressable>
+          </>
+        )}
+        {isQuizCard && quiz && (
+          <>
+            <Text style={styles.quizTitle}>{quiz.title}</Text>
+            <Text style={styles.quizQuestion}>{quiz.question}</Text>
+            {quiz.options.map((option, index) => {
+              const quizAnswer = learnProgress.quizAnswers?.[quiz.id];
+              const selected = quizAnswer?.selectedIndex === index;
+              const correctOption = quizAnswer && index === quiz.answerIndex;
+              const selectedWrong = selected && quizAnswer && !quizAnswer.correct;
+              return (
+                <Pressable
+                  key={option}
+                  style={[
+                    styles.quizOption,
+                    selected && styles.quizOptionSelected,
+                    selectedWrong && styles.quizOptionWrong,
+                    correctOption && styles.quizOptionCorrect,
+                  ]}
+                  onPress={() => answerQuiz(quiz.id, index, quiz.answerIndex)}
+                >
+                  <Text style={styles.quizOptionText}>{option}</Text>
+                </Pressable>
+              );
+            })}
+            {learnProgress.quizAnswers?.[quiz.id] ? (
+              <Text style={learnProgress.quizAnswers[quiz.id].correct ? styles.quizFeedbackCorrect : styles.quizFeedbackWrong}>
+                {learnProgress.quizAnswers[quiz.id].correct ? 'Correct. ' : 'Not quite. '}
+                {quiz.explanation}
+              </Text>
+            ) : (
+              <Text style={styles.flowHint}>Choose an answer to see feedback before moving on.</Text>
+            )}
+          </>
+        )}
+        <View style={styles.flowControls}>
+          <Pressable
+            style={[styles.flowButton, activePathwayCardIndex === 0 && styles.flowButtonDisabled]}
+            disabled={activePathwayCardIndex === 0}
+            onPress={() => setActivePathwayCardIndex(index => Math.max(0, index - 1))}
+          >
+            <Text style={styles.flowButtonText}>Previous</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.flowButton, activePathwayCardIndex === totalCards - 1 && styles.flowButtonDisabled]}
+            disabled={activePathwayCardIndex === totalCards - 1}
+            onPress={() => setActivePathwayCardIndex(index => Math.min(totalCards - 1, index + 1))}
+          >
+            <Text style={styles.flowButtonText}>Next</Text>
+          </Pressable>
+        </View>
+        <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode('overview')}>
+          <Text style={styles.secondaryTextButtonText}>Back to pathways</Text>
+        </Pressable>
+      </Animated.View>
+    );
+  };
+
+  const renderNawawiFlow = () => {
+    const hadith = nawawiPreview.find(item => item.id === selectedNawawiId) || nawawiPreview[0];
+    if (!hadith) return null;
+    const totalCards = 1 + hadith.questions.length;
+    const tracker = learnProgress.memorisation?.[hadith.id] || {};
+    const isQuestionCard = activeNawawiCardIndex > 0;
+    const question = hadith.questions[activeNawawiCardIndex - 1];
+    const progress = ((activeNawawiCardIndex + 1) / totalCards) * 100;
+
+    return (
+      <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim }]}>
+        <View style={styles.learnCardHeader}>
+          <Text style={styles.lessonLevel}>Arbain Nawawi</Text>
+          <Text style={styles.completedBadge}>{activeNawawiCardIndex + 1}/{totalCards}</Text>
+        </View>
+        <View style={styles.flowProgressTrack}>
+          <View style={[styles.flowProgressFill, { width: `${progress}%` }]} />
+        </View>
+        {!isQuestionCard ? (
+          <>
             <Text style={styles.lessonTitle}>{hadith.title}</Text>
             <Text style={styles.nawawiReference}>{hadith.reference}</Text>
             <Text style={styles.nawawiReference}>Narrator: {hadith.narrator}</Text>
@@ -884,149 +1061,33 @@ const closeNarratorBio = () => {
                 );
               })}
             </View>
-            <Text style={styles.nawawiQuestionTitle}>Learning questions</Text>
-            {hadith.questions.map(question => (
-              <Text key={question} style={styles.lessonPoint}>• {question}</Text>
-            ))}
-          </View>
-        );
-      })}
-    </>
-  );
-
-  const renderCardLearningFlow = () => {
-    const lesson = lessons[activeLessonIndex];
-    const quiz = quizzes[activeQuizIndex];
-    if (!lesson || !quiz) {
-      return (
-        <View style={styles.learnCard}>
-          <Text style={styles.lessonTitle}>Learning content unavailable</Text>
-          <Text style={styles.lessonSummary}>Please try again after restarting the app.</Text>
-        </View>
-      );
-    }
-    const lessonCompleted = !!learnProgress.completedLessons?.[lesson.id];
-    const quizAnswer = learnProgress.quizAnswers?.[quiz.id];
-    const quizTriedCount = Object.keys(learnProgress.quizAnswers || {}).length;
-    const quizCorrectCount = Object.values(learnProgress.quizAnswers || {}).filter(answer => answer?.correct).length;
-    const lessonProgress = ((activeLessonIndex + 1) / lessons.length) * 100;
-    const quizProgress = ((activeQuizIndex + 1) / quizzes.length) * 100;
-
-    return (
-      <>
-        <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim }]}>
-          <View style={styles.learnCardHeader}>
-            <Text style={styles.lessonLevel}>Lesson {activeLessonIndex + 1} of {lessons.length} • {lesson.level}</Text>
-            {lessonCompleted && <Text style={styles.completedBadge}>Completed</Text>}
-          </View>
-          <View style={styles.flowProgressTrack}>
-            <View style={[styles.flowProgressFill, { width: `${lessonProgress}%` }]} />
-          </View>
-          <Text style={styles.lessonTitle}>{lesson.title}</Text>
-          <Text style={styles.lessonSummary}>{lesson.summary}</Text>
-          {lesson.points.map(point => (
-            <Text key={point} style={styles.lessonPoint}>• {point}</Text>
-          ))}
+          </>
+        ) : (
+          <>
+            <Text style={styles.nawawiQuestionTitle}>Learning Question</Text>
+            <Text style={styles.quizQuestion}>{question}</Text>
+          </>
+        )}
+        <View style={styles.flowControls}>
           <Pressable
-            style={[styles.learnActionButton, lessonCompleted && styles.learnActionButtonSecondary]}
-            onPress={() => markLessonComplete(lesson.id)}
-            disabled={lessonCompleted}
+            style={[styles.flowButton, activeNawawiCardIndex === 0 && styles.flowButtonDisabled]}
+            disabled={activeNawawiCardIndex === 0}
+            onPress={() => setActiveNawawiCardIndex(index => Math.max(0, index - 1))}
           >
-            <Text style={styles.learnActionText}>{lessonCompleted ? 'Completed' : 'Mark Complete'}</Text>
+            <Text style={styles.flowButtonText}>Previous</Text>
           </Pressable>
-          <View style={styles.flowControls}>
-            <Pressable
-              style={[styles.flowButton, activeLessonIndex === 0 && styles.flowButtonDisabled]}
-              disabled={activeLessonIndex === 0}
-              onPress={() => {
-                const nextIndex = Math.max(0, activeLessonIndex - 1);
-                setActiveLessonIndex(nextIndex);
-                saveLearningPosition(nextIndex, activeQuizIndex);
-              }}
-            >
-              <Text style={styles.flowButtonText}>Previous</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.flowButton, activeLessonIndex === lessons.length - 1 && styles.flowButtonDisabled]}
-              disabled={activeLessonIndex === lessons.length - 1}
-              onPress={() => {
-                const nextIndex = Math.min(lessons.length - 1, activeLessonIndex + 1);
-                setActiveLessonIndex(nextIndex);
-                saveLearningPosition(nextIndex, activeQuizIndex);
-              }}
-            >
-              <Text style={styles.flowButtonText}>Next</Text>
-            </Pressable>
-          </View>
-        </Animated.View>
-
-        <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim }]}>
-          <View style={styles.learnCardHeader}>
-            <Text style={styles.lessonLevel}>Quiz {activeQuizIndex + 1} of {quizzes.length}</Text>
-            <Text style={styles.completedBadge}>{quizCorrectCount}/{quizTriedCount || 0} correct</Text>
-          </View>
-          <View style={styles.flowProgressTrack}>
-            <View style={[styles.flowProgressFill, { width: `${quizProgress}%` }]} />
-          </View>
-          <Text style={styles.quizTitle}>{quiz.title}</Text>
-          <Text style={styles.quizQuestion}>{quiz.question}</Text>
-          {quiz.options.map((option, index) => {
-            const selected = quizAnswer?.selectedIndex === index;
-            const correctOption = quizAnswer && index === quiz.answerIndex;
-            const selectedWrong = selected && quizAnswer && !quizAnswer.correct;
-            return (
-              <Pressable
-                key={option}
-                style={[
-                  styles.quizOption,
-                  selected && styles.quizOptionSelected,
-                  selectedWrong && styles.quizOptionWrong,
-                  correctOption && styles.quizOptionCorrect,
-                ]}
-                onPress={() => answerQuiz(quiz.id, index, quiz.answerIndex)}
-              >
-                <Text style={styles.quizOptionText}>{option}</Text>
-              </Pressable>
-            );
-          })}
-          {quizAnswer && (
-            <Text style={quizAnswer.correct ? styles.quizFeedbackCorrect : styles.quizFeedbackWrong}>
-              {quizAnswer.correct ? 'Correct. ' : 'Not quite. '}
-              {quiz.explanation}
-            </Text>
-          )}
-          {!quizAnswer && (
-            <Text style={styles.flowHint}>Choose an answer to see feedback before moving on.</Text>
-          )}
-          <View style={styles.flowControls}>
-            <Pressable
-              style={[styles.flowButton, activeQuizIndex === 0 && styles.flowButtonDisabled]}
-              disabled={activeQuizIndex === 0}
-              onPress={() => {
-                const nextIndex = Math.max(0, activeQuizIndex - 1);
-                setActiveQuizIndex(nextIndex);
-                saveLearningPosition(activeLessonIndex, nextIndex);
-              }}
-            >
-              <Text style={styles.flowButtonText}>Previous</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.flowButton, (!quizAnswer || activeQuizIndex === quizzes.length - 1) && styles.flowButtonDisabled]}
-              disabled={!quizAnswer || activeQuizIndex === quizzes.length - 1}
-              onPress={() => {
-                const nextIndex = Math.min(quizzes.length - 1, activeQuizIndex + 1);
-                setActiveQuizIndex(nextIndex);
-                saveLearningPosition(activeLessonIndex, nextIndex);
-              }}
-            >
-              <Text style={styles.flowButtonText}>Next</Text>
-            </Pressable>
-          </View>
-          <Text style={styles.flowSummary}>
-            Quizzes tried: {quizTriedCount}/{quizzes.length} • Correct: {quizCorrectCount}/{quizTriedCount || 0}
-          </Text>
-        </Animated.View>
-      </>
+          <Pressable
+            style={[styles.flowButton, activeNawawiCardIndex === totalCards - 1 && styles.flowButtonDisabled]}
+            disabled={activeNawawiCardIndex === totalCards - 1}
+            onPress={() => setActiveNawawiCardIndex(index => Math.min(totalCards - 1, index + 1))}
+          >
+            <Text style={styles.flowButtonText}>Next</Text>
+          </Pressable>
+        </View>
+        <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode('overview')}>
+          <Text style={styles.secondaryTextButtonText}>Back to Arbain preview</Text>
+        </Pressable>
+      </Animated.View>
     );
   };
 
@@ -1036,6 +1097,11 @@ const closeNarratorBio = () => {
     const pathwayProgress = lessons.length
       ? Math.round((completedLessonCount / lessons.length) * 100)
       : 0;
+    const currentPathway = LEARNING_PATHWAYS.find(item => item.id === selectedPathwayId) || LEARNING_PATHWAYS[0];
+    const currentPathwayLessonCount = lessons.filter(lesson => lesson.pathway === currentPathway.id).length;
+    const currentLessonLabel = learnMode === 'pathway'
+      ? `${currentPathway.title}: card ${activePathwayCardIndex + 1}`
+      : `Choose ${currentPathway.range} to begin`;
 
     return (
     <>
@@ -1047,35 +1113,40 @@ const closeNarratorBio = () => {
         </Text>
         <View style={styles.continueLearningCard}>
           <Text style={styles.continueLearningLabel}>Continue Learning</Text>
-          <Text style={styles.continueLearningText}>Current lesson: {activeLessonIndex + 1} of {lessons.length}</Text>
+          <Text style={styles.continueLearningText}>{currentLessonLabel}</Text>
           <Text style={styles.continueLearningMeta}>Overall pathway progress: {pathwayProgress}%</Text>
+          <Text style={styles.continueLearningMeta}>{currentPathway.title} lessons: {currentPathwayLessonCount}</Text>
         </View>
         <Text style={styles.learnProgressSummary}>
           Lessons completed: {completedLessonCount}/{lessons.length} • Quizzes tried: {quizTriedCount}/{quizzes.length}
         </Text>
       </View>
 
-      <Text style={styles.learnSectionTitle}>Pathway Previews</Text>
-      {renderPathwayPreviews()}
+      {learnMode === 'overview' && (
+        <>
+          <Text style={styles.learnSectionTitle}>Pathway Previews</Text>
+          {renderPathwayPreviews()}
 
-      {renderCardLearningFlow()}
+          <Text style={styles.learnSectionTitle}>Arbain Nawawi Preview</Text>
+          {renderNawawiOverview()}
 
-      <Text style={styles.learnSectionTitle}>Arbain Nawawi Preview</Text>
-      {renderNawawiPrototype()}
-
-      <Text style={styles.learnSectionTitle}>Future Paid Version</Text>
-      <Text style={styles.premiumIntro}>A future paid version is planned to include deeper guided study tools.</Text>
-      {premiumFeatures.map(feature => (
-        <View key={feature} style={styles.lockedCard}>
-          <View style={styles.lockedIcon}>
-            <Icon name="lock" size={18} color="#d8b15a" />
-          </View>
-          <View style={styles.lockedCopy}>
-            <Text style={styles.lockedTitle}>{feature}</Text>
-            <Text style={styles.lockedText}>Locked for future release.</Text>
-          </View>
-        </View>
-      ))}
+          <Text style={styles.learnSectionTitle}>Future Paid Version</Text>
+          <Text style={styles.premiumIntro}>A future paid version is planned to include deeper guided study tools.</Text>
+          {premiumFeatures.map(feature => (
+            <View key={feature} style={styles.lockedCard}>
+              <View style={styles.lockedIcon}>
+                <Icon name="lock" size={18} color="#d8b15a" />
+              </View>
+              <View style={styles.lockedCopy}>
+                <Text style={styles.lockedTitle}>{feature}</Text>
+                <Text style={styles.lockedText}>Locked for future release.</Text>
+              </View>
+            </View>
+          ))}
+        </>
+      )}
+      {learnMode === 'pathway' && renderPathwayFlow()}
+      {learnMode === 'nawawi' && renderNawawiFlow()}
     </>
     );
   };
@@ -1419,7 +1490,6 @@ const closeNarratorBio = () => {
                 style={[styles.sectionTab, activeSection === 'search' && styles.sectionTabActive]}
                 onPress={() => setActiveSection('search')}
               >
-                <Icon name="search" size={17} color={activeSection === 'search' ? '#fff' : '#176b5f'} />
                 <Text style={[styles.sectionTabText, activeSection === 'search' && styles.sectionTabTextActive]}>
                   Search
                 </Text>
@@ -1428,7 +1498,6 @@ const closeNarratorBio = () => {
                 style={[styles.sectionTab, activeSection === 'learn' && styles.sectionTabActive]}
                 onPress={() => setActiveSection('learn')}
               >
-                <Icon name="book-open" size={17} color={activeSection === 'learn' ? '#fff' : '#176b5f'} />
                 <Text style={[styles.sectionTabText, activeSection === 'learn' && styles.sectionTabTextActive]}>
                   Learn
                 </Text>
@@ -1447,7 +1516,7 @@ const closeNarratorBio = () => {
               </Text>
               <View style={styles.searchRow}>
                 <View style={styles.searchInputWrapper}>
-                  <Icon name="search" size={20} color="#888" style={styles.searchIcon} />
+                  <Text style={styles.searchPrefixText}>Search</Text>
                   <TextInput
                     placeholder="Enter topic"
                     placeholderTextColor="#888"
@@ -1763,8 +1832,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     height: 54,
   },
-  searchIcon: {
+  searchPrefixText: {
+    color: '#607174',
+    fontSize: 12,
+    fontWeight: '800',
     marginRight: 10,
+    textTransform: 'uppercase',
   },
   searchInput: {
     flex: 1,
@@ -2104,6 +2177,17 @@ const styles = StyleSheet.create({
   },
   learnActionText: {
     color: '#fff',
+    fontWeight: '800',
+  },
+  secondaryTextButton: {
+    alignSelf: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginTop: 8,
+  },
+  secondaryTextButtonText: {
+    color: '#176b5f',
+    fontSize: 14,
     fontWeight: '800',
   },
   flowControls: {

@@ -1,6 +1,7 @@
 [
   {
     "id": "hadith-meaning-1",
+    "pathway": "beginner",
     "title": "Hadith Basics",
     "question": "What is a hadith?",
     "options": [
@@ -13,6 +14,7 @@
   },
   {
     "id": "sunnah-meaning-1",
+    "pathway": "beginner",
     "title": "Sunnah Basics",
     "question": "What does Sunnah commonly refer to?",
     "options": [
@@ -25,6 +27,7 @@
   },
   {
     "id": "qudsi-quran-1",
+    "pathway": "beginner",
     "title": "Qur'an and Hadith Qudsi",
     "question": "Which statement is correct?",
     "options": [
@@ -37,6 +40,7 @@
   },
   {
     "id": "matn-sanad-1",
+    "pathway": "beginner",
     "title": "Matn and Sanad",
     "question": "What is the sanad?",
     "options": [
@@ -49,6 +53,7 @@
   },
   {
     "id": "rawi-1",
+    "pathway": "beginner",
     "title": "Narrator Terms",
     "question": "What is a rawi?",
     "options": [
@@ -61,6 +66,7 @@
   },
   {
     "id": "hadith-quran-1",
+    "pathway": "intermediate",
     "title": "Hadith and Qur'an",
     "question": "How can hadith help with Qur'anic guidance?",
     "options": [
@@ -73,6 +79,7 @@
   },
   {
     "id": "sama-1",
+    "pathway": "intermediate",
     "title": "Receiving Hadith",
     "question": "What does al-sama refer to?",
     "options": [
@@ -85,6 +92,7 @@
   },
   {
     "id": "ahad-1",
+    "pathway": "intermediate",
     "title": "Ahad Categories",
     "question": "Which group belongs under ahad reports?",
     "options": [
@@ -97,6 +105,7 @@
   },
   {
     "id": "mutawatir-1",
+    "pathway": "intermediate",
     "title": "Mutawatir",
     "question": "What is a basic idea of mutawatir?",
     "options": [
@@ -109,6 +118,7 @@
   },
   {
     "id": "daif-1",
+    "pathway": "intermediate",
     "title": "Da'if Reports",
     "question": "What should be made clear when a report is weak?",
     "options": [
@@ -118,5 +128,70 @@
     ],
     "answerIndex": 0,
     "explanation": "If a report is weak, readers should be told clearly and should not rely on it casually."
+  },
+  {
+    "id": "muallaq-1",
+    "pathway": "advanced",
+    "title": "Mu'allaq Reports",
+    "question": "Where does omission happen in a mu'allaq report?",
+    "options": [
+      "From the beginning of the chain",
+      "Only in the English translation",
+      "Only in the chapter title"
+    ],
+    "answerIndex": 0,
+    "explanation": "A mu'allaq report has narrator omission from the beginning of the chain."
+  },
+  {
+    "id": "mursal-1",
+    "pathway": "advanced",
+    "title": "Mursal Reports",
+    "question": "What is missing in a mursal report?",
+    "options": [
+      "The Companion link is not named",
+      "The book name is always missing",
+      "The Arabic text is always missing"
+    ],
+    "answerIndex": 0,
+    "explanation": "A mursal report is narrated by a Tabi'i from the Prophet without naming the Companion."
+  },
+  {
+    "id": "maudhu-1",
+    "pathway": "advanced",
+    "title": "Fabricated Reports",
+    "question": "What does maudhu' mean?",
+    "options": [
+      "Falsely attributed to the Prophet",
+      "Always found in Bukhari",
+      "A report with many narrators"
+    ],
+    "answerIndex": 0,
+    "explanation": "Maudhu' refers to a fabricated report falsely attributed to the Prophet."
+  },
+  {
+    "id": "mudraj-1",
+    "pathway": "advanced",
+    "title": "Mudraj Reports",
+    "question": "What is mudraj?",
+    "options": [
+      "Inserted wording mistaken as part of the hadith",
+      "A report with no narrator names",
+      "A hadith only about prayer"
+    ],
+    "answerIndex": 0,
+    "explanation": "Mudraj means added wording became mixed into the report and may be mistaken as part of it."
+  },
+  {
+    "id": "maqlub-1",
+    "pathway": "advanced",
+    "title": "Maqlub Reports",
+    "question": "What can happen in a maqlub report?",
+    "options": [
+      "Names or wording may be reversed",
+      "The report becomes Qur'an",
+      "The narrator becomes unknown automatically"
+    ],
+    "answerIndex": 0,
+    "explanation": "Maqlub involves reversal or switching in the chain or text."
   }
 ]
