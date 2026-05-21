@@ -3,10 +3,10 @@
     "id": "ulum-intro",
     "title": "Welcome to Ulum al-Hadith",
     "level": "Beginner",
-    "summary": "Ulum al-Hadith means the sciences used to study hadith carefully.",
+    "summary": "Ulum al-Hadith is the field that teaches how hadith reports are studied carefully.",
     "points": [
       "This path introduces simple terms step by step.",
-      "You will learn how hadith reports are described and transmitted.",
+      "You will learn how hadith reports are described, transmitted, and checked.",
       "Use this as a beginner study aid, not a replacement for qualified teachers."
     ]
   },
@@ -14,22 +14,11 @@
     "id": "what-is-hadith",
     "title": "What Is a Hadith?",
     "level": "Beginner",
-    "summary": "A hadith is a report attributed to the Prophet Muhammad, peace be upon him.",
+    "summary": "A hadith is a report about the Prophet Muhammad, peace be upon him.",
     "points": [
-      "It may report his words, actions, approvals, or personal qualities.",
+      "It may mention his words, actions, approvals, or personal qualities.",
       "Hadith helps Muslims learn the Sunnah.",
       "Beginners should learn the terms before making conclusions."
-    ]
-  },
-  {
-    "id": "khabar-and-athar",
-    "title": "Khabar and Athar",
-    "level": "Beginner",
-    "summary": "Khabar means news or report. Athar means a trace or report from earlier Muslims.",
-    "points": [
-      "Khabar can be a broad word for transmitted reports.",
-      "Athar is often used for reports from Companions or Successors.",
-      "Scholars may use these terms differently depending on context."
     ]
   },
   {
@@ -44,13 +33,24 @@
     ]
   },
   {
+    "id": "khabar-and-athar",
+    "title": "Khabar and Athar",
+    "level": "Beginner",
+    "summary": "Khabar means news or report. Athar often refers to a trace from earlier Muslims.",
+    "points": [
+      "Khabar can be a broad word for transmitted reports.",
+      "Athar is commonly used for reports from Companions or Successors.",
+      "Scholars may use these terms differently depending on context."
+    ]
+  },
+  {
     "id": "quran-and-qudsi",
     "title": "Qur'an and Hadith Qudsi",
     "level": "Beginner",
-    "summary": "The Qur'an is Allah's exact revealed wording. Hadith Qudsi conveys meaning from Allah in prophetic wording.",
+    "summary": "The Qur'an is Allah's revealed Book. Hadith Qudsi is a sacred report narrated from Allah.",
     "points": [
-      "The Qur'an is recited in prayer and preserved as revelation.",
-      "Hadith Qudsi is important but not recited as Qur'an in prayer.",
+      "The Qur'an is recited in prayer as Qur'an.",
+      "Hadith Qudsi is important, but it is not recited as Qur'an in prayer.",
       "Both must be treated with respect and careful learning."
     ]
   },
@@ -69,10 +69,10 @@
     "id": "hadith-and-quran",
     "title": "Hadith and the Qur'an",
     "level": "Beginner",
-    "summary": "Hadith helps explain, clarify, and apply Qur'anic guidance in Muslim life.",
+    "summary": "Hadith helps Muslims understand and practise Qur'anic guidance.",
     "points": [
-      "The Prophet taught the meaning and practice of revelation.",
-      "Hadith can explain general Qur'anic instructions in practical detail.",
+      "The Prophet taught Muslims how to live by revelation.",
+      "Hadith can explain general Qur'anic guidance with practical detail.",
       "Understanding both sources requires adab and qualified scholarship."
     ]
   },
@@ -91,7 +91,7 @@
     "id": "written-permission-methods",
     "title": "Other Transmission Methods",
     "level": "Beginner",
-    "summary": "Some methods involved permission, written material, discovery of writings, or a scholar's instruction.",
+    "summary": "Some transmission methods involved permission, written material, or a scholar's instruction.",
     "points": [
       "Examples include ijazah, munawalah, kitabah, i'lam, wijadah, and wasiyyah.",
       "Not all methods have the same strength.",
@@ -102,21 +102,21 @@
     "id": "classification-overview",
     "title": "How Hadith Are Classified",
     "level": "Beginner",
-    "summary": "Hadith can be classified by narrator type, number of narrators, and level of acceptance.",
+    "summary": "Hadith can be grouped by narrator type, number of narrators, and authenticity terms.",
     "points": [
       "Narrator type includes qudsi, marfu, mawquf, and maqtu.",
       "Number of narrators includes mutawatir and ahad.",
-      "Acceptance terms include sahih, hasan, and da'if."
+      "Authenticity terms include sahih, hasan, and da'if."
     ]
   },
   {
     "id": "ahad-categories",
     "title": "Ahad: Mashhur, Aziz, Gharib",
     "level": "Beginner",
-    "summary": "Ahad reports do not reach the large transmission level of mutawatir reports.",
+    "summary": "Ahad reports are reports that do not reach the broad transmission level of mutawatir.",
     "points": [
-      "Mashhur has three or more narrators at each level, without reaching mutawatir.",
-      "Aziz has at least two routes in its discussion.",
+      "Mashhur has three or more narrators at a level, without reaching mutawatir.",
+      "Aziz has at least two narrators at a key level.",
       "Gharib is reported through one narrator at a key level."
     ]
   },
@@ -124,9 +124,9 @@
     "id": "mutawatir-basics",
     "title": "Mutawatir Reports",
     "level": "Beginner",
-    "summary": "Mutawatir refers to a report transmitted by many narrators in each generation.",
+    "summary": "Mutawatir refers to a report transmitted by many narrators across the generations.",
     "points": [
-      "The number is so large that agreement upon a lie is normally impossible.",
+      "The number is so large that they could not normally have agreed to invent it.",
       "Mutawatir lafzi keeps the same wording.",
       "Mutawatir ma'nawi shares the same meaning with different wording."
     ]
@@ -135,10 +135,10 @@
     "id": "sahih-and-hasan",
     "title": "Sahih and Hasan",
     "level": "Beginner",
-    "summary": "Sahih and hasan are terms scholars use for accepted hadith reports.",
+    "summary": "Sahih and hasan are terms scholars use for strong or acceptable hadith reports.",
     "points": [
-      "Sahih includes a connected chain, upright and precise narrators, and no serious defect.",
-      "Hasan is similar but with slightly lower precision.",
+      "Sahih includes a connected chain, upright and precise narrators, and no hidden defect.",
+      "Hasan is similar, but narrator precision may be slightly lower.",
       "Beginners should not grade hadith independently."
     ]
   },
@@ -146,9 +146,9 @@
     "id": "daif-basics",
     "title": "Da'if Reports",
     "level": "Beginner",
-    "summary": "Da'if means a report is weak because it lacks one or more conditions of acceptance.",
+    "summary": "Da'if means a report is weak because it lacks one or more required conditions.",
     "points": [
-      "Weakness may relate to the chain or narrator information.",
+      "Weakness may relate to the chain, narrator information, or other hadith conditions.",
       "Scholars discuss weak reports with care and conditions.",
       "If a report is weak, that should be made clear to readers."
     ]
@@ -160,7 +160,7 @@
     "summary": "You have learned the basic language of hadith study and why careful transmission matters.",
     "points": [
       "Know the report: matn, sanad, and narrator.",
-      "Know the category: number of narrators and acceptance terms.",
+      "Know the category: number of narrators and authenticity terms.",
       "Keep learning with humility and verify religious matters with qualified scholars."
     ]
   }

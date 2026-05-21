@@ -4,7 +4,7 @@
     "title": "Hadith Basics",
     "question": "What is a hadith?",
     "options": [
-      "A report attributed to the Prophet",
+      "A report about the Prophet",
       "Only a chapter title",
       "A modern opinion"
     ],
@@ -28,12 +28,12 @@
     "title": "Qur'an and Hadith Qudsi",
     "question": "Which statement is correct?",
     "options": [
-      "The Qur'an is Allah's exact revealed wording",
+      "The Qur'an is Allah's revealed Book",
       "Hadith Qudsi is recited as Qur'an in prayer",
       "Hadith Qudsi has 114 surahs"
     ],
     "answerIndex": 0,
-    "explanation": "The Qur'an is Allah's exact revealed wording and is recited in prayer."
+    "explanation": "The Qur'an is Allah's revealed Book and is recited as Qur'an in prayer."
   },
   {
     "id": "matn-sanad-1",
@@ -69,7 +69,7 @@
       "By removing the need for teachers"
     ],
     "answerIndex": 0,
-    "explanation": "Hadith helps explain and apply Qur'anic guidance, while learning should remain careful and guided."
+    "explanation": "Hadith helps explain and apply Qur'anic guidance, while students should keep learning carefully."
   },
   {
     "id": "sama-1",
@@ -105,7 +105,7 @@
       "It has no chain"
     ],
     "answerIndex": 0,
-    "explanation": "Mutawatir reports are transmitted by many narrators at each level."
+    "explanation": "Mutawatir reports are transmitted by many narrators across the generations."
   },
   {
     "id": "daif-1",
