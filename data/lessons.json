@@ -1,6 +1,7 @@
 [
   {
     "id": "ulum-intro",
+    "pathway": "beginner",
     "title": "Welcome to Ulum al-Hadith",
     "level": "Beginner",
     "summary": "Ulum al-Hadith is the field that teaches how hadith reports are studied carefully.",
@@ -12,6 +13,7 @@
   },
   {
     "id": "what-is-hadith",
+    "pathway": "beginner",
     "title": "What Is a Hadith?",
     "level": "Beginner",
     "summary": "A hadith is a report about the Prophet Muhammad, peace be upon him.",
@@ -22,43 +24,23 @@
     ]
   },
   {
-    "id": "sunnah-basics",
-    "title": "What Is Sunnah?",
+    "id": "sunnah-khabar-athar",
+    "pathway": "beginner",
+    "title": "Sunnah, Khabar, and Athar",
     "level": "Beginner",
-    "summary": "Sunnah can mean the Prophet's way, including his teachings and example.",
+    "summary": "Sunnah refers to the Prophet's way. Khabar means report. Athar often refers to earlier Muslims.",
     "points": [
       "Some scholars use Sunnah and Hadith closely together.",
-      "Sunnah may include sayings, actions, approvals, and intended actions.",
-      "The Sunnah helps explain how Islam is lived."
-    ]
-  },
-  {
-    "id": "khabar-and-athar",
-    "title": "Khabar and Athar",
-    "level": "Beginner",
-    "summary": "Khabar means news or report. Athar often refers to a trace from earlier Muslims.",
-    "points": [
       "Khabar can be a broad word for transmitted reports.",
-      "Athar is commonly used for reports from Companions or Successors.",
-      "Scholars may use these terms differently depending on context."
+      "Athar is commonly used for reports from Companions or Successors."
     ]
   },
   {
-    "id": "quran-and-qudsi",
-    "title": "Qur'an and Hadith Qudsi",
+    "id": "quran-qudsi-matn-sanad",
+    "pathway": "beginner",
+    "title": "Qur'an, Qudsi, Matn, and Sanad",
     "level": "Beginner",
     "summary": "The Qur'an is Allah's revealed Book. Hadith Qudsi is a sacred report narrated from Allah.",
-    "points": [
-      "The Qur'an is recited in prayer as Qur'an.",
-      "Hadith Qudsi is important, but it is not recited as Qur'an in prayer.",
-      "Both must be treated with respect and careful learning."
-    ]
-  },
-  {
-    "id": "matn-sanad-rawi",
-    "title": "Matn, Sanad, and Rawi",
-    "level": "Beginner",
-    "summary": "A hadith report has a text and a chain of people who transmitted it.",
     "points": [
       "The matn is the wording or message of the hadith.",
       "The sanad is the chain of narrators.",
@@ -66,42 +48,22 @@
     ]
   },
   {
-    "id": "hadith-and-quran",
-    "title": "Hadith and the Qur'an",
-    "level": "Beginner",
-    "summary": "Hadith helps Muslims understand and practise Qur'anic guidance.",
-    "points": [
-      "The Prophet taught Muslims how to live by revelation.",
-      "Hadith can explain general Qur'anic guidance with practical detail.",
-      "Understanding both sources requires adab and qualified scholarship."
-    ]
-  },
-  {
     "id": "receiving-hadith",
+    "pathway": "beginner",
     "title": "How Hadith Was Received",
     "level": "Beginner",
     "summary": "Classical students received hadith through careful learning methods from teachers.",
     "points": [
       "Al-sama means hearing directly from a teacher.",
       "Al-qira'ah means reading to a teacher for correction.",
-      "These methods show the importance of accuracy in transmission."
-    ]
-  },
-  {
-    "id": "written-permission-methods",
-    "title": "Other Transmission Methods",
-    "level": "Beginner",
-    "summary": "Some transmission methods involved permission, written material, or a scholar's instruction.",
-    "points": [
-      "Examples include ijazah, munawalah, kitabah, i'lam, wijadah, and wasiyyah.",
-      "Not all methods have the same strength.",
-      "Knowing the method helps students understand how knowledge was preserved."
+      "Other methods include ijazah, munawalah, kitabah, i'lam, wijadah, and wasiyyah."
     ]
   },
   {
     "id": "classification-overview",
+    "pathway": "intermediate",
     "title": "How Hadith Are Classified",
-    "level": "Beginner",
+    "level": "Intermediate",
     "summary": "Hadith can be grouped by narrator type, number of narrators, and authenticity terms.",
     "points": [
       "Narrator type includes qudsi, marfu, mawquf, and maqtu.",
@@ -111,8 +73,9 @@
   },
   {
     "id": "ahad-categories",
+    "pathway": "intermediate",
     "title": "Ahad: Mashhur, Aziz, Gharib",
-    "level": "Beginner",
+    "level": "Intermediate",
     "summary": "Ahad reports are reports that do not reach the broad transmission level of mutawatir.",
     "points": [
       "Mashhur has three or more narrators at a level, without reaching mutawatir.",
@@ -122,8 +85,9 @@
   },
   {
     "id": "mutawatir-basics",
+    "pathway": "intermediate",
     "title": "Mutawatir Reports",
-    "level": "Beginner",
+    "level": "Intermediate",
     "summary": "Mutawatir refers to a report transmitted by many narrators across the generations.",
     "points": [
       "The number is so large that they could not normally have agreed to invent it.",
@@ -133,8 +97,9 @@
   },
   {
     "id": "sahih-and-hasan",
+    "pathway": "intermediate",
     "title": "Sahih and Hasan",
-    "level": "Beginner",
+    "level": "Intermediate",
     "summary": "Sahih and hasan are terms scholars use for strong or acceptable hadith reports.",
     "points": [
       "Sahih includes a connected chain, upright and precise narrators, and no hidden defect.",
@@ -144,8 +109,9 @@
   },
   {
     "id": "daif-basics",
+    "pathway": "intermediate",
     "title": "Da'if Reports",
-    "level": "Beginner",
+    "level": "Intermediate",
     "summary": "Da'if means a report is weak because it lacks one or more required conditions.",
     "points": [
       "Weakness may relate to the chain, narrator information, or other hadith conditions.",
@@ -154,14 +120,123 @@
     ]
   },
   {
-    "id": "ulum-recap",
-    "title": "Recap: Study with Care",
-    "level": "Beginner",
-    "summary": "You have learned the basic language of hadith study and why careful transmission matters.",
+    "id": "muallaq-basics",
+    "pathway": "advanced",
+    "title": "Mu'allaq Reports",
+    "level": "Advanced",
+    "summary": "A mu'allaq report has narrator omission from the beginning of the chain.",
     "points": [
-      "Know the report: matn, sanad, and narrator.",
-      "Know the category: number of narrators and authenticity terms.",
-      "Keep learning with humility and verify religious matters with qualified scholars."
+      "One narrator, several narrators, or the whole beginning of the chain may be omitted.",
+      "This often appears in shortened references or chapter headings.",
+      "Students should notice when a chain is not fully shown."
+    ]
+  },
+  {
+    "id": "mursal-basics",
+    "pathway": "advanced",
+    "title": "Mursal Reports",
+    "level": "Advanced",
+    "summary": "A mursal report is narrated by a Tabi'i directly from the Prophet without naming the Companion.",
+    "points": [
+      "The Companion link is not mentioned in the chain.",
+      "Scholars discuss mursal reports carefully and with conditions.",
+      "This term teaches students to ask who is missing from the chain."
+    ]
+  },
+  {
+    "id": "mudhal-munqati-basics",
+    "pathway": "advanced",
+    "title": "Mu'dal and Munqati'",
+    "level": "Advanced",
+    "summary": "Mu'dal and munqati' are types of reports with disconnected chains.",
+    "points": [
+      "Mu'dal usually means two or more narrators are missing in sequence.",
+      "Munqati' means the chain is broken or not continuous.",
+      "These categories require careful scholarly checking."
+    ]
+  },
+  {
+    "id": "mudallas-basics",
+    "pathway": "advanced",
+    "title": "Mudallas Reports",
+    "level": "Advanced",
+    "summary": "Tadlis means concealing something in the chain in a way that can make it look stronger.",
+    "points": [
+      "A narrator may use unclear wording or an unusual name for a teacher.",
+      "Scholars study wording such as 'from' and how the narrator received the report.",
+      "This topic shows why exact transmission details matter."
+    ]
+  },
+  {
+    "id": "maudhu-origins",
+    "pathway": "advanced",
+    "title": "Maudhu': Fabricated Reports",
+    "level": "Advanced",
+    "summary": "Maudhu' means a report falsely attributed to the Prophet, peace be upon him.",
+    "points": [
+      "Fabricated reports may appear because of politics, stories, or careless preaching.",
+      "Scholars warned strongly against attributing false words to the Prophet.",
+      "Specific religious claims should be checked before being shared."
+    ]
+  },
+  {
+    "id": "maudhu-signs",
+    "pathway": "advanced",
+    "title": "Recognising Fabrication",
+    "level": "Advanced",
+    "summary": "Scholars look at both chain and text when warning about fabricated reports.",
+    "points": [
+      "Chain signs may include broken chains or known fabricators.",
+      "Text signs may include extreme rewards or meanings that clash with established Islam.",
+      "Beginners should not judge alone, but should learn why checking matters."
+    ]
+  },
+  {
+    "id": "shadh-basics",
+    "pathway": "advanced",
+    "title": "Shadh Reports",
+    "level": "Advanced",
+    "summary": "A shadh report involves isolation or contradiction in a way scholars need to examine.",
+    "points": [
+      "One common discussion is a narration conflicting with a stronger narration.",
+      "Scholars compare chains, narrators, and wording.",
+      "This topic shows that strong-looking reports still need careful comparison."
+    ]
+  },
+  {
+    "id": "mudraj-basics",
+    "pathway": "advanced",
+    "title": "Mudraj Reports",
+    "level": "Advanced",
+    "summary": "Mudraj means extra words were inserted and mistaken as part of the hadith.",
+    "points": [
+      "The addition may appear in the text or chain.",
+      "It may come from a narrator's explanation or misunderstanding.",
+      "Scholars separate the Prophet's wording from added wording."
+    ]
+  },
+  {
+    "id": "maqlub-basics",
+    "pathway": "advanced",
+    "title": "Maqlub Reports",
+    "level": "Advanced",
+    "summary": "Maqlub involves reversal or switching in a chain or text.",
+    "points": [
+      "A narrator's name may be switched or placed in the wrong order.",
+      "A word in the text may be reversed or changed by mistake.",
+      "This topic shows why exact names and wording matter."
+    ]
+  },
+  {
+    "id": "musalsal-basics",
+    "pathway": "advanced",
+    "title": "Musalsal Reports",
+    "level": "Advanced",
+    "summary": "Musalsal reports share a repeated pattern in transmission.",
+    "points": [
+      "The shared pattern may be wording, action, time, place, or narrator state.",
+      "Hadith al-Rahmah is often used as an example of musalsal transmission.",
+      "This reminds students that hadith study also records how knowledge was passed on."
     ]
   }
 ]

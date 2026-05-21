@@ -30,6 +30,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const lessons = require('./data/lessons.json');
 const quizzes = require('./data/quizzes.json');
+const nawawiPreview = require('./data/nawawiPreview.json');
 
 const { width, height } = Dimensions.get('window');
 
@@ -51,14 +52,26 @@ const clampLearningIndex = (value, length) => {
   if (!Number.isFinite(index)) return 0;
   return Math.min(Math.max(Math.floor(index), 0), Math.max(length - 1, 0));
 };
-const NAWAWI_HADITH_1 = {
-  id: 'nawawi-hadith-1',
-  title: 'Hadith 1: Intentions',
-  reference: 'Sahih al-Bukhari 1; Sahih Muslim 1907',
-  arabic: 'إنما الأعمال بالنيات',
-  english: 'Actions are only by intentions.',
-  stages: ['Read', 'Understand', 'Memorise', 'Review'],
-};
+const LEARNING_PATHWAYS = [
+  {
+    id: 'beginner',
+    title: 'Beginner Pathway',
+    range: 'Lessons 1-5',
+    description: 'Introduction to key hadith terms and transmission basics.',
+  },
+  {
+    id: 'intermediate',
+    title: 'Intermediate Pathway',
+    range: 'Lessons 6-10',
+    description: 'Hadith classification by narrators and authenticity terms.',
+  },
+  {
+    id: 'advanced',
+    title: 'Advanced Pathway',
+    range: 'Lessons 11-20',
+    description: 'Broken chains, hidden issues, fabrication, and technical report types.',
+  },
+];
 
 const getTodayKey = () => {
   const now = new Date();
@@ -557,16 +570,16 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
     }));
   };
 
-  const toggleMemorisationStage = stage => {
+  const toggleMemorisationStage = (hadithId, stage) => {
     updateLearnProgress(previousProgress => {
-      const currentTracker = previousProgress.memorisation?.[NAWAWI_HADITH_1.id] || {};
+      const currentTracker = previousProgress.memorisation?.[hadithId] || {};
       return {
         ...previousProgress,
         currentLessonIndex: activeLessonIndex,
         currentQuizIndex: activeQuizIndex,
         memorisation: {
           ...previousProgress.memorisation,
-          [NAWAWI_HADITH_1.id]: {
+          [hadithId]: {
             ...currentTracker,
             [stage]: !currentTracker[stage],
           },
@@ -803,50 +816,83 @@ const closeNarratorBio = () => {
   ]);
 
   const premiumFeatures = [
-    'Full 40 Hadith Nawawi pathway',
-    'Quiz and test mode for each hadith',
-    'Advanced memorisation progress',
-    'Sahih Bukhari and Sahih Muslim pathway',
-    'Narrator and rijal learning cards',
+    'All 40 Hadith Nawawi',
+    'Full memorisation tracking',
+    'Revision schedule',
+    'Narrator flashcards',
+    'Sahihayn memorisation pathway',
+    'Rijal learning system',
   ];
 
-  const renderNawawiPrototype = () => {
-    const tracker = learnProgress.memorisation?.[NAWAWI_HADITH_1.id] || {};
-    const completedStages = NAWAWI_HADITH_1.stages.filter(stage => tracker[stage]).length;
+  const renderPathwayPreviews = () => (
+    <>
+      {LEARNING_PATHWAYS.map(pathway => {
+        const pathwayLessons = lessons.filter(lesson => lesson.pathway === pathway.id);
+        const completedCount = pathwayLessons.filter(lesson => learnProgress.completedLessons?.[lesson.id]).length;
+        const progress = pathwayLessons.length
+          ? Math.round((completedCount / pathwayLessons.length) * 100)
+          : 0;
 
-    return (
-      <View style={styles.learnCard}>
-        <View style={styles.learnCardHeader}>
-          <Text style={styles.lessonLevel}>Preview</Text>
-          <Text style={styles.completedBadge}>{completedStages}/{NAWAWI_HADITH_1.stages.length}</Text>
-        </View>
-        <Text style={styles.lessonTitle}>{NAWAWI_HADITH_1.title}</Text>
-        <Text style={styles.nawawiReference}>{NAWAWI_HADITH_1.reference}</Text>
-        <Text style={styles.nawawiArabic}>{NAWAWI_HADITH_1.arabic}</Text>
-        <Text style={styles.lessonSummary}>{NAWAWI_HADITH_1.english}</Text>
-        <Text style={styles.lessonPoint}>
-          Prototype tracker only. The full 40 Hadith Nawawi pathway is planned for a future release.
-        </Text>
-        <View style={styles.memorisationGrid}>
-          {NAWAWI_HADITH_1.stages.map(stage => {
-            const done = !!tracker[stage];
-            return (
-              <Pressable
-                key={stage}
-                style={[styles.memorisationStep, done && styles.memorisationStepDone]}
-                onPress={() => toggleMemorisationStage(stage)}
-              >
-                <Icon name={done ? 'check-circle' : 'circle'} size={16} color={done ? '#fff' : '#176b5f'} />
-                <Text style={[styles.memorisationStepText, done && styles.memorisationStepTextDone]}>
-                  {stage}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      </View>
-    );
-  };
+        return (
+          <View key={pathway.id} style={styles.learnCard}>
+            <View style={styles.learnCardHeader}>
+              <Text style={styles.lessonLevel}>{pathway.range}</Text>
+              <Text style={styles.completedBadge}>Free preview</Text>
+            </View>
+            <Text style={styles.lessonTitle}>{pathway.title}</Text>
+            <Text style={styles.lessonSummary}>{pathway.description}</Text>
+            <Text style={styles.lessonPoint}>
+              Progress: {completedCount}/{pathwayLessons.length} lessons • {progress}%
+            </Text>
+          </View>
+        );
+      })}
+    </>
+  );
+
+  const renderNawawiPrototype = () => (
+    <>
+      {nawawiPreview.map(hadith => {
+        const tracker = learnProgress.memorisation?.[hadith.id] || {};
+        const completedStages = hadith.stages.filter(stage => tracker[stage]).length;
+
+        return (
+          <View key={hadith.id} style={styles.learnCard}>
+            <View style={styles.learnCardHeader}>
+              <Text style={styles.lessonLevel}>Free Arbain Preview</Text>
+              <Text style={styles.completedBadge}>{completedStages}/{hadith.stages.length}</Text>
+            </View>
+            <Text style={styles.lessonTitle}>{hadith.title}</Text>
+            <Text style={styles.nawawiReference}>{hadith.reference}</Text>
+            <Text style={styles.nawawiReference}>Narrator: {hadith.narrator}</Text>
+            <Text style={styles.nawawiArabic}>{hadith.arabic}</Text>
+            <Text style={styles.lessonSummary}>{hadith.english}</Text>
+            <View style={styles.memorisationGrid}>
+              {hadith.stages.map(stage => {
+                const done = !!tracker[stage];
+                return (
+                  <Pressable
+                    key={stage}
+                    style={[styles.memorisationStep, done && styles.memorisationStepDone]}
+                    onPress={() => toggleMemorisationStage(hadith.id, stage)}
+                  >
+                    <Icon name={done ? 'check-circle' : 'circle'} size={16} color={done ? '#fff' : '#176b5f'} />
+                    <Text style={[styles.memorisationStepText, done && styles.memorisationStepTextDone]}>
+                      {stage}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Text style={styles.nawawiQuestionTitle}>Learning questions</Text>
+            {hadith.questions.map(question => (
+              <Text key={question} style={styles.lessonPoint}>• {question}</Text>
+            ))}
+          </View>
+        );
+      })}
+    </>
+  );
 
   const renderCardLearningFlow = () => {
     const lesson = lessons[activeLessonIndex];
@@ -870,7 +916,7 @@ const closeNarratorBio = () => {
       <>
         <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim }]}>
           <View style={styles.learnCardHeader}>
-            <Text style={styles.lessonLevel}>Lesson {activeLessonIndex + 1} of {lessons.length}</Text>
+            <Text style={styles.lessonLevel}>Lesson {activeLessonIndex + 1} of {lessons.length} • {lesson.level}</Text>
             {lessonCompleted && <Text style={styles.completedBadge}>Completed</Text>}
           </View>
           <View style={styles.flowProgressTrack}>
@@ -994,28 +1040,31 @@ const closeNarratorBio = () => {
     return (
     <>
       <View style={styles.learnHeroCard}>
-        <Text style={styles.learnEyebrow}>Lessons 1-10</Text>
-        <Text style={styles.learnTitle}>Beginner Pathway: Introduction to the Sciences of Hadith</Text>
+        <Text style={styles.learnEyebrow}>Free learning previews</Text>
+        <Text style={styles.learnTitle}>Hadith Learning Pathways</Text>
         <Text style={styles.learnIntro}>
-          Short lessons, simple quizzes, and glossary access to help you build confidence before deeper study. Lessons 11-20 are reserved for future Intermediate or Advanced pathways.
+          Beginner, Intermediate, and Advanced previews help you study the sciences of hadith step by step. All three pathway previews are free for now.
         </Text>
         <View style={styles.continueLearningCard}>
           <Text style={styles.continueLearningLabel}>Continue Learning</Text>
           <Text style={styles.continueLearningText}>Current lesson: {activeLessonIndex + 1} of {lessons.length}</Text>
-          <Text style={styles.continueLearningMeta}>Beginner Pathway progress: {pathwayProgress}%</Text>
+          <Text style={styles.continueLearningMeta}>Overall pathway progress: {pathwayProgress}%</Text>
         </View>
         <Text style={styles.learnProgressSummary}>
           Lessons completed: {completedLessonCount}/{lessons.length} • Quizzes tried: {quizTriedCount}/{quizzes.length}
         </Text>
       </View>
 
+      <Text style={styles.learnSectionTitle}>Pathway Previews</Text>
+      {renderPathwayPreviews()}
+
       {renderCardLearningFlow()}
 
-      <Text style={styles.learnSectionTitle}>40 Hadith Nawawi Preview</Text>
+      <Text style={styles.learnSectionTitle}>Arbain Nawawi Preview</Text>
       {renderNawawiPrototype()}
 
-      <Text style={styles.learnSectionTitle}>Future Premium Features</Text>
-      <Text style={styles.premiumIntro}>Premium learning paths are planned for a future release.</Text>
+      <Text style={styles.learnSectionTitle}>Future Paid Version</Text>
+      <Text style={styles.premiumIntro}>A future paid version is planned to include deeper guided study tools.</Text>
       {premiumFeatures.map(feature => (
         <View key={feature} style={styles.lockedCard}>
           <View style={styles.lockedIcon}>
@@ -2005,6 +2054,13 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textAlign: 'right',
     marginBottom: 10,
+  },
+  nawawiQuestionTitle: {
+    color: '#132f35',
+    fontSize: 15,
+    fontWeight: '800',
+    marginTop: 14,
+    marginBottom: 8,
   },
   memorisationGrid: {
     flexDirection: 'row',

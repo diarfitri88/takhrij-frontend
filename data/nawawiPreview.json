@@ -1,0 +1,77 @@
+[
+  {
+    "id": "nawawi-1",
+    "title": "Hadith 1: Intentions",
+    "narrator": "Umar ibn al-Khattab",
+    "reference": "Sahih al-Bukhari 1; Sahih Muslim 1907",
+    "arabic": "إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ",
+    "english": "Actions are judged by intentions.",
+    "stages": ["Read", "Understand", "Memorise", "Review"],
+    "questions": [
+      "Who is the narrator?",
+      "What is the main lesson about intention?",
+      "Who narrates from whom, if available?",
+      "Complete: إِنَّمَا الأَعْمَالُ بِ____"
+    ]
+  },
+  {
+    "id": "nawawi-2",
+    "title": "Hadith 2: Islam, Iman, Ihsan",
+    "narrator": "Umar ibn al-Khattab",
+    "reference": "Sahih Muslim 8",
+    "arabic": "أَنْ تَعْبُدَ اللَّهَ كَأَنَّكَ تَرَاهُ",
+    "english": "Ihsan is to worship Allah as though you see Him.",
+    "stages": ["Read", "Understand", "Memorise", "Review"],
+    "questions": [
+      "Who is the narrator?",
+      "What are Islam, Iman, and Ihsan?",
+      "Who narrates from whom, if available?",
+      "Complete: أَنْ تَعْبُدَ اللَّهَ كَأَنَّكَ ____"
+    ]
+  },
+  {
+    "id": "nawawi-3",
+    "title": "Hadith 3: The Pillars of Islam",
+    "narrator": "Abdullah ibn Umar",
+    "reference": "Sahih al-Bukhari 8; Sahih Muslim 16",
+    "arabic": "بُنِيَ الإِسْلَامُ عَلَى خَمْسٍ",
+    "english": "Islam is built upon five foundations.",
+    "stages": ["Read", "Understand", "Memorise", "Review"],
+    "questions": [
+      "Who is the narrator?",
+      "What are the five foundations mentioned?",
+      "Who narrates from whom, if available?",
+      "Complete: بُنِيَ الإِسْلَامُ عَلَى ____"
+    ]
+  },
+  {
+    "id": "nawawi-4",
+    "title": "Hadith 4: Human Creation",
+    "narrator": "Abdullah ibn Mas'ud",
+    "reference": "Sahih al-Bukhari 3208; Sahih Muslim 2643",
+    "arabic": "إِنَّ أَحَدَكُمْ يُجْمَعُ خَلْقُهُ فِي بَطْنِ أُمِّهِ",
+    "english": "A person's creation is formed by Allah in the mother's womb.",
+    "stages": ["Read", "Understand", "Memorise", "Review"],
+    "questions": [
+      "Who is the narrator?",
+      "What does this hadith teach about Allah's knowledge and decree?",
+      "Who narrates from whom, if available?",
+      "Complete: فِي بَطْنِ ____"
+    ]
+  },
+  {
+    "id": "nawawi-5",
+    "title": "Hadith 5: Rejected Innovations",
+    "narrator": "Aisha bint Abi Bakr",
+    "reference": "Sahih al-Bukhari 2697; Sahih Muslim 1718",
+    "arabic": "مَنْ أَحْدَثَ فِي أَمْرِنَا هَذَا مَا لَيْسَ مِنْهُ فَهُوَ رَدٌّ",
+    "english": "A religious matter introduced without basis is rejected.",
+    "stages": ["Read", "Understand", "Memorise", "Review"],
+    "questions": [
+      "Who is the narrator?",
+      "What is the main lesson about following the Sunnah?",
+      "Who narrates from whom, if available?",
+      "Complete: فَهُوَ ____"
+    ]
+  }
+]
