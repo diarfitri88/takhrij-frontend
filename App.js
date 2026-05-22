@@ -297,9 +297,12 @@ const getReviewCardId = (type, id, extra = '') =>
 
 const getReviewScheduleForNewCard = () => ({
   intervalIndex: 0,
-  dueDate: addDaysToDateKey(getTodayKey(), REVIEW_INTERVAL_DAYS[0]),
+  dueDate: getTodayKey(),
   lastReviewed: '',
 });
+
+const isReviewCardDue = (schedule, todayKey) =>
+  !schedule?.dueDate || !schedule?.lastReviewed || schedule.dueDate <= todayKey;
 
 const buildReviewCards = (progress, todayKey = getTodayKey()) => {
   const cards = [];
@@ -312,7 +315,7 @@ const buildReviewCards = (progress, todayKey = getTodayKey()) => {
   lessons.forEach(lesson => {
     const cardId = getReviewCardId('lesson', lesson.id);
     const schedule = progress.reviewSchedule?.[cardId];
-    if (progress.completedLessons?.[lesson.id] && (!schedule?.dueDate || schedule.dueDate <= todayKey)) {
+    if (progress.completedLessons?.[lesson.id] && isReviewCardDue(schedule, todayKey)) {
       addReviewCard({
         id: cardId,
         type: 'Lesson',
@@ -328,7 +331,7 @@ const buildReviewCards = (progress, todayKey = getTodayKey()) => {
     const cardId = getReviewCardId('quiz', quiz.id);
     const schedule = progress.reviewSchedule?.[cardId];
     const answer = progress.quizAnswers?.[quiz.id];
-    if (answer && (!schedule?.dueDate || schedule.dueDate <= todayKey)) {
+    if (answer && isReviewCardDue(schedule, todayKey)) {
       const correctOption = answer.correctOption || quiz.options[quiz.answerIndex];
       addReviewCard({
         id: cardId,
@@ -347,7 +350,7 @@ const buildReviewCards = (progress, todayKey = getTodayKey()) => {
     hadith.stages.forEach(stage => {
       const cardId = getReviewCardId('arbain', hadith.id, stage);
       const schedule = progress.reviewSchedule?.[cardId];
-      if (tracker[stage] && (!schedule?.dueDate || schedule.dueDate <= todayKey)) {
+      if (tracker[stage] && isReviewCardDue(schedule, todayKey)) {
         addReviewCard({
           id: cardId,
           type: 'Arbain',
@@ -1690,7 +1693,7 @@ const closeNarratorBio = () => {
         <View style={styles.dailyReviewCard}>
           <View style={styles.learnCardHeader}>
             <Text style={styles.continueLearningLabel}>Today’s Review</Text>
-            <Text style={styles.completedBadge}>{reviewCards.length} waiting</Text>
+            <Text style={styles.completedBadge}>{reviewCards.length} cards ready</Text>
           </View>
           <Text style={styles.continueLearningText}>
             {reviewCards.length ? 'Review one card to keep your learning fresh.' : 'No review content available yet. Complete a lesson or quiz first.'}
