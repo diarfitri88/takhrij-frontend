@@ -19,9 +19,9 @@ import {
   AppState,
   BackHandler,
   Animated,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Icon from 'react-native-vector-icons/Feather';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import { Share } from 'react-native';
@@ -716,6 +716,34 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
     });
   };
 
+  const resetLearningProgress = () => {
+    Alert.alert(
+      'Reset learning progress?',
+      'This clears lesson completion, quiz attempts, pathway position, and Arbain checklist progress. Search limits and app settings will not be changed.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset',
+          style: 'destructive',
+          onPress: async () => {
+            learnProgressRef.current = DEFAULT_LEARN_PROGRESS;
+            setLearnProgress(DEFAULT_LEARN_PROGRESS);
+            setSelectedPathwayId('beginner');
+            setActivePathwayPreviewIndex(0);
+            setActivePathwayCardIndex(0);
+            setActiveNawawiCardIndex(0);
+            setLearnMode('overview');
+            try {
+              await AsyncStorage.removeItem(LEARN_PROGRESS_STORAGE_KEY);
+            } catch {
+              // Reset is a developer convenience; storage errors should not break Learn.
+            }
+          },
+        },
+      ]
+    );
+  };
+
   useEffect(() => {
     if (learnMode !== 'pathway') return;
     const currentProgress = learnProgressRef.current || DEFAULT_LEARN_PROGRESS;
@@ -1219,9 +1247,8 @@ const closeNarratorBio = () => {
                     style={[styles.memorisationStep, done && styles.memorisationStepDone]}
                     onPress={() => toggleMemorisationStage(hadith.id, stage)}
                   >
-                    <Icon name={done ? 'check-circle' : 'circle'} size={16} color={done ? '#fff' : '#176b5f'} />
                     <Text style={[styles.memorisationStepText, done && styles.memorisationStepTextDone]}>
-                      {stage}
+                      {done ? `${stage} done` : stage}
                     </Text>
                   </Pressable>
                 );
@@ -1293,6 +1320,9 @@ const closeNarratorBio = () => {
           <Text style={styles.continueLearningText}>{currentLessonLabel}</Text>
           <Text style={styles.continueLearningMeta}>Overall pathway progress: {pathwayProgress}%</Text>
           <Text style={styles.continueLearningMeta}>{currentPathway.title}: {getPathwayLessonProgress(currentPathway.id, safeProgress).percentage}% complete</Text>
+          <Pressable style={styles.resetLearnButton} onPress={resetLearningProgress}>
+            <Text style={styles.resetLearnButtonText}>Reset learning progress</Text>
+          </Pressable>
         </View>
         <Text style={styles.learnProgressSummary}>
           Lessons completed: {completedLessonCount}/{lessons.length} • Quizzes tried: {quizTriedCount}/{quizzes.length}
@@ -1311,9 +1341,6 @@ const closeNarratorBio = () => {
           <Text style={styles.premiumIntro}>A future paid version is planned to include deeper guided study tools.</Text>
           {premiumFeatures.map(feature => (
             <View key={feature} style={styles.lockedCard}>
-              <View style={styles.lockedIcon}>
-                <Icon name="lock" size={18} color="#d8b15a" />
-              </View>
               <View style={styles.lockedCopy}>
                 <Text style={styles.lockedTitle}>{feature}</Text>
                 <Text style={styles.lockedText}>Locked for future release.</Text>
@@ -1703,7 +1730,7 @@ const closeNarratorBio = () => {
                   />
                   {query && (
                     <Pressable onPress={() => setQuery('')} style={styles.clearButton}>
-                      <Icon name="x" size={20} color="#888" />
+                      <Text style={styles.clearButtonText}>Clear</Text>
                     </Pressable>
                   )}
                 </View>
@@ -1771,7 +1798,6 @@ const closeNarratorBio = () => {
               <View key={i} style={styles.card}>
                 {h.reference && (
                   <View style={styles.referenceBadge}>
-                    <Icon name="bookmark" size={14} color="#1b433f" />
                     <Text style={styles.referenceBadgeText}>{h.reference}</Text>
                   </View>
                 )}
@@ -1790,7 +1816,6 @@ const closeNarratorBio = () => {
                     style={styles.commentaryButton}
                     onPress={() => fetchCommentary(h.arabic, h.english, h.reference, h.collection)}
                   >
-                    <Icon name="message-circle" size={18} color="#fff" style={styles.commentaryIcon} />
                     <Text style={styles.commentaryText}>View Commentary</Text>
                   </Pressable>
                 )}
@@ -2014,7 +2039,13 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     backgroundColor: '#e6ece4',
     borderRadius: 8,
-    padding: 5,
+    paddingVertical: 7,
+    paddingHorizontal: 9,
+  },
+  clearButtonText: {
+    color: '#607174',
+    fontSize: 12,
+    fontWeight: '800',
   },
   searchButton: {
     backgroundColor: '#176b5f',
@@ -2119,7 +2150,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     color: '#1b433f',
-    marginLeft: 6,
   },
   resultAuthenticityBadge: {
     alignSelf: 'flex-start',
@@ -2211,6 +2241,20 @@ const styles = StyleSheet.create({
     color: '#d9e3df',
     fontSize: 13,
     lineHeight: 19,
+  },
+  resetLearnButton: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: 'rgba(216,177,90,0.45)',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    marginTop: 12,
+  },
+  resetLearnButtonText: {
+    color: '#f7f1df',
+    fontSize: 12,
+    fontWeight: '800',
   },
   learnProgressSummary: {
     color: '#f7f1df',
@@ -2487,15 +2531,6 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     marginBottom: 12,
   },
-  lockedIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    backgroundColor: '#132f35',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
   lockedCopy: {
     flex: 1,
   },
@@ -2525,9 +2560,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     marginTop: 12,
-  },
-  commentaryIcon: {
-    marginRight: 8,
   },
   commentaryText: {
     color: '#fff',
