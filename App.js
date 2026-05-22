@@ -96,6 +96,21 @@ const getNawawiCards = () => nawawiPreview.flatMap(hadith => [
   })),
 ]);
 
+const getStableHash = value => String(value).split('').reduce((hash, char) => {
+  const nextHash = ((hash << 5) - hash) + char.charCodeAt(0);
+  return nextHash | 0;
+}, 0);
+
+const getShuffledOptions = (options = [], seed = '') => (
+  [...options]
+    .map((option, index) => ({
+      option,
+      sort: getStableHash(`${seed}:${option}:${index}`),
+    }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(item => item.option)
+);
+
 const sanitizeLearnProgress = progress => {
   const source = progress && typeof progress === 'object' ? progress : {};
   const completedLessons = {};
@@ -113,13 +128,23 @@ const sanitizeLearnProgress = progress => {
       quiz &&
       answer &&
       typeof answer === 'object' &&
-      Number.isInteger(selectedIndex) &&
-      selectedIndex >= 0 &&
-      selectedIndex < quiz.options.length
+      (
+        typeof answer.selectedOption === 'string' ||
+        (
+          Number.isInteger(selectedIndex) &&
+          selectedIndex >= 0 &&
+          selectedIndex < quiz.options.length
+        )
+      )
     ) {
+      const selectedOption = typeof answer.selectedOption === 'string'
+        ? answer.selectedOption
+        : quiz.options[selectedIndex];
+      const correctOption = quiz.options[quiz.answerIndex];
       quizAnswers[quizId] = {
-        selectedIndex,
-        correct: selectedIndex === quiz.answerIndex,
+        selectedOption,
+        correctOption,
+        correct: selectedOption === correctOption,
       };
     }
   });
@@ -139,9 +164,29 @@ const sanitizeLearnProgress = progress => {
     const hadith = nawawiPreview.find(item => item.id === hadithId);
     if (!hadith || !checks || typeof checks !== 'object') return;
     nawawiQuestionChecks[hadithId] = {};
-    (hadith.questions || []).forEach((_, index) => {
-      if (typeof checks[index] === 'number' || checks[index] === true) {
+    (hadith.questions || []).forEach((question, index) => {
+      if (typeof question === 'string' && checks[index] === true) {
         nawawiQuestionChecks[hadithId][index] = checks[index];
+      } else if (question && typeof question === 'object' && checks[index] && typeof checks[index] === 'object') {
+        const selectedOption = checks[index].selectedOption;
+        const correctOption = question.options?.[question.answerIndex];
+        if (typeof selectedOption === 'string' && typeof correctOption === 'string') {
+          nawawiQuestionChecks[hadithId][index] = {
+            selectedOption,
+            correctOption,
+            correct: selectedOption === correctOption,
+          };
+        }
+      } else if (question && typeof question === 'object' && typeof checks[index] === 'number') {
+        const selectedOption = question.options?.[checks[index]];
+        const correctOption = question.options?.[question.answerIndex];
+        if (typeof selectedOption === 'string' && typeof correctOption === 'string') {
+          nawawiQuestionChecks[hadithId][index] = {
+            selectedOption,
+            correctOption,
+            correct: selectedOption === correctOption,
+          };
+        }
       }
     });
   });
@@ -258,16 +303,23 @@ const getReviewScheduleForNewCard = () => ({
 
 const buildReviewCards = (progress, todayKey = getTodayKey()) => {
   const cards = [];
+  const addReviewCard = card => {
+    if (card.title && card.prompt && card.sourceLabel) {
+      cards.push(card);
+    }
+  };
 
   lessons.forEach(lesson => {
     const cardId = getReviewCardId('lesson', lesson.id);
     const schedule = progress.reviewSchedule?.[cardId];
     if (progress.completedLessons?.[lesson.id] && (!schedule?.dueDate || schedule.dueDate <= todayKey)) {
-      cards.push({
+      addReviewCard({
         id: cardId,
         type: 'Lesson',
+        sourceLabel: 'Lesson Review',
         title: lesson.title,
         prompt: `Can you explain this lesson in your own words? ${lesson.summary}`,
+        selfCheckText: 'I can explain the main idea.',
       });
     }
   });
@@ -277,11 +329,15 @@ const buildReviewCards = (progress, todayKey = getTodayKey()) => {
     const schedule = progress.reviewSchedule?.[cardId];
     const answer = progress.quizAnswers?.[quiz.id];
     if (answer && (!schedule?.dueDate || schedule.dueDate <= todayKey)) {
-      cards.push({
+      const correctOption = answer.correctOption || quiz.options[quiz.answerIndex];
+      addReviewCard({
         id: cardId,
         type: 'Quiz',
+        sourceLabel: 'Quiz Review',
         title: quiz.title,
-        prompt: `${quiz.question} Review the correct answer: ${quiz.options[quiz.answerIndex]}.`,
+        prompt: quiz.question,
+        answer: correctOption ? `Correct answer: ${correctOption}` : '',
+        selfCheckText: 'I reviewed the correct answer.',
       });
     }
   });
@@ -292,11 +348,13 @@ const buildReviewCards = (progress, todayKey = getTodayKey()) => {
       const cardId = getReviewCardId('arbain', hadith.id, stage);
       const schedule = progress.reviewSchedule?.[cardId];
       if (tracker[stage] && (!schedule?.dueDate || schedule.dueDate <= todayKey)) {
-        cards.push({
+        addReviewCard({
           id: cardId,
           type: 'Arbain',
+          sourceLabel: 'Arbain Review',
           title: `${hadith.title}: ${stage}`,
           prompt: `Review your ${stage.toLowerCase()} checkpoint for this hadith. Recite or explain what you remember before continuing.`,
+          selfCheckText: 'I reviewed this checkpoint.',
         });
       }
     });
@@ -786,7 +844,7 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
     }));
   };
 
-  const answerQuiz = (quizId, selectedIndex, answerIndex) => {
+  const answerQuiz = (quizId, selectedOption, correctOption) => {
     updateLearnProgress(previousProgress => ({
       ...previousProgress,
       currentPathwayId: selectedPathwayId,
@@ -794,8 +852,9 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
       quizAnswers: {
         ...previousProgress.quizAnswers,
         [quizId]: {
-          selectedIndex,
-          correct: selectedIndex === answerIndex,
+          selectedOption,
+          correctOption,
+          correct: selectedOption === correctOption,
         },
       },
       reviewSchedule: {
@@ -832,12 +891,16 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
     });
   };
 
-  const toggleNawawiQuestionCheck = (hadithId, questionIndex, selectedIndex = true) => {
+  const toggleNawawiQuestionCheck = (hadithId, questionIndex, selectedOption = true, correctOption = '') => {
     updateLearnProgress(previousProgress => {
       const currentChecks = previousProgress.nawawiQuestionChecks?.[hadithId] || {};
-      const nextValue = selectedIndex === true
+      const nextValue = selectedOption === true
         ? !currentChecks[questionIndex]
-        : selectedIndex;
+        : {
+            selectedOption,
+            correctOption,
+            correct: selectedOption === correctOption,
+          };
       return {
         ...previousProgress,
         currentNawawiCardIndex: activeNawawiCardIndex,
@@ -1335,10 +1398,11 @@ const closeNarratorBio = () => {
           <>
             <Text style={styles.quizTitle}>{quiz.title}</Text>
             <Text style={styles.quizQuestion}>{quiz.question}</Text>
-            {quiz.options.map((option, index) => {
+            {getShuffledOptions(quiz.options, quiz.id).map(option => {
               const quizAnswer = learnProgress.quizAnswers?.[quiz.id];
-              const selected = quizAnswer?.selectedIndex === index;
-              const correctOption = quizAnswer && index === quiz.answerIndex;
+              const correctAnswer = quiz.options[quiz.answerIndex];
+              const selected = quizAnswer?.selectedOption === option;
+              const correctOption = quizAnswer && option === correctAnswer;
               const selectedWrong = selected && quizAnswer && !quizAnswer.correct;
               return (
                 <Pressable
@@ -1349,7 +1413,7 @@ const closeNarratorBio = () => {
                     selectedWrong && styles.quizOptionWrong,
                     correctOption && styles.quizOptionCorrect,
                   ]}
-                  onPress={() => answerQuiz(quiz.id, index, quiz.answerIndex)}
+                  onPress={() => answerQuiz(quiz.id, option, correctAnswer)}
                 >
                   <Text style={styles.quizOptionText}>{option}</Text>
                 </Pressable>
@@ -1397,9 +1461,7 @@ const closeNarratorBio = () => {
     const tracker = learnProgress.memorisation?.[hadith.id] || {};
     const questionChecks = learnProgress.nawawiQuestionChecks?.[hadith.id] || {};
     const rawQuestionCheck = questionChecks[card.questionIndex];
-    const questionReviewed = typeof rawQuestionCheck === 'number'
-      ? rawQuestionCheck
-      : !!rawQuestionCheck;
+    const questionReviewed = rawQuestionCheck || false;
     const progress = totalCards ? Math.min(100, ((activeNawawiCardIndex + 1) / totalCards) * 100) : 0;
 
     return (
@@ -1455,10 +1517,11 @@ const closeNarratorBio = () => {
             ) : (
               <>
                 <Text style={styles.quizQuestion}>{card.question.prompt}</Text>
-                {card.question.options.map((option, index) => {
-                  const selected = questionReviewed === index;
-                  const correctOption = questionReviewed !== false && index === card.question.answerIndex;
-                  const selectedWrong = selected && index !== card.question.answerIndex;
+                {getShuffledOptions(card.question.options, `${hadith.id}:${card.questionIndex}`).map(option => {
+                  const correctAnswer = card.question.options[card.question.answerIndex];
+                  const selected = questionReviewed?.selectedOption === option;
+                  const correctOption = !!questionReviewed && option === correctAnswer;
+                  const selectedWrong = selected && !questionReviewed.correct;
                   return (
                     <Pressable
                       key={option}
@@ -1468,15 +1531,15 @@ const closeNarratorBio = () => {
                         selectedWrong && styles.quizOptionWrong,
                         correctOption && styles.quizOptionCorrect,
                       ]}
-                      onPress={() => toggleNawawiQuestionCheck(hadith.id, card.questionIndex, index)}
+                      onPress={() => toggleNawawiQuestionCheck(hadith.id, card.questionIndex, option, correctAnswer)}
                     >
                       <Text style={styles.quizOptionText}>{option}</Text>
                     </Pressable>
                   );
                 })}
                 {questionReviewed !== false ? (
-                  <Text style={questionReviewed === card.question.answerIndex ? styles.quizFeedbackCorrect : styles.quizFeedbackWrong}>
-                    {questionReviewed === card.question.answerIndex ? 'Correct. ' : 'Not quite. '}
+                  <Text style={questionReviewed.correct ? styles.quizFeedbackCorrect : styles.quizFeedbackWrong}>
+                    {questionReviewed.correct ? 'Correct. ' : 'Not quite. '}
                     {card.question.explanation}
                   </Text>
                 ) : (
@@ -1519,7 +1582,7 @@ const closeNarratorBio = () => {
       return (
         <View style={styles.learnCard}>
           <Text style={styles.lessonTitle}>Today’s Review Complete</Text>
-          <Text style={styles.lessonSummary}>No review cards are waiting right now. Continue learning when you are ready.</Text>
+          <Text style={styles.lessonSummary}>No review content available yet. Complete a lesson or quiz first.</Text>
           <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode('overview')}>
             <Text style={styles.secondaryTextButtonText}>Back to Learn</Text>
           </Pressable>
@@ -1536,15 +1599,16 @@ const closeNarratorBio = () => {
         <View style={styles.flowProgressTrack}>
           <View style={[styles.flowProgressFill, { width: `${((safeReviewIndex + 1) / reviewCards.length) * 100}%` }]} />
         </View>
-        <Text style={styles.quizTitle}>{reviewCard.type}</Text>
+        <Text style={styles.quizTitle}>{reviewCard.sourceLabel}</Text>
         <Text style={styles.lessonTitle}>{reviewCard.title}</Text>
         <Text style={styles.quizQuestion}>{reviewCard.prompt}</Text>
+        {!!reviewCard.answer && <Text style={styles.lessonSummary}>{reviewCard.answer}</Text>}
         <Pressable
           style={[styles.reviewCheckButton, reviewSelfChecked && styles.reviewCheckButtonDone]}
           onPress={() => setReviewSelfChecked(true)}
         >
           <Text style={[styles.reviewCheckText, reviewSelfChecked && styles.reviewCheckTextDone]}>
-            {reviewSelfChecked ? 'Self check completed' : 'I reviewed this carefully'}
+            {reviewSelfChecked ? 'Self check completed' : reviewCard.selfCheckText || 'I reviewed this carefully'}
           </Text>
         </Pressable>
         <Pressable
