@@ -173,6 +173,24 @@ const getPathwayLessonProgress = (pathwayId, progress) => {
   };
 };
 
+const isPathwayComplete = (pathwayId, progress) => {
+  const pathwayLessons = getPathwayLessons(pathwayId);
+  const pathwayQuizzes = getPathwayQuizzes(pathwayId);
+  const lessonsDone = pathwayLessons.every(lesson => !!progress.completedLessons?.[lesson.id]);
+  const quizzesDone = pathwayQuizzes.every(quiz => !!progress.quizAnswers?.[quiz.id]);
+  return lessonsDone && quizzesDone;
+};
+
+const getPathwayLockMessage = (pathwayId, progress) => {
+  if (pathwayId === 'intermediate' && !isPathwayComplete('beginner', progress)) {
+    return 'Complete Beginner Pathway to unlock';
+  }
+  if (pathwayId === 'advanced' && !isPathwayComplete('intermediate', progress)) {
+    return 'Complete Intermediate Pathway to unlock';
+  }
+  return '';
+};
+
 const getTodayKey = () => {
   const now = new Date();
   const year = now.getFullYear();
@@ -967,7 +985,9 @@ const closeNarratorBio = () => {
   ];
 
   const openPathway = pathwayId => {
-    const savedProgress = learnProgressRef.current || DEFAULT_LEARN_PROGRESS;
+    const savedProgress = sanitizeLearnProgress(learnProgressRef.current || DEFAULT_LEARN_PROGRESS);
+    const lockMessage = getPathwayLockMessage(pathwayId, savedProgress);
+    if (lockMessage) return;
     const pathwayCardCount = getPathwayLessons(pathwayId).length + getPathwayQuizzes(pathwayId).length;
     setSelectedPathwayId(pathwayId);
     setActivePathwayCardIndex(
@@ -986,15 +1006,22 @@ const closeNarratorBio = () => {
   const renderPathwayPreviews = () => (
     <View>
       {(() => {
+        const safeProgress = sanitizeLearnProgress(learnProgress);
         const pathway = LEARNING_PATHWAYS[activePathwayPreviewIndex] || LEARNING_PATHWAYS[0];
         const pathwayLessons = getPathwayLessons(pathway.id);
         const pathwayQuizzes = getPathwayQuizzes(pathway.id);
-        const { completedCount, total, percentage } = getPathwayLessonProgress(pathway.id, learnProgress);
+        const { completedCount, total, percentage } = getPathwayLessonProgress(pathway.id, safeProgress);
         const progress = percentage;
-        const hasStarted = completedCount > 0 || pathwayQuizzes.some(quiz => learnProgress.quizAnswers?.[quiz.id]);
+        const hasStarted = completedCount > 0 || pathwayQuizzes.some(quiz => safeProgress.quizAnswers?.[quiz.id]);
+        const lockMessage = getPathwayLockMessage(pathway.id, safeProgress);
+        const isLocked = !!lockMessage;
 
         return (
-          <Pressable style={styles.learnCard} onPress={() => openPathway(pathway.id)}>
+          <Pressable
+            style={[styles.learnCard, isLocked && styles.learnCardLocked]}
+            onPress={() => openPathway(pathway.id)}
+            disabled={isLocked}
+          >
             <View style={styles.learnCardHeader}>
               <Text style={styles.lessonLevel}>{pathway.range}</Text>
               <Text style={styles.completedBadge}>{activePathwayPreviewIndex + 1}/{LEARNING_PATHWAYS.length}</Text>
@@ -1005,8 +1032,11 @@ const closeNarratorBio = () => {
               Progress: {completedCount}/{pathwayLessons.length} lessons • {progress}%
             </Text>
             <Text style={styles.flowHint}>Study one card at a time, then try the pathway quiz.</Text>
-            <View style={styles.learnActionButton}>
-              <Text style={styles.learnActionText}>{hasStarted ? 'Continue Pathway' : 'Start Pathway'}</Text>
+            {isLocked && <Text style={styles.lockedPathwayNotice}>{lockMessage}</Text>}
+            <View style={[styles.learnActionButton, isLocked && styles.learnActionButtonDisabled]}>
+              <Text style={styles.learnActionText}>
+                {isLocked ? 'Locked' : hasStarted ? 'Continue Pathway' : 'Start Pathway'}
+              </Text>
             </View>
           </Pressable>
         );
@@ -1621,9 +1651,6 @@ const closeNarratorBio = () => {
 </Modal>
 
         <LinearGradient colors={['#0f2f35', '#176b5f']} style={styles.header}>
-          <View style={styles.headerMark}>
-            <Icon name="book-open" size={24} color="#d8b15a" />
-          </View>
           <Text style={styles.headerText}>Takhrij</Text>
         </LinearGradient>
 
@@ -1663,9 +1690,8 @@ const closeNarratorBio = () => {
               </Text>
               <View style={styles.searchRow}>
                 <View style={styles.searchInputWrapper}>
-                  <Text style={styles.searchPrefixText}>Search</Text>
                   <TextInput
-                    placeholder="Enter topic"
+                    placeholder="Enter hadith, keyword, or topic"
                     placeholderTextColor="#888"
                     style={styles.searchInput}
                     value={query}
@@ -1892,15 +1918,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
   },
-  headerMark: {
-    width: 44,
-    height: 44,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
   headerText: {
     fontSize: 30,
     fontWeight: '800',
@@ -1986,13 +2003,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 14,
     height: 54,
-  },
-  searchPrefixText: {
-    color: '#607174',
-    fontSize: 12,
-    fontWeight: '800',
-    marginRight: 10,
-    textTransform: 'uppercase',
   },
   searchInput: {
     flex: 1,
@@ -2228,6 +2238,11 @@ const styles = StyleSheet.create({
     shadowRadius: 14,
     elevation: 2,
   },
+  learnCardLocked: {
+    backgroundColor: '#f2f5f1',
+    borderColor: '#d6ded4',
+    opacity: 0.72,
+  },
   flowCard: {
     padding: 18,
     marginBottom: 16,
@@ -2344,9 +2359,19 @@ const styles = StyleSheet.create({
   learnActionButtonSecondary: {
     backgroundColor: '#8aa5a0',
   },
+  learnActionButtonDisabled: {
+    backgroundColor: '#aebdb8',
+  },
   learnActionText: {
     color: '#fff',
     fontWeight: '800',
+  },
+  lockedPathwayNotice: {
+    color: '#607174',
+    fontSize: 13,
+    fontWeight: '800',
+    lineHeight: 20,
+    marginTop: 8,
   },
   secondaryTextButton: {
     alignSelf: 'center',
