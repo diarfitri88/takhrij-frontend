@@ -363,6 +363,27 @@ const buildReviewCards = (progress, todayKey = getTodayKey()) => {
   return cards;
 };
 
+const normalizeReviewCard = card => {
+  if (!card || typeof card !== 'object') return null;
+  const sourceLabel = String(card.sourceLabel || card.type || 'Review').trim();
+  const title = String(card.title || '').trim();
+  const prompt = String(card.prompt || card.question || '').trim();
+  if (!sourceLabel || !title || !prompt) return null;
+  return {
+    ...card,
+    sourceLabel,
+    title,
+    prompt,
+    answer: card.answer ? String(card.answer).trim() : '',
+    selfCheckText: card.selfCheckText ? String(card.selfCheckText).trim() : 'I reviewed this carefully',
+  };
+};
+
+const getReadyReviewCards = progress =>
+  buildReviewCards(progress)
+    .map(normalizeReviewCard)
+    .filter(Boolean);
+
 const getCurrentReviewStreakCount = (progress, todayKey = getTodayKey()) => {
   const streak = progress.reviewStreak || DEFAULT_LEARN_PROGRESS.reviewStreak;
   if (!streak.lastReviewDate) return 0;
@@ -763,7 +784,7 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
       duration: 160,
       useNativeDriver: true,
     }).start();
-  }, [learnMode, activePathwayCardIndex, activeNawawiCardIndex, cardFadeAnim]);
+  }, [learnMode, activePathwayCardIndex, activeNawawiCardIndex, activeReviewIndex, cardFadeAnim]);
 
   useEffect(() => {
     const loadLocalProgress = async () => {
@@ -1574,7 +1595,7 @@ const closeNarratorBio = () => {
 
   const renderReviewFlow = () => {
     const safeProgress = sanitizeLearnProgress(learnProgress);
-    const reviewCards = buildReviewCards(safeProgress);
+    const reviewCards = getReadyReviewCards(safeProgress);
     const safeReviewIndex = clampLearningIndex(activeReviewIndex, reviewCards.length || 1);
     const reviewCard = reviewCards[safeReviewIndex];
 
@@ -1643,7 +1664,7 @@ const closeNarratorBio = () => {
     const currentLessonLabel = isResumeQuiz
       ? `Continue ${currentPathway.title}: Quiz ${safePathwayIndex - currentPathwayLessons.length + 1} of ${currentPathwayQuizzes.length}`
       : `${currentPathway.title}: Lesson ${safePathwayIndex + 1} of ${currentPathwayLessons.length}`;
-    const reviewCards = buildReviewCards(safeProgress);
+    const reviewCards = getReadyReviewCards(safeProgress);
     const reviewStreakCount = getCurrentReviewStreakCount(safeProgress);
 
     return (
@@ -1672,7 +1693,7 @@ const closeNarratorBio = () => {
             <Text style={styles.completedBadge}>{reviewCards.length} waiting</Text>
           </View>
           <Text style={styles.continueLearningText}>
-            {reviewCards.length ? 'Review one card to keep your learning fresh.' : 'No cards are waiting for review today.'}
+            {reviewCards.length ? 'Review one card to keep your learning fresh.' : 'No review content available yet. Complete a lesson or quiz first.'}
           </Text>
           <Text style={styles.continueLearningMeta}>Daily review streak: {reviewStreakCount} day{reviewStreakCount === 1 ? '' : 's'}</Text>
           <Pressable
