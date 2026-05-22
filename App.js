@@ -1748,26 +1748,24 @@ const closeNarratorBio = () => {
           <SafeAreaView style={[styles.welcomeContainer, { paddingBottom: insets.bottom }]}>
             <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
             <View style={styles.welcomeGlassCard}>
-              <Text style={styles.welcomeEyebrow}>A beginner friendly hadith learning app</Text>
+              <Text style={styles.welcomeEyebrow}>A beginner-friendly app to learn, search, and memorise hadith step by step.</Text>
               <Text style={styles.welcomeTitle}>Welcome to Takhrij</Text>
               <Text style={styles.welcomeText}>
-                Takhrij refers to tracing, identifying, and researching hadith sources and their narrations.
-              </Text>
-              <Text style={styles.welcomeText}>
-                This app helps users search and explore hadith from the collections available on Sunnah.com.
+                Takhrij helps you explore hadith while learning the foundations of the sciences of hadith through guided cards, quizzes, daily review, and Arbain Nawawi memorisation previews.
               </Text>
               <Text style={styles.welcomeSectionTitle}>Features include</Text>
               <View style={styles.welcomeBulletList}>
-                <Text style={styles.welcomeBullet}>• Search by keywords or phrases</Text>
-                <Text style={styles.welcomeBullet}>• View hadith references and narrations</Text>
-                <Text style={styles.welcomeBullet}>• Learn basic hadith terminology and narrator information</Text>
-                <Text style={styles.welcomeBullet}>• Read concise AI assisted explanations</Text>
+                <Text style={styles.welcomeBullet}>• Search hadith by keywords or phrases</Text>
+                <Text style={styles.welcomeBullet}>• Learn Beginner, Intermediate, and Advanced hadith science pathways</Text>
+                <Text style={styles.welcomeBullet}>• Test yourself with short quizzes</Text>
+                <Text style={styles.welcomeBullet}>• Review cards daily to strengthen retention</Text>
+                <Text style={styles.welcomeBullet}>• Preview and memorise the first 5 Hadith of Arbain Nawawi</Text>
               </View>
               <Text style={styles.welcomeDisclaimer}>
-                Beginner-friendly research assistance only. Not a replacement for qualified scholars, formal study, or scholarly takhrij.
+                This app is an educational research aid. It does not replace qualified scholars, formal study, or scholarly takhrij.
               </Text>
               <Pressable style={styles.welcomeButton} onPress={() => setShowWelcome(false)}>
-                <Text style={styles.welcomeButtonText}>Start Your Search</Text>
+                <Text style={styles.welcomeButtonText}>Start Learning</Text>
               </Pressable>
             </View>
           </SafeAreaView>
