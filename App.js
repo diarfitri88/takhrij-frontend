@@ -1056,20 +1056,16 @@ const fetchNarratorBio = async (narratorName) => {
   const cleanNarratorName = narratorName.trim();
   if (!cleanNarratorName) return;
 
-  console.log('[NarratorBio] narrator chip pressed:', cleanNarratorName);
   setSelectedNarrator(cleanNarratorName);
   setReturnToCommentaryAfterBio(commentaryModalVisible);
   setCommentaryModalVisible(false);
   setNarratorBioVisible(true);
   setNarratorBioText('Loading biography...');
   try {
-    console.log('[NarratorBio] calling /narrator-bio with:', cleanNarratorName);
     const data = await postJson('/narrator-bio', { name: cleanNarratorName }, NARRATOR_BIO_TIMEOUT_MS);
-    console.log('[NarratorBio] /narrator-bio response:', data);
     const raw = data.bio || 'Biography not available.';
     setNarratorBioText(sanitizeNarratorBioText(raw));
   } catch (error) {
-    console.log('[NarratorBio] /narrator-bio error:', error);
     setNarratorBioText(error.message || 'Error fetching biography. Please try again.');
   }
 };
@@ -1683,9 +1679,11 @@ const closeNarratorBio = () => {
           <Text style={styles.continueLearningText}>{currentLessonLabel}</Text>
           <Text style={styles.continueLearningMeta}>Overall pathway progress: {pathwayProgress}%</Text>
           <Text style={styles.continueLearningMeta}>{currentPathway.title}: {getPathwayLessonProgress(currentPathway.id, safeProgress).percentage}% complete</Text>
-          <Pressable style={styles.resetLearnButton} onPress={resetLearningProgress}>
-            <Text style={styles.resetLearnButtonText}>Reset learning progress</Text>
-          </Pressable>
+          {__DEV__ && (
+            <Pressable style={styles.resetLearnButton} onPress={resetLearningProgress}>
+              <Text style={styles.resetLearnButtonText}>Reset learning progress</Text>
+            </Pressable>
+          )}
         </View>
         <Text style={styles.learnProgressSummary}>
           Lessons completed: {completedLessonCount}/{lessons.length} • Quizzes tried: {quizTriedCount}/{quizzes.length}
