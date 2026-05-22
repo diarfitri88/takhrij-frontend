@@ -46,7 +46,15 @@ const NARRATOR_BIO_TIMEOUT_MS = 60000;
 const DAILY_FREE_SEARCH_LIMIT = 5;
 const SEARCH_LIMIT_STORAGE_KEY = 'takhrij.dailySearchCounter';
 const LEARN_PROGRESS_STORAGE_KEY = 'takhrij.learnProgress';
-const DEFAULT_LEARN_PROGRESS = { completedLessons: {}, quizAnswers: {} };
+const DEFAULT_LEARN_PROGRESS = {
+  completedLessons: {},
+  quizAnswers: {},
+  memorisation: {},
+  nawawiQuestionChecks: {},
+  reviewSchedule: {},
+  reviewStreak: { count: 0, lastReviewDate: '' },
+};
+const REVIEW_INTERVAL_DAYS = [1, 3, 7];
 const clampLearningIndex = (value, length) => {
   const index = Number(value);
   if (!Number.isFinite(index)) return 0;
@@ -138,6 +146,30 @@ const sanitizeLearnProgress = progress => {
     });
   });
 
+  const reviewSchedule = {};
+  Object.entries(source.reviewSchedule || {}).forEach(([cardId, review]) => {
+    if (!review || typeof review !== 'object') return;
+    const intervalIndex = Number.isInteger(review.intervalIndex)
+      ? Math.min(Math.max(review.intervalIndex, 0), REVIEW_INTERVAL_DAYS.length - 1)
+      : 0;
+    reviewSchedule[cardId] = {
+      intervalIndex,
+      dueDate: typeof review.dueDate === 'string' ? review.dueDate : '',
+      lastReviewed: typeof review.lastReviewed === 'string' ? review.lastReviewed : '',
+    };
+  });
+
+  const reviewStreak = source.reviewStreak && typeof source.reviewStreak === 'object'
+    ? {
+        count: Number.isInteger(source.reviewStreak.count) && source.reviewStreak.count > 0
+          ? source.reviewStreak.count
+          : 0,
+        lastReviewDate: typeof source.reviewStreak.lastReviewDate === 'string'
+          ? source.reviewStreak.lastReviewDate
+          : '',
+      }
+    : DEFAULT_LEARN_PROGRESS.reviewStreak;
+
   const currentPathwayId = validPathwayIds.has(source.currentPathwayId)
     ? source.currentPathwayId
     : 'beginner';
@@ -150,6 +182,8 @@ const sanitizeLearnProgress = progress => {
     quizAnswers,
     memorisation,
     nawawiQuestionChecks,
+    reviewSchedule,
+    reviewStreak,
     currentPathwayId,
     currentPathwayCardIndex: clampLearningIndex(source.currentPathwayCardIndex, pathwayCardCount || 1),
     currentNawawiCardIndex: clampLearningIndex(source.currentNawawiCardIndex, getNawawiCards().length || 1),
@@ -199,6 +233,85 @@ const getTodayKey = () => {
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+};
+
+const addDaysToDateKey = (dateKey, days) => {
+  const [year, month, day] = String(dateKey || getTodayKey()).split('-').map(Number);
+  const date = Number.isFinite(year) && Number.isFinite(month) && Number.isFinite(day)
+    ? new Date(year, month - 1, day)
+    : new Date();
+  date.setDate(date.getDate() + days);
+  const nextYear = date.getFullYear();
+  const nextMonth = String(date.getMonth() + 1).padStart(2, '0');
+  const nextDay = String(date.getDate()).padStart(2, '0');
+  return `${nextYear}-${nextMonth}-${nextDay}`;
+};
+
+const getReviewCardId = (type, id, extra = '') =>
+  extra ? `${type}:${id}:${extra}` : `${type}:${id}`;
+
+const getReviewScheduleForNewCard = () => ({
+  intervalIndex: 0,
+  dueDate: addDaysToDateKey(getTodayKey(), REVIEW_INTERVAL_DAYS[0]),
+  lastReviewed: '',
+});
+
+const buildReviewCards = (progress, todayKey = getTodayKey()) => {
+  const cards = [];
+
+  lessons.forEach(lesson => {
+    const cardId = getReviewCardId('lesson', lesson.id);
+    const schedule = progress.reviewSchedule?.[cardId];
+    if (progress.completedLessons?.[lesson.id] && (!schedule?.dueDate || schedule.dueDate <= todayKey)) {
+      cards.push({
+        id: cardId,
+        type: 'Lesson',
+        title: lesson.title,
+        prompt: `Can you explain this lesson in your own words? ${lesson.summary}`,
+      });
+    }
+  });
+
+  quizzes.forEach(quiz => {
+    const cardId = getReviewCardId('quiz', quiz.id);
+    const schedule = progress.reviewSchedule?.[cardId];
+    const answer = progress.quizAnswers?.[quiz.id];
+    if (answer && (!schedule?.dueDate || schedule.dueDate <= todayKey)) {
+      cards.push({
+        id: cardId,
+        type: 'Quiz',
+        title: quiz.title,
+        prompt: `${quiz.question} Review the correct answer: ${quiz.options[quiz.answerIndex]}.`,
+      });
+    }
+  });
+
+  nawawiPreview.forEach(hadith => {
+    const tracker = progress.memorisation?.[hadith.id] || {};
+    hadith.stages.forEach(stage => {
+      const cardId = getReviewCardId('arbain', hadith.id, stage);
+      const schedule = progress.reviewSchedule?.[cardId];
+      if (tracker[stage] && (!schedule?.dueDate || schedule.dueDate <= todayKey)) {
+        cards.push({
+          id: cardId,
+          type: 'Arbain',
+          title: `${hadith.title}: ${stage}`,
+          prompt: `Review your ${stage.toLowerCase()} checkpoint for this hadith. Recite or explain what you remember before continuing.`,
+        });
+      }
+    });
+  });
+
+  return cards;
+};
+
+const getCurrentReviewStreakCount = (progress, todayKey = getTodayKey()) => {
+  const streak = progress.reviewStreak || DEFAULT_LEARN_PROGRESS.reviewStreak;
+  if (!streak.lastReviewDate) return 0;
+  if (streak.lastReviewDate === todayKey || streak.lastReviewDate === addDaysToDateKey(todayKey, -1)) {
+    return streak.count || 0;
+  }
+  return 0;
 };
 
 const parseNarratorNames = (chain = '') => {
@@ -558,6 +671,8 @@ export default function App() {
   const [activePathwayPreviewIndex, setActivePathwayPreviewIndex] = useState(0);
   const [activePathwayCardIndex, setActivePathwayCardIndex] = useState(0);
   const [activeNawawiCardIndex, setActiveNawawiCardIndex] = useState(0);
+  const [activeReviewIndex, setActiveReviewIndex] = useState(0);
+  const [reviewSelfChecked, setReviewSelfChecked] = useState(false);
   const [showSearchHelp, setShowSearchHelp] = useState(false);
   const [loadingCommentary, setLoadingCommentary] = useState(false);
   const [commentaryModalVisible, setCommentaryModalVisible] = useState(false);
@@ -664,6 +779,10 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
         ...previousProgress.completedLessons,
         [lessonId]: true,
       },
+      reviewSchedule: {
+        ...previousProgress.reviewSchedule,
+        [getReviewCardId('lesson', lessonId)]: previousProgress.reviewSchedule?.[getReviewCardId('lesson', lessonId)] || getReviewScheduleForNewCard(),
+      },
     }));
   };
 
@@ -679,12 +798,18 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
           correct: selectedIndex === answerIndex,
         },
       },
+      reviewSchedule: {
+        ...previousProgress.reviewSchedule,
+        [getReviewCardId('quiz', quizId)]: previousProgress.reviewSchedule?.[getReviewCardId('quiz', quizId)] || getReviewScheduleForNewCard(),
+      },
     }));
   };
 
   const toggleMemorisationStage = (hadithId, stage) => {
     updateLearnProgress(previousProgress => {
       const currentTracker = previousProgress.memorisation?.[hadithId] || {};
+      const nextStageValue = !currentTracker[stage];
+      const cardId = getReviewCardId('arbain', hadithId, stage);
       return {
         ...previousProgress,
         currentPathwayId: selectedPathwayId,
@@ -694,9 +819,15 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
           ...previousProgress.memorisation,
           [hadithId]: {
             ...currentTracker,
-            [stage]: !currentTracker[stage],
+            [stage]: nextStageValue,
           },
         },
+        reviewSchedule: nextStageValue
+          ? {
+              ...previousProgress.reviewSchedule,
+              [cardId]: previousProgress.reviewSchedule?.[cardId] || getReviewScheduleForNewCard(),
+            }
+          : previousProgress.reviewSchedule,
       };
     });
   };
@@ -737,6 +868,8 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
             setActivePathwayPreviewIndex(0);
             setActivePathwayCardIndex(0);
             setActiveNawawiCardIndex(0);
+            setActiveReviewIndex(0);
+            setReviewSelfChecked(false);
             setLearnMode('overview');
             try {
               await AsyncStorage.removeItem(LEARN_PROGRESS_STORAGE_KEY);
@@ -1034,6 +1167,48 @@ const closeNarratorBio = () => {
   const openNawawiItem = () => {
     setActiveNawawiCardIndex(clampLearningIndex(learnProgressRef.current?.currentNawawiCardIndex, getNawawiCards().length || 1));
     setLearnMode('nawawi');
+  };
+
+  const openReviewFlow = () => {
+    setActiveReviewIndex(0);
+    setReviewSelfChecked(false);
+    setLearnMode('review');
+  };
+
+  const completeReviewCard = reviewCard => {
+    if (!reviewCard) return;
+    updateLearnProgress(previousProgress => {
+      const today = getTodayKey();
+      const currentSchedule = previousProgress.reviewSchedule?.[reviewCard.id] || { intervalIndex: 0 };
+      const nextIntervalIndex = Math.min(
+        (currentSchedule.intervalIndex || 0) + 1,
+        REVIEW_INTERVAL_DAYS.length - 1
+      );
+      const lastReviewDate = previousProgress.reviewStreak?.lastReviewDate || '';
+      let streakCount = previousProgress.reviewStreak?.count || 0;
+      if (lastReviewDate !== today) {
+        streakCount = lastReviewDate === addDaysToDateKey(today, -1)
+          ? streakCount + 1
+          : 1;
+      }
+
+      return {
+        ...previousProgress,
+        reviewSchedule: {
+          ...previousProgress.reviewSchedule,
+          [reviewCard.id]: {
+            intervalIndex: nextIntervalIndex,
+            dueDate: addDaysToDateKey(today, REVIEW_INTERVAL_DAYS[nextIntervalIndex]),
+            lastReviewed: today,
+          },
+        },
+        reviewStreak: {
+          count: streakCount,
+          lastReviewDate: today,
+        },
+      };
+    });
+    setReviewSelfChecked(false);
   };
 
   const renderPathwayPreviews = () => (
@@ -1334,6 +1509,61 @@ const closeNarratorBio = () => {
     );
   };
 
+  const renderReviewFlow = () => {
+    const safeProgress = sanitizeLearnProgress(learnProgress);
+    const reviewCards = buildReviewCards(safeProgress);
+    const safeReviewIndex = clampLearningIndex(activeReviewIndex, reviewCards.length || 1);
+    const reviewCard = reviewCards[safeReviewIndex];
+
+    if (!reviewCard) {
+      return (
+        <View style={styles.learnCard}>
+          <Text style={styles.lessonTitle}>Today’s Review Complete</Text>
+          <Text style={styles.lessonSummary}>No review cards are waiting right now. Continue learning when you are ready.</Text>
+          <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode('overview')}>
+            <Text style={styles.secondaryTextButtonText}>Back to Learn</Text>
+          </Pressable>
+        </View>
+      );
+    }
+
+    return (
+      <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim }]}>
+        <View style={styles.learnCardHeader}>
+          <Text style={styles.lessonLevel}>Today’s Review</Text>
+          <Text style={styles.completedBadge}>{safeReviewIndex + 1}/{reviewCards.length}</Text>
+        </View>
+        <View style={styles.flowProgressTrack}>
+          <View style={[styles.flowProgressFill, { width: `${((safeReviewIndex + 1) / reviewCards.length) * 100}%` }]} />
+        </View>
+        <Text style={styles.quizTitle}>{reviewCard.type}</Text>
+        <Text style={styles.lessonTitle}>{reviewCard.title}</Text>
+        <Text style={styles.quizQuestion}>{reviewCard.prompt}</Text>
+        <Pressable
+          style={[styles.reviewCheckButton, reviewSelfChecked && styles.reviewCheckButtonDone]}
+          onPress={() => setReviewSelfChecked(true)}
+        >
+          <Text style={[styles.reviewCheckText, reviewSelfChecked && styles.reviewCheckTextDone]}>
+            {reviewSelfChecked ? 'Self check completed' : 'I reviewed this carefully'}
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[styles.learnActionButton, !reviewSelfChecked && styles.learnActionButtonDisabled]}
+          disabled={!reviewSelfChecked}
+          onPress={() => {
+            completeReviewCard(reviewCard);
+            setActiveReviewIndex(index => Math.min(index, Math.max(reviewCards.length - 2, 0)));
+          }}
+        >
+          <Text style={styles.learnActionText}>Continue</Text>
+        </Pressable>
+        <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode('overview')}>
+          <Text style={styles.secondaryTextButtonText}>Back to Learn</Text>
+        </Pressable>
+      </Animated.View>
+    );
+  };
+
   const renderLearnSection = () => {
     const safeProgress = sanitizeLearnProgress(learnProgress);
     const completedLessonCount = getCompletedLessonCount(safeProgress);
@@ -1349,6 +1579,8 @@ const closeNarratorBio = () => {
     const currentLessonLabel = isResumeQuiz
       ? `Continue ${currentPathway.title}: Quiz ${safePathwayIndex - currentPathwayLessons.length + 1} of ${currentPathwayQuizzes.length}`
       : `${currentPathway.title}: Lesson ${safePathwayIndex + 1} of ${currentPathwayLessons.length}`;
+    const reviewCards = buildReviewCards(safeProgress);
+    const reviewStreakCount = getCurrentReviewStreakCount(safeProgress);
 
     return (
     <>
@@ -1370,6 +1602,23 @@ const closeNarratorBio = () => {
         <Text style={styles.learnProgressSummary}>
           Lessons completed: {completedLessonCount}/{lessons.length} • Quizzes tried: {quizTriedCount}/{quizzes.length}
         </Text>
+        <View style={styles.dailyReviewCard}>
+          <View style={styles.learnCardHeader}>
+            <Text style={styles.continueLearningLabel}>Today’s Review</Text>
+            <Text style={styles.completedBadge}>{reviewCards.length} waiting</Text>
+          </View>
+          <Text style={styles.continueLearningText}>
+            {reviewCards.length ? 'Review one card to keep your learning fresh.' : 'No cards are waiting for review today.'}
+          </Text>
+          <Text style={styles.continueLearningMeta}>Daily review streak: {reviewStreakCount} day{reviewStreakCount === 1 ? '' : 's'}</Text>
+          <Pressable
+            style={[styles.reviewStartButton, !reviewCards.length && styles.learnActionButtonDisabled]}
+            disabled={!reviewCards.length}
+            onPress={openReviewFlow}
+          >
+            <Text style={styles.learnActionText}>{reviewCards.length ? 'Start Today’s Review' : 'Review Complete'}</Text>
+          </Pressable>
+        </View>
       </View>
 
       {learnMode === 'overview' && (
@@ -1394,6 +1643,7 @@ const closeNarratorBio = () => {
       )}
       {learnMode === 'pathway' && renderPathwayFlow()}
       {learnMode === 'nawawi' && renderNawawiFlow()}
+      {learnMode === 'review' && renderReviewFlow()}
     </>
     );
   };
@@ -2299,6 +2549,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
   },
+  dailyReviewCard: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(216,177,90,0.28)',
+    padding: 12,
+    marginTop: 14,
+  },
+  reviewStartButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#176b5f',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginTop: 12,
+  },
   learnProgressSummary: {
     color: '#f7f1df',
     fontSize: 13,
@@ -2452,6 +2718,28 @@ const styles = StyleSheet.create({
   learnActionText: {
     color: '#fff',
     fontWeight: '800',
+  },
+  reviewCheckButton: {
+    borderWidth: 1,
+    borderColor: '#d7dfd5',
+    backgroundColor: '#f7faf7',
+    borderRadius: 8,
+    paddingVertical: 13,
+    paddingHorizontal: 13,
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  reviewCheckButtonDone: {
+    borderColor: '#176b5f',
+    backgroundColor: '#edf4e8',
+  },
+  reviewCheckText: {
+    color: '#41504d',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  reviewCheckTextDone: {
+    color: '#176b5f',
   },
   lockedPathwayNotice: {
     color: '#607174',
