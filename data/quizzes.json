@@ -1,0 +1,197 @@
+[
+  {
+    "id": "hadith-meaning-1",
+    "pathway": "beginner",
+    "title": "Hadith Basics",
+    "question": "What is a hadith?",
+    "options": [
+      "A report about the Prophet",
+      "Only a chapter title",
+      "A modern opinion"
+    ],
+    "answerIndex": 0,
+    "explanation": "A hadith reports the Prophet's words, actions, approvals, or qualities."
+  },
+  {
+    "id": "sunnah-meaning-1",
+    "pathway": "beginner",
+    "title": "Sunnah Basics",
+    "question": "What does Sunnah commonly refer to?",
+    "options": [
+      "The Prophet's way and example",
+      "Any random custom",
+      "Only book names"
+    ],
+    "answerIndex": 0,
+    "explanation": "Sunnah commonly refers to the Prophet's teachings, actions, approvals, and example."
+  },
+  {
+    "id": "qudsi-quran-1",
+    "pathway": "beginner",
+    "title": "Qur'an and Hadith Qudsi",
+    "question": "Which statement is correct?",
+    "options": [
+      "The Qur'an is Allah's revealed Book",
+      "Hadith Qudsi is recited as Qur'an in prayer",
+      "Hadith Qudsi has 114 surahs"
+    ],
+    "answerIndex": 0,
+    "explanation": "The Qur'an is Allah's revealed Book and is recited as Qur'an in prayer."
+  },
+  {
+    "id": "matn-sanad-1",
+    "pathway": "beginner",
+    "title": "Matn and Sanad",
+    "question": "What is the sanad?",
+    "options": [
+      "The chain of narrators",
+      "The book cover",
+      "The page number"
+    ],
+    "answerIndex": 0,
+    "explanation": "The sanad is the chain of people who transmitted the report."
+  },
+  {
+    "id": "rawi-1",
+    "pathway": "beginner",
+    "title": "Narrator Terms",
+    "question": "What is a rawi?",
+    "options": [
+      "A hadith narrator",
+      "A prayer direction",
+      "A legal chapter"
+    ],
+    "answerIndex": 0,
+    "explanation": "A rawi is a narrator mentioned in the chain of transmission."
+  },
+  {
+    "id": "hadith-quran-1",
+    "pathway": "intermediate",
+    "title": "Hadith and Qur'an",
+    "question": "How can hadith help with Qur'anic guidance?",
+    "options": [
+      "By explaining and clarifying practice",
+      "By adding a separate Qur'an",
+      "By replacing careful study with guesses"
+    ],
+    "answerIndex": 0,
+    "explanation": "Hadith helps explain and apply Qur'anic guidance, while students should keep learning carefully."
+  },
+  {
+    "id": "sama-1",
+    "pathway": "intermediate",
+    "title": "Receiving Hadith",
+    "question": "What does al-sama refer to?",
+    "options": [
+      "Hearing directly from a teacher",
+      "Reading a written copy to a teacher",
+      "Receiving permission without hearing"
+    ],
+    "answerIndex": 0,
+    "explanation": "Al-sama is a direct hearing method used in classical transmission."
+  },
+  {
+    "id": "ahad-1",
+    "pathway": "intermediate",
+    "title": "Ahad Categories",
+    "question": "Which group belongs under ahad reports?",
+    "options": [
+      "Mashhur, aziz, and gharib",
+      "Sahih, hasan, and da'if",
+      "Matn, sanad, and rawi"
+    ],
+    "answerIndex": 0,
+    "explanation": "Ahad reports are commonly discussed through categories such as mashhur, aziz, and gharib."
+  },
+  {
+    "id": "mutawatir-1",
+    "pathway": "intermediate",
+    "title": "Mutawatir",
+    "question": "What is a basic idea of mutawatir?",
+    "options": [
+      "Many narrators transmit it across generations",
+      "One narrator transmits it at every level",
+      "The chain is missing from the report"
+    ],
+    "answerIndex": 0,
+    "explanation": "Mutawatir reports are transmitted by many narrators across the generations."
+  },
+  {
+    "id": "daif-1",
+    "pathway": "intermediate",
+    "title": "Da'if Reports",
+    "question": "What should be made clear when a report is weak?",
+    "options": [
+      "That it is da'if",
+      "That it is automatically sahih",
+      "That the wording no longer matters"
+    ],
+    "answerIndex": 0,
+    "explanation": "If a report is weak, readers should be told clearly and should not rely on it casually."
+  },
+  {
+    "id": "muallaq-1",
+    "pathway": "advanced",
+    "title": "Connected and Broken Chains",
+    "question": "Which answer best shows the difference between muttasil and munqati'?",
+    "options": [
+      "Muttasil is connected; munqati' has a break",
+      "Muttasil is the text; munqati' is the narrator's name",
+      "Muttasil means fabricated; munqati' means famous"
+    ],
+    "answerIndex": 0,
+    "explanation": "Muttasil describes a connected chain, while munqati' means there is a disconnection."
+  },
+  {
+    "id": "mursal-1",
+    "pathway": "advanced",
+    "title": "Isnad and Matn",
+    "question": "Which distinction is correct?",
+    "options": [
+      "Isnad is the chain; matn is the wording",
+      "Isnad is the translation; matn is the page number",
+      "Isnad is always weak; matn is always strong"
+    ],
+    "answerIndex": 0,
+    "explanation": "The isnad is the chain of narrators, and the matn is the reported text."
+  },
+  {
+    "id": "maudhu-1",
+    "pathway": "advanced",
+    "title": "Authenticity Terms",
+    "question": "Which order is generally stronger to weaker?",
+    "options": [
+      "Sahih, hasan, then da'if",
+      "Da'if, hasan, then sahih",
+      "Hasan, da'if, then sahih"
+    ],
+    "answerIndex": 0,
+    "explanation": "Sahih is strongest, hasan is acceptable but below sahih, and da'if means weak."
+  },
+  {
+    "id": "mudraj-1",
+    "pathway": "advanced",
+    "title": "Narrator and Text Study",
+    "question": "Which issue is mainly about narrator reliability?",
+    "options": [
+      "Whether a narrator is accurate and upright",
+      "Whether an added phrase entered the matn",
+      "Whether two words were reversed in the text"
+    ],
+    "answerIndex": 0,
+    "explanation": "Narrator reliability concerns the people in the chain. Text criticism studies wording issues in the matn."
+  },
+  {
+    "id": "maqlub-1",
+    "pathway": "advanced",
+    "title": "Why Scholars Differ",
+    "question": "Why might qualified scholars differ when grading a hadith?",
+    "options": [
+      "They may weigh chains, narrators, and hidden defects differently",
+      "They ignore the chain and only guess from the topic",
+      "They always use different Arabic alphabets"
+    ],
+    "answerIndex": 0,
+    "explanation": "Scholars may differ because hadith grading studies chains, narrators, wording, supporting routes, and hidden defects."
+  }
+]
