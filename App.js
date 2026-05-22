@@ -132,7 +132,9 @@ const sanitizeLearnProgress = progress => {
     if (!hadith || !checks || typeof checks !== 'object') return;
     nawawiQuestionChecks[hadithId] = {};
     (hadith.questions || []).forEach((_, index) => {
-      if (checks[index]) nawawiQuestionChecks[hadithId][index] = true;
+      if (typeof checks[index] === 'number' || checks[index] === true) {
+        nawawiQuestionChecks[hadithId][index] = checks[index];
+      }
     });
   });
 
@@ -699,9 +701,12 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
     });
   };
 
-  const toggleNawawiQuestionCheck = (hadithId, questionIndex) => {
+  const toggleNawawiQuestionCheck = (hadithId, questionIndex, selectedIndex = true) => {
     updateLearnProgress(previousProgress => {
       const currentChecks = previousProgress.nawawiQuestionChecks?.[hadithId] || {};
+      const nextValue = selectedIndex === true
+        ? !currentChecks[questionIndex]
+        : selectedIndex;
       return {
         ...previousProgress,
         currentNawawiCardIndex: activeNawawiCardIndex,
@@ -709,7 +714,7 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
           ...previousProgress.nawawiQuestionChecks,
           [hadithId]: {
             ...currentChecks,
-            [questionIndex]: !currentChecks[questionIndex],
+            [questionIndex]: nextValue,
           },
         },
       };
@@ -1216,7 +1221,10 @@ const closeNarratorBio = () => {
     const { hadith } = card;
     const tracker = learnProgress.memorisation?.[hadith.id] || {};
     const questionChecks = learnProgress.nawawiQuestionChecks?.[hadith.id] || {};
-    const questionReviewed = !!questionChecks[card.questionIndex];
+    const rawQuestionCheck = questionChecks[card.questionIndex];
+    const questionReviewed = typeof rawQuestionCheck === 'number'
+      ? rawQuestionCheck
+      : !!rawQuestionCheck;
     const progress = totalCards ? Math.min(100, ((activeNawawiCardIndex + 1) / totalCards) * 100) : 0;
 
     return (
@@ -1258,14 +1266,49 @@ const closeNarratorBio = () => {
         ) : (
           <>
             <Text style={styles.nawawiQuestionTitle}>Learning Question</Text>
-            <Text style={styles.quizQuestion}>{card.question}</Text>
-            <Text style={styles.lessonSummary}>Pause and answer in your own words before moving on.</Text>
-            <Pressable
-              style={[styles.learnActionButton, questionReviewed && styles.learnActionButtonSecondary]}
-              onPress={() => toggleNawawiQuestionCheck(hadith.id, card.questionIndex)}
-            >
-              <Text style={styles.learnActionText}>{questionReviewed ? 'Self Check Completed' : 'Mark Self Check'}</Text>
-            </Pressable>
+            {typeof card.question === 'string' ? (
+              <>
+                <Text style={styles.quizQuestion}>{card.question}</Text>
+                <Text style={styles.lessonSummary}>Pause and answer in your own words before moving on.</Text>
+                <Pressable
+                  style={[styles.learnActionButton, questionReviewed && styles.learnActionButtonSecondary]}
+                  onPress={() => toggleNawawiQuestionCheck(hadith.id, card.questionIndex)}
+                >
+                  <Text style={styles.learnActionText}>{questionReviewed ? 'Self Check Completed' : 'Mark Self Check'}</Text>
+                </Pressable>
+              </>
+            ) : (
+              <>
+                <Text style={styles.quizQuestion}>{card.question.prompt}</Text>
+                {card.question.options.map((option, index) => {
+                  const selected = questionReviewed === index;
+                  const correctOption = questionReviewed !== false && index === card.question.answerIndex;
+                  const selectedWrong = selected && index !== card.question.answerIndex;
+                  return (
+                    <Pressable
+                      key={option}
+                      style={[
+                        styles.quizOption,
+                        selected && styles.quizOptionSelected,
+                        selectedWrong && styles.quizOptionWrong,
+                        correctOption && styles.quizOptionCorrect,
+                      ]}
+                      onPress={() => toggleNawawiQuestionCheck(hadith.id, card.questionIndex, index)}
+                    >
+                      <Text style={styles.quizOptionText}>{option}</Text>
+                    </Pressable>
+                  );
+                })}
+                {questionReviewed !== false ? (
+                  <Text style={questionReviewed === card.question.answerIndex ? styles.quizFeedbackCorrect : styles.quizFeedbackWrong}>
+                    {questionReviewed === card.question.answerIndex ? 'Correct. ' : 'Not quite. '}
+                    {card.question.explanation}
+                  </Text>
+                ) : (
+                  <Text style={styles.flowHint}>Choose an answer to check the phrase.</Text>
+                )}
+              </>
+            )}
           </>
         )}
         <View style={styles.flowControls}>

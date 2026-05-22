@@ -71,8 +71,8 @@
     "question": "How can hadith help with Qur'anic guidance?",
     "options": [
       "By explaining and clarifying practice",
-      "By replacing the Qur'an",
-      "By removing the need for teachers"
+      "By adding a separate Qur'an",
+      "By replacing careful study with guesses"
     ],
     "answerIndex": 0,
     "explanation": "Hadith helps explain and apply Qur'anic guidance, while students should keep learning carefully."
@@ -84,8 +84,8 @@
     "question": "What does al-sama refer to?",
     "options": [
       "Hearing directly from a teacher",
-      "Guessing a source",
-      "Reading without checking"
+      "Reading a written copy to a teacher",
+      "Receiving permission without hearing"
     ],
     "answerIndex": 0,
     "explanation": "Al-sama is a direct hearing method used in classical transmission."
@@ -97,8 +97,8 @@
     "question": "Which group belongs under ahad reports?",
     "options": [
       "Mashhur, aziz, and gharib",
-      "Prayer, fasting, and zakat",
-      "Makkah, Madinah, and Ta'if"
+      "Sahih, hasan, and da'if",
+      "Matn, sanad, and rawi"
     ],
     "answerIndex": 0,
     "explanation": "Ahad reports are commonly discussed through categories such as mashhur, aziz, and gharib."
@@ -110,8 +110,8 @@
     "question": "What is a basic idea of mutawatir?",
     "options": [
       "Many narrators transmit it across generations",
-      "Only one person reports it",
-      "It has no chain"
+      "One narrator transmits it at every level",
+      "The chain is missing from the report"
     ],
     "answerIndex": 0,
     "explanation": "Mutawatir reports are transmitted by many narrators across the generations."
@@ -123,8 +123,8 @@
     "question": "What should be made clear when a report is weak?",
     "options": [
       "That it is da'if",
-      "That it is automatically accepted",
-      "That no source is needed"
+      "That it is automatically sahih",
+      "That the wording no longer matters"
     ],
     "answerIndex": 0,
     "explanation": "If a report is weak, readers should be told clearly and should not rely on it casually."
@@ -132,66 +132,66 @@
   {
     "id": "muallaq-1",
     "pathway": "advanced",
-    "title": "Mu'allaq Reports",
-    "question": "Where does omission happen in a mu'allaq report?",
+    "title": "Connected and Broken Chains",
+    "question": "Which answer best shows the difference between muttasil and munqati'?",
     "options": [
-      "From the beginning of the chain",
-      "Only in the English translation",
-      "Only in the chapter title"
+      "Muttasil is connected; munqati' has a break",
+      "Muttasil is the text; munqati' is the narrator's name",
+      "Muttasil means fabricated; munqati' means famous"
     ],
     "answerIndex": 0,
-    "explanation": "A mu'allaq report has narrator omission from the beginning of the chain."
+    "explanation": "Muttasil describes a connected chain, while munqati' means there is a disconnection."
   },
   {
     "id": "mursal-1",
     "pathway": "advanced",
-    "title": "Mursal Reports",
-    "question": "What is missing in a mursal report?",
+    "title": "Isnad and Matn",
+    "question": "Which distinction is correct?",
     "options": [
-      "The Companion link is not named",
-      "The book name is always missing",
-      "The Arabic text is always missing"
+      "Isnad is the chain; matn is the wording",
+      "Isnad is the translation; matn is the page number",
+      "Isnad is always weak; matn is always strong"
     ],
     "answerIndex": 0,
-    "explanation": "A mursal report is narrated by a Tabi'i from the Prophet without naming the Companion."
+    "explanation": "The isnad is the chain of narrators, and the matn is the reported text."
   },
   {
     "id": "maudhu-1",
     "pathway": "advanced",
-    "title": "Fabricated Reports",
-    "question": "What does maudhu' mean?",
+    "title": "Authenticity Terms",
+    "question": "Which order is generally stronger to weaker?",
     "options": [
-      "Falsely attributed to the Prophet",
-      "Always found in Bukhari",
-      "A report with many narrators"
+      "Sahih, hasan, then da'if",
+      "Da'if, hasan, then sahih",
+      "Hasan, da'if, then sahih"
     ],
     "answerIndex": 0,
-    "explanation": "Maudhu' refers to a fabricated report falsely attributed to the Prophet."
+    "explanation": "Sahih is strongest, hasan is acceptable but below sahih, and da'if means weak."
   },
   {
     "id": "mudraj-1",
     "pathway": "advanced",
-    "title": "Mudraj Reports",
-    "question": "What is mudraj?",
+    "title": "Narrator and Text Study",
+    "question": "Which issue is mainly about narrator reliability?",
     "options": [
-      "Inserted wording mistaken as part of the hadith",
-      "A report with no narrator names",
-      "A hadith only about prayer"
+      "Whether a narrator is accurate and upright",
+      "Whether an added phrase entered the matn",
+      "Whether two words were reversed in the text"
     ],
     "answerIndex": 0,
-    "explanation": "Mudraj means added wording became mixed into the report and may be mistaken as part of it."
+    "explanation": "Narrator reliability concerns the people in the chain. Text criticism studies wording issues in the matn."
   },
   {
     "id": "maqlub-1",
     "pathway": "advanced",
-    "title": "Maqlub Reports",
-    "question": "What can happen in a maqlub report?",
+    "title": "Why Scholars Differ",
+    "question": "Why might qualified scholars differ when grading a hadith?",
     "options": [
-      "Names or wording may be reversed",
-      "The report becomes Qur'an",
-      "The narrator becomes unknown automatically"
+      "They may weigh chains, narrators, and hidden defects differently",
+      "They ignore the chain and only guess from the topic",
+      "They always use different Arabic alphabets"
     ],
     "answerIndex": 0,
-    "explanation": "Maqlub involves reversal or switching in the chain or text."
+    "explanation": "Scholars may differ because hadith grading studies chains, narrators, wording, supporting routes, and hidden defects."
   }
 ]

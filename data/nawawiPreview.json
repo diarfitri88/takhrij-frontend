@@ -11,7 +11,12 @@
       "Who is the narrator?",
       "What is the main lesson about intention?",
       "Who narrates from whom, if available?",
-      "Complete: إِنَّمَا الأَعْمَالُ بِ____"
+      {
+        "prompt": "Which word completes this phrase: إِنَّمَا الأَعْمَالُ بِـ ____؟",
+        "options": ["النِّيَّات", "الصَّلَاة", "الزَّكَاة"],
+        "answerIndex": 0,
+        "explanation": "The phrase means actions are judged by intentions: بِالنِّيَّات."
+      }
     ]
   },
   {
@@ -26,7 +31,12 @@
       "Who is the narrator?",
       "What are Islam, Iman, and Ihsan?",
       "Who narrates from whom, if available?",
-      "Complete: أَنْ تَعْبُدَ اللَّهَ كَأَنَّكَ ____"
+      {
+        "prompt": "Which word completes this phrase: أَنْ تَعْبُدَ اللَّهَ كَأَنَّكَ ____؟",
+        "options": ["تَرَاهُ", "تَسْمَعُهُ", "تَكْتُبُهُ"],
+        "answerIndex": 0,
+        "explanation": "Ihsan is to worship Allah as though you see Him: كَأَنَّكَ تَرَاهُ."
+      }
     ]
   },
   {
@@ -41,7 +51,12 @@
       "Who is the narrator?",
       "What are the five foundations mentioned?",
       "Who narrates from whom, if available?",
-      "Complete: بُنِيَ الإِسْلَامُ عَلَى ____"
+      {
+        "prompt": "Which word completes this phrase: بُنِيَ الإِسْلَامُ عَلَى ____؟",
+        "options": ["خَمْسٍ", "سَبْعٍ", "عَشْرٍ"],
+        "answerIndex": 0,
+        "explanation": "The hadith says Islam is built upon five foundations: عَلَى خَمْسٍ."
+      }
     ]
   },
   {
@@ -56,7 +71,12 @@
       "Who is the narrator?",
       "What does this hadith teach about Allah's knowledge and decree?",
       "Who narrates from whom, if available?",
-      "Complete: فِي بَطْنِ ____"
+      {
+        "prompt": "Which phrase completes this phrase: فِي بَطْنِ ____؟",
+        "options": ["أُمِّهِ", "أَبِيهِ", "أَخِيهِ"],
+        "answerIndex": 0,
+        "explanation": "The hadith describes creation in the womb of one's mother: فِي بَطْنِ أُمِّهِ."
+      }
     ]
   },
   {
@@ -71,7 +91,12 @@
       "Who is the narrator?",
       "What is the main lesson about following the Sunnah?",
       "Who narrates from whom, if available?",
-      "Complete: فَهُوَ ____"
+      {
+        "prompt": "Which word completes this phrase: فَهُوَ ____؟",
+        "options": ["رَدٌّ", "حَسَنٌ", "جَدِيدٌ"],
+        "answerIndex": 0,
+        "explanation": "The hadith says an unsupported religious innovation is rejected: فَهُوَ رَدٌّ."
+      }
     ]
   }
 ]
