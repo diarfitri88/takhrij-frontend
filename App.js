@@ -1449,9 +1449,9 @@ const closeNarratorBio = () => {
         <View style={styles.learnHeroCard}>
           <Text style={styles.learnEyebrow}>Guided memorisation</Text>
           <Text style={styles.learnTitle}>Arbain Nawawi</Text>
-          <Text style={styles.learnIntro}>Learn and memorise foundational hadith step by step.</Text>
-          <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode('overview')}>
-            <Text style={styles.secondaryTextButtonText}>Back to Learn</Text>
+          <Text style={styles.learnIntro}>Learn and memorise the 40 hadith of Imam Nawawi step by step.</Text>
+          <Pressable style={styles.arbainBackButton} onPress={() => setLearnMode('overview')}>
+            <Text style={styles.arbainBackButtonText}>Back to Learn</Text>
           </Pressable>
         </View>
 
@@ -3052,6 +3052,21 @@ const styles = StyleSheet.create({
     color: '#176b5f',
     fontSize: 14,
     fontWeight: '800',
+  },
+  arbainBackButton: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: '#176b5f',
+    backgroundColor: '#eef6f2',
+    borderRadius: 8,
+    paddingVertical: 9,
+    paddingHorizontal: 13,
+    marginTop: 12,
+  },
+  arbainBackButtonText: {
+    color: '#0f5148',
+    fontSize: 14,
+    fontWeight: '900',
   },
   flowControls: {
     flexDirection: 'row',
