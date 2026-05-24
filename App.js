@@ -501,6 +501,29 @@ const normalizeAuthenticityStatus = (status, reference = '', collection = '') =>
 const isSearchSuggestionReference = reference =>
   ['Search Suggestions', 'Suggested Searches', 'No Local Match', 'AI Generated'].includes(String(reference || '').trim());
 
+const formatStructuredSearchResults = results => {
+  if (!Array.isArray(results)) return '';
+
+  return results
+    .map(item => {
+      const arabic = item?.arabic || '';
+      const english = item?.english || '';
+      const reference = item?.reference || 'Reference under review';
+      const authenticityStatus = item?.authenticityStatus || '';
+      const warning = item?.sourceCaution || item?.warning || '';
+
+      return [
+        '---',
+        `Arabic Matn: ${arabic}`,
+        `English Matn: ${english}`,
+        `Reference: ${reference}`,
+        authenticityStatus ? `Authenticity Status: ${authenticityStatus}` : '',
+        warning ? `Warning: ${warning}` : ''
+      ].filter(Boolean).join('\n');
+    })
+    .join('\n');
+};
+
 const getAuthenticitySourceLabel = (status = '', source = '') => {
   const normalizedStatus = String(status || '').toLowerCase();
   const normalizedSource = String(source || '').toLowerCase();
@@ -1096,7 +1119,7 @@ const closeNarratorBio = () => {
     setResult('');
     try {
       const data = await postJson('/search-hadith', { query: q });
-      setResult(data.result || '');
+      setResult(data.result || formatStructuredSearchResults(data.results) || '');
       await incrementDailySearchCounter();
     } catch {
       setResult('Error connecting to server.');
