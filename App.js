@@ -85,32 +85,44 @@ const LEARNING_PATHWAYS = [
 
 const validLessonIds = new Set(lessons.map(lesson => lesson.id));
 const validPathwayIds = new Set(LEARNING_PATHWAYS.map(pathway => pathway.id));
+const NAWAWI_SELECTION_TITLES = {
+  'nawawi-1': 'Hadith 1: Actions Are by Intentions',
+  'nawawi-2': 'Hadith 2: Islam, Iman, Ihsan',
+  'nawawi-3': 'Hadith 3: The Pillars of Islam',
+  'nawawi-4': 'Hadith 4: Creation in the Womb',
+  'nawawi-5': 'Hadith 5: Rejected Innovations',
+};
 
 const getPathwayLessons = pathwayId => lessons.filter(lesson => lesson.pathway === pathwayId);
 const getPathwayQuizzes = pathwayId => quizzes.filter(quiz => quiz.pathway === pathwayId);
-const getNawawiCards = () => [
-  ...nawawiIntroCards.map(card => ({ type: 'intro', card })),
-  ...nawawiPreview.flatMap(hadith => [
-    { type: 'hadith', hadith },
-    { type: 'meaning', hadith },
-    { type: 'vocabulary', hadith },
-    { type: 'lessons', hadith },
-    ...(hadith.chunks || []).map((chunk, index) => ({
-      type: 'chunk',
-      hadith,
-      chunk,
-      chunkIndex: index,
-    })),
-    ...(hadith.questions || []).map((question, index) => ({
-      type: 'question',
-      hadith,
-      question,
-      questionIndex: index,
-    })),
-    { type: 'reflection', hadith },
-    { type: 'checklist', hadith },
-  ]),
+const getNawawiHadithCards = hadith => [
+  { type: 'hadith', hadith },
+  { type: 'meaning', hadith },
+  { type: 'vocabulary', hadith },
+  { type: 'lessons', hadith },
+  ...(hadith.chunks || []).map((chunk, index) => ({
+    type: 'chunk',
+    hadith,
+    chunk,
+    chunkIndex: index,
+  })),
+  ...(hadith.questions || []).map((question, index) => ({
+    type: 'question',
+    hadith,
+    question,
+    questionIndex: index,
+  })),
+  { type: 'reflection', hadith },
+  { type: 'checklist', hadith },
 ];
+
+const getNawawiCards = hadithId => {
+  const selectedHadith = hadithId
+    ? nawawiPreview.find(hadith => hadith.id === hadithId)
+    : null;
+  if (selectedHadith) return getNawawiHadithCards(selectedHadith);
+  return nawawiPreview.flatMap(getNawawiHadithCards);
+};
 
 const getStableHash = value => String(value).split('').reduce((hash, char) => {
   const nextHash = ((hash << 5) - hash) + char.charCodeAt(0);
@@ -791,6 +803,7 @@ export default function App() {
   const [selectedPathwayId, setSelectedPathwayId] = useState('beginner');
   const [activePathwayPreviewIndex, setActivePathwayPreviewIndex] = useState(0);
   const [activePathwayCardIndex, setActivePathwayCardIndex] = useState(0);
+  const [selectedNawawiHadithId, setSelectedNawawiHadithId] = useState(nawawiPreview[0]?.id || '');
   const [activeNawawiCardIndex, setActiveNawawiCardIndex] = useState(0);
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
   const [reviewSelfChecked, setReviewSelfChecked] = useState(false);
@@ -826,7 +839,7 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
       duration: 160,
       useNativeDriver: true,
     }).start();
-  }, [learnMode, activePathwayCardIndex, activeNawawiCardIndex, activeReviewIndex, cardFadeAnim]);
+  }, [learnMode, activePathwayCardIndex, selectedNawawiHadithId, activeNawawiCardIndex, activeReviewIndex, cardFadeAnim]);
 
   useEffect(() => {
     const loadLocalProgress = async () => {
@@ -993,6 +1006,7 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
             setSelectedPathwayId('beginner');
             setActivePathwayPreviewIndex(0);
             setActivePathwayCardIndex(0);
+            setSelectedNawawiHadithId(nawawiPreview[0]?.id || '');
             setActiveNawawiCardIndex(0);
             setActiveReviewIndex(0);
             setReviewSelfChecked(false);
@@ -1028,7 +1042,7 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
   }, [learnMode, selectedPathwayId, activePathwayCardIndex]);
 
   useEffect(() => {
-    if (learnMode !== 'nawawi') return;
+    if (learnMode !== 'nawawiHadith') return;
     const currentProgress = learnProgressRef.current || DEFAULT_LEARN_PROGRESS;
     if (currentProgress.currentNawawiCardIndex === activeNawawiCardIndex) return;
     const nextProgress = sanitizeLearnProgress({
@@ -1245,6 +1259,16 @@ const closeNarratorBio = () => {
         return true;
       }
 
+      if (activeSection === 'learn' && learnMode === 'nawawiHadith') {
+        setLearnMode('nawawi');
+        return true;
+      }
+
+      if (activeSection === 'learn' && learnMode !== 'overview') {
+        setLearnMode('overview');
+        return true;
+      }
+
       if (hasSearchOutput) {
         setResult('');
         return true;
@@ -1260,6 +1284,8 @@ const closeNarratorBio = () => {
     donationVisible,
     glossaryModalVisible,
     hasSearchOutput,
+    activeSection,
+    learnMode,
     loadingCommentary,
     narratorBioVisible,
     thankYouVisible,
@@ -1289,8 +1315,13 @@ const closeNarratorBio = () => {
   };
 
   const openNawawiItem = () => {
-    setActiveNawawiCardIndex(clampLearningIndex(learnProgressRef.current?.currentNawawiCardIndex, getNawawiCards().length || 1));
     setLearnMode('nawawi');
+  };
+
+  const openNawawiHadith = hadithId => {
+    setSelectedNawawiHadithId(hadithId);
+    setActiveNawawiCardIndex(0);
+    setLearnMode('nawawiHadith');
   };
 
   const openReviewFlow = () => {
@@ -1411,6 +1442,55 @@ const closeNarratorBio = () => {
     </View>
   );
 
+  const renderNawawiPage = () => {
+    const introCards = nawawiIntroCards.slice(0, 2);
+    return (
+      <>
+        <View style={styles.learnHeroCard}>
+          <Text style={styles.learnEyebrow}>Guided memorisation</Text>
+          <Text style={styles.learnTitle}>Arbain Nawawi</Text>
+          <Text style={styles.learnIntro}>Learn and memorise foundational hadith step by step.</Text>
+          <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode('overview')}>
+            <Text style={styles.secondaryTextButtonText}>Back to Learn</Text>
+          </Pressable>
+        </View>
+
+        <Text style={styles.learnSectionTitle}>Start Here</Text>
+        {introCards.map(card => (
+          <View key={card.id} style={styles.learnCard}>
+            <Text style={styles.lessonLevel}>Optional intro</Text>
+            <Text style={styles.lessonTitle}>{card.title}</Text>
+            <Text style={styles.lessonSummary}>{card.body}</Text>
+          </View>
+        ))}
+
+        <Text style={styles.learnSectionTitle}>Choose a Hadith</Text>
+        {nawawiPreview.map((hadith, index) => {
+          const tracker = learnProgress.memorisation?.[hadith.id] || {};
+          const completedStages = (hadith.stages || []).filter(stage => tracker[stage]).length;
+          return (
+            <Pressable
+              key={hadith.id}
+              style={styles.learnCard}
+              onPress={() => openNawawiHadith(hadith.id)}
+            >
+              <View style={styles.learnCardHeader}>
+                <Text style={styles.lessonLevel}>Hadith {index + 1}</Text>
+                <Text style={styles.completedBadge}>{completedStages}/{hadith.stages.length} checkpoints</Text>
+              </View>
+              <Text style={styles.lessonTitle}>{NAWAWI_SELECTION_TITLES[hadith.id] || hadith.title}</Text>
+              <Text style={styles.nawawiReference}>{hadith.reference}</Text>
+              <Text style={styles.lessonSummary}>{hadith.english}</Text>
+              <View style={styles.learnActionButton}>
+                <Text style={styles.learnActionText}>{completedStages ? 'Continue Hadith' : 'Start Hadith'}</Text>
+              </View>
+            </Pressable>
+          );
+        })}
+      </>
+    );
+  };
+
   const renderPathwayFlow = () => {
     const pathway = LEARNING_PATHWAYS.find(item => item.id === selectedPathwayId) || LEARNING_PATHWAYS[0];
     const pathwayLessons = getPathwayLessons(pathway.id);
@@ -1514,7 +1594,8 @@ const closeNarratorBio = () => {
   };
 
   const renderNawawiFlow = () => {
-    const nawawiCards = getNawawiCards();
+    const selectedHadith = nawawiPreview.find(hadith => hadith.id === selectedNawawiHadithId) || nawawiPreview[0];
+    const nawawiCards = getNawawiCards(selectedHadith?.id);
     const totalCards = nawawiCards.length;
     const card = nawawiCards[activeNawawiCardIndex] || nawawiCards[0];
     if (!card) return null;
@@ -1692,8 +1773,8 @@ const closeNarratorBio = () => {
             <Text style={styles.flowButtonText}>Next</Text>
           </Pressable>
         </View>
-        <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode('overview')}>
-          <Text style={styles.secondaryTextButtonText}>Back to Arbain learning</Text>
+        <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode('nawawi')}>
+          <Text style={styles.secondaryTextButtonText}>Back to Arbain</Text>
         </Pressable>
       </Animated.View>
     );
@@ -1773,6 +1854,14 @@ const closeNarratorBio = () => {
     const reviewCards = getReadyReviewCards(safeProgress);
     const reviewStreakCount = getCurrentReviewStreakCount(safeProgress);
 
+    if (learnMode === 'nawawi') {
+      return renderNawawiPage();
+    }
+
+    if (learnMode === 'nawawiHadith') {
+      return renderNawawiFlow();
+    }
+
     return (
     <>
       <View style={styles.learnHeroCard}>
@@ -1835,7 +1924,6 @@ const closeNarratorBio = () => {
         </>
       )}
       {learnMode === 'pathway' && renderPathwayFlow()}
-      {learnMode === 'nawawi' && renderNawawiFlow()}
       {learnMode === 'review' && renderReviewFlow()}
     </>
     );
