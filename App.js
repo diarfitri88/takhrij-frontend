@@ -1435,7 +1435,7 @@ const closeNarratorBio = () => {
         <Text style={styles.lessonPoint}>Includes introduction cards, full matn, key vocabulary, lessons, memorisation chunks, active recall, and review checkpoints.</Text>
         <View style={styles.learnActionButton}>
           <Text style={styles.learnActionText}>
-            {learnProgress.currentNawawiCardIndex ? 'Continue Arbain Learning' : 'Start Arbain Learning'}
+            {learnProgress.currentNawawiCardIndex ? 'Continue Arbain Nawawi' : 'Explore Arbain Nawawi'}
           </Text>
         </View>
       </Pressable>
@@ -1455,10 +1455,10 @@ const closeNarratorBio = () => {
           </Pressable>
         </View>
 
-        <Text style={styles.learnSectionTitle}>Start Here</Text>
+        <Text style={styles.learnSectionTitle}>Before You Begin</Text>
         {introCards.map(card => (
           <View key={card.id} style={styles.learnCard}>
-            <Text style={styles.lessonLevel}>Optional intro</Text>
+            <Text style={styles.lessonLevel}>Introduction</Text>
             <Text style={styles.lessonTitle}>{card.title}</Text>
             <Text style={styles.lessonSummary}>{card.body}</Text>
           </View>
