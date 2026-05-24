@@ -31,6 +31,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const lessons = require('./data/lessons.json');
 const quizzes = require('./data/quizzes.json');
 const arbainLearning = require('./data/arbainLearning.json');
+const appConfig = require('./app.json');
 const nawawiIntroCards = arbainLearning.introCards || [];
 const nawawiPreview = arbainLearning.hadiths || [];
 
@@ -43,6 +44,7 @@ iOS: Coming soon
 `;
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://takhrij-backend.onrender.com';
+const APP_VERSION = appConfig?.expo?.version || '1.0.0';
 const DEFAULT_API_TIMEOUT_MS = 30000;
 const NARRATOR_BIO_TIMEOUT_MS = 60000;
 const DAILY_FREE_SEARCH_LIMIT = 5;
@@ -810,6 +812,7 @@ export default function App() {
   const [showSearchHelp, setShowSearchHelp] = useState(false);
   const [loadingCommentary, setLoadingCommentary] = useState(false);
   const [commentaryModalVisible, setCommentaryModalVisible] = useState(false);
+  const [settingsVisible, setSettingsVisible] = useState(false);
   const [aboutVisible, setAboutVisible] = useState(false);
   const [glossaryModalVisible, setGlossaryModalVisible] = useState(false);
   const [commentaryData, setCommentaryData] = useState({
@@ -1340,6 +1343,11 @@ const closeNarratorBio = () => {
         return true;
       }
 
+      if (settingsVisible) {
+        setSettingsVisible(false);
+        return true;
+      }
+
       if (activeSection === 'learn' && learnMode === 'nawawiHadith') {
         setLearnMode('nawawi');
         return true;
@@ -1369,6 +1377,7 @@ const closeNarratorBio = () => {
     learnMode,
     loadingCommentary,
     narratorBioVisible,
+    settingsVisible,
     thankYouVisible,
   ]);
 
@@ -2267,6 +2276,51 @@ const closeNarratorBio = () => {
 </Modal>
 
 <Modal
+  visible={settingsVisible}
+  transparent
+  animationType="slide"
+  onRequestClose={() => setSettingsVisible(false)}
+>
+  <View style={styles.modalBackdrop}>
+    <View style={styles.modalContent}>
+      <Text style={styles.modalHeader}>Settings</Text>
+      <ScrollView contentContainerStyle={styles.modalScrollContent}>
+        <Text style={styles.settingsSectionTitle}>About Takhrij</Text>
+        <Text style={styles.modalText}>
+          Takhrij helps beginners search hadith references and learn the sciences of hadith through guided cards, quizzes, Daily Review, and Arbain Nawawi memorisation.
+        </Text>
+
+        <Text style={styles.settingsSectionTitle}>Educational Disclaimer</Text>
+        <Text style={styles.modalText}>
+          Takhrij is an educational research aid. It does not replace qualified scholars, formal study, or scholarly takhrij. AI assisted explanations may contain mistakes, so religious matters should be verified with reliable scholarship.
+        </Text>
+
+        <Text style={styles.settingsSectionTitle}>App Version</Text>
+        <Text style={styles.modalText}>Version {APP_VERSION}</Text>
+
+        <Text style={styles.settingsSectionTitle}>Contact / Feedback</Text>
+        <Text style={styles.modalText}>Feedback form and support contact will be added in a future update.</Text>
+
+        <Text style={styles.settingsSectionTitle}>Restore Purchases</Text>
+        <Text style={styles.modalText}>Restore purchases will be available when premium features are introduced.</Text>
+
+        {__DEV__ && (
+          <Pressable style={styles.settingsResetButton} onPress={resetLearningProgress}>
+            <Text style={styles.settingsResetButtonText}>Reset learning progress</Text>
+          </Pressable>
+        )}
+      </ScrollView>
+      <TouchableOpacity
+        style={styles.modalCloseButton}
+        onPress={() => setSettingsVisible(false)}
+      >
+        <Text style={styles.modalCloseText}>Close</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
+
+<Modal
   visible={glossaryModalVisible}
   transparent
   animationType="slide"
@@ -2351,6 +2405,9 @@ const closeNarratorBio = () => {
 
         <LinearGradient colors={['#0f2f35', '#176b5f']} style={styles.header}>
           <Text style={styles.headerText}>Takhrij</Text>
+          <Pressable style={styles.headerSettingsButton} onPress={() => setSettingsVisible(true)}>
+            <Text style={styles.headerSettingsText}>Settings</Text>
+          </Pressable>
         </LinearGradient>
 
         <KeyboardAvoidingView
@@ -2621,6 +2678,21 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: '800',
     color: '#fff',
+  },
+  headerSettingsButton: {
+    position: 'absolute',
+    right: 16,
+    bottom: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.42)',
+    borderRadius: 8,
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+  },
+  headerSettingsText: {
+    color: '#f7f1df',
+    fontSize: 12,
+    fontWeight: '800',
   },
   screenContainer: { flex: 1 },
   container: {
@@ -3366,6 +3438,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 25,
     color: '#2f3d40',
+  },
+  settingsSectionTitle: {
+    color: '#176b5f',
+    fontSize: 14,
+    fontWeight: '900',
+    marginTop: 14,
+    marginBottom: 6,
+    textTransform: 'uppercase',
+  },
+  settingsResetButton: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: '#b85c4d',
+    backgroundColor: '#fff1ef',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginTop: 16,
+  },
+  settingsResetButtonText: {
+    color: '#8a3a32',
+    fontSize: 14,
+    fontWeight: '900',
   },
   authenticityStatusText: {
     fontSize: 16,
