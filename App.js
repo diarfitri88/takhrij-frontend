@@ -501,6 +501,29 @@ const normalizeAuthenticityStatus = (status, reference = '', collection = '') =>
 const isSearchSuggestionReference = reference =>
   ['Search Suggestions', 'Suggested Searches', 'No Local Match', 'AI Generated'].includes(String(reference || '').trim());
 
+const formatStructuredSearchResults = results => {
+  if (!Array.isArray(results)) return '';
+
+  return results
+    .map(item => {
+      const arabic = item?.arabic || '';
+      const english = item?.english || '';
+      const reference = item?.reference || 'Reference under review';
+      const authenticityStatus = item?.authenticityStatus || '';
+      const warning = item?.sourceCaution || item?.warning || '';
+
+      return [
+        '---',
+        `Arabic Matn: ${arabic}`,
+        `English Matn: ${english}`,
+        `Reference: ${reference}`,
+        authenticityStatus ? `Authenticity Status: ${authenticityStatus}` : '',
+        warning ? `Warning: ${warning}` : ''
+      ].filter(Boolean).join('\n');
+    })
+    .join('\n');
+};
+
 const getAuthenticitySourceLabel = (status = '', source = '') => {
   const normalizedStatus = String(status || '').toLowerCase();
   const normalizedSource = String(source || '').toLowerCase();
@@ -1086,7 +1109,7 @@ const closeNarratorBio = () => {
     if (!q) return;
     const today = getTodayKey();
     const searchesUsed = dailySearchCounter.date === today ? dailySearchCounter.count : 0;
-    if (searchesUsed >= DAILY_FREE_SEARCH_LIMIT) {
+    if (!__DEV__ && searchesUsed >= DAILY_FREE_SEARCH_LIMIT) {
       setResult(
         `---\nEnglish Matn:\nYou have used your ${DAILY_FREE_SEARCH_LIMIT} free searches for today.\n\nCome back tomorrow for more free searches, or continue learning in the Learn section.\n\nReference: No Local Match\nNote: Daily free search limit reached.`
       );
@@ -1096,8 +1119,10 @@ const closeNarratorBio = () => {
     setResult('');
     try {
       const data = await postJson('/search-hadith', { query: q });
-      setResult(data.result || '');
-      await incrementDailySearchCounter();
+      setResult(data.result || formatStructuredSearchResults(data.results) || '');
+      if (!__DEV__) {
+        await incrementDailySearchCounter();
+      }
     } catch {
       setResult('Error connecting to server.');
     } finally {
