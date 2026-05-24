@@ -830,16 +830,96 @@ export default function App() {
 const [narratorBioText, setNarratorBioText] = useState('');
 const [selectedNarrator, setSelectedNarrator] = useState('');
 const [returnToCommentaryAfterBio, setReturnToCommentaryAfterBio] = useState(false);
+const welcomeFadeAnim = useRef(new Animated.Value(0)).current;
+const welcomeSlideAnim = useRef(new Animated.Value(16)).current;
+const sectionFadeAnim = useRef(new Animated.Value(1)).current;
+const sectionSlideAnim = useRef(new Animated.Value(0)).current;
 const cardFadeAnim = useRef(new Animated.Value(1)).current;
+const cardSlideAnim = useRef(new Animated.Value(0)).current;
+const progressAnim = useRef(new Animated.Value(0)).current;
+const checklistFeedbackAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    cardFadeAnim.setValue(0.85);
-    Animated.timing(cardFadeAnim, {
+    Animated.parallel([
+      Animated.timing(welcomeFadeAnim, {
+        toValue: 1,
+        duration: 420,
+        useNativeDriver: true,
+      }),
+      Animated.timing(welcomeSlideAnim, {
+        toValue: 0,
+        duration: 420,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [welcomeFadeAnim, welcomeSlideAnim]);
+
+  useEffect(() => {
+    sectionFadeAnim.setValue(0.88);
+    sectionSlideAnim.setValue(8);
+    Animated.parallel([
+      Animated.timing(sectionFadeAnim, {
+        toValue: 1,
+        duration: 170,
+        useNativeDriver: true,
+      }),
+      Animated.timing(sectionSlideAnim, {
+        toValue: 0,
+        duration: 170,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [activeSection, sectionFadeAnim, sectionSlideAnim]);
+
+  useEffect(() => {
+    cardFadeAnim.setValue(0.88);
+    cardSlideAnim.setValue(10);
+    Animated.parallel([
+      Animated.timing(cardFadeAnim, {
+        toValue: 1,
+        duration: 190,
+        useNativeDriver: true,
+      }),
+      Animated.timing(cardSlideAnim, {
+        toValue: 0,
+        duration: 190,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [learnMode, activePathwayCardIndex, selectedNawawiHadithId, activeNawawiCardIndex, activeReviewIndex, cardFadeAnim, cardSlideAnim]);
+
+  const animateProgressTo = percentage => {
+    Animated.timing(progressAnim, {
+      toValue: Math.min(Math.max(percentage || 0, 0), 100),
+      duration: 260,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const pulseChecklistFeedback = () => {
+    checklistFeedbackAnim.setValue(0.96);
+    Animated.spring(checklistFeedbackAnim, {
       toValue: 1,
-      duration: 160,
+      friction: 5,
+      tension: 90,
       useNativeDriver: true,
     }).start();
-  }, [learnMode, activePathwayCardIndex, selectedNawawiHadithId, activeNawawiCardIndex, activeReviewIndex, cardFadeAnim]);
+  };
+
+  useEffect(() => {
+    if (learnMode === 'pathway') {
+      const totalCards = getPathwayLessons(selectedPathwayId).length + getPathwayQuizzes(selectedPathwayId).length;
+      animateProgressTo(totalCards ? ((activePathwayCardIndex + 1) / totalCards) * 100 : 0);
+    } else if (learnMode === 'nawawiHadith') {
+      const totalCards = getNawawiCards(selectedNawawiHadithId).length;
+      animateProgressTo(totalCards ? ((activeNawawiCardIndex + 1) / totalCards) * 100 : 0);
+    } else if (learnMode === 'review') {
+      const totalCards = getReadyReviewCards(sanitizeLearnProgress(learnProgressRef.current || DEFAULT_LEARN_PROGRESS)).length;
+      animateProgressTo(totalCards ? ((activeReviewIndex + 1) / totalCards) * 100 : 0);
+    } else {
+      progressAnim.setValue(0);
+    }
+  }, [learnMode, selectedPathwayId, activePathwayCardIndex, selectedNawawiHadithId, activeNawawiCardIndex, activeReviewIndex, progressAnim]);
 
   useEffect(() => {
     const loadLocalProgress = async () => {
@@ -941,6 +1021,7 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
   };
 
   const toggleMemorisationStage = (hadithId, stage) => {
+    pulseChecklistFeedback();
     updateLearnProgress(previousProgress => {
       const currentTracker = previousProgress.memorisation?.[hadithId] || {};
       const nextStageValue = !currentTracker[stage];
@@ -1442,6 +1523,22 @@ const closeNarratorBio = () => {
     </View>
   );
 
+  const renderAnimatedProgressBar = () => (
+    <View style={styles.flowProgressTrack}>
+      <Animated.View
+        style={[
+          styles.flowProgressFill,
+          {
+            width: progressAnim.interpolate({
+              inputRange: [0, 100],
+              outputRange: ['0%', '100%'],
+            }),
+          },
+        ]}
+      />
+    </View>
+  );
+
   const renderNawawiPage = () => {
     const introCards = nawawiIntroCards.slice(0, 2);
     return (
@@ -1511,14 +1608,12 @@ const closeNarratorBio = () => {
     }
 
     return (
-      <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim }]}>
+      <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim, transform: [{ translateY: cardSlideAnim }] }]}>
         <View style={styles.learnCardHeader}>
           <Text style={styles.lessonLevel}>{pathway.title}</Text>
           <Text style={styles.completedBadge}>{activePathwayCardIndex + 1}/{totalCards}</Text>
         </View>
-        <View style={styles.flowProgressTrack}>
-          <View style={[styles.flowProgressFill, { width: `${progress}%` }]} />
-        </View>
+        {renderAnimatedProgressBar()}
         {!isQuizCard && lesson && (
           <>
             <Text style={styles.lessonTitle}>{lesson.title}</Text>
@@ -1624,14 +1719,12 @@ const closeNarratorBio = () => {
                     : 'Active Recall';
 
     return (
-      <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim }]}>
+      <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim, transform: [{ translateY: cardSlideAnim }] }]}>
         <View style={styles.learnCardHeader}>
           <Text style={styles.lessonLevel}>Arbain Nawawi • {cardLabel}</Text>
           <Text style={styles.completedBadge}>{activeNawawiCardIndex + 1}/{totalCards}</Text>
         </View>
-        <View style={styles.flowProgressTrack}>
-          <View style={[styles.flowProgressFill, { width: `${progress}%` }]} />
-        </View>
+        {renderAnimatedProgressBar()}
         {card.type === 'intro' ? (
           <>
             <Text style={styles.lessonTitle}>{card.card.title}</Text>
@@ -1690,15 +1783,16 @@ const closeNarratorBio = () => {
               {hadith.stages.map(stage => {
                 const done = !!tracker[stage];
                 return (
-                  <Pressable
-                    key={stage}
-                    style={[styles.memorisationStep, done && styles.memorisationStepDone]}
-                    onPress={() => toggleMemorisationStage(hadith.id, stage)}
-                  >
-                    <Text style={[styles.memorisationStepText, done && styles.memorisationStepTextDone]}>
-                      {done ? `${stage} done` : stage}
-                    </Text>
-                  </Pressable>
+                  <Animated.View key={stage} style={done ? { transform: [{ scale: checklistFeedbackAnim }] } : null}>
+                    <Pressable
+                      style={[styles.memorisationStep, done && styles.memorisationStepDone]}
+                      onPress={() => toggleMemorisationStage(hadith.id, stage)}
+                    >
+                      <Text style={[styles.memorisationStepText, done && styles.memorisationStepTextDone]}>
+                        {done ? `${stage} done` : stage}
+                      </Text>
+                    </Pressable>
+                  </Animated.View>
                 );
               })}
             </View>
@@ -1799,14 +1893,12 @@ const closeNarratorBio = () => {
     }
 
     return (
-      <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim }]}>
+      <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim, transform: [{ translateY: cardSlideAnim }] }]}>
         <View style={styles.learnCardHeader}>
           <Text style={styles.lessonLevel}>Today’s Review</Text>
           <Text style={styles.completedBadge}>{safeReviewIndex + 1}/{reviewCards.length}</Text>
         </View>
-        <View style={styles.flowProgressTrack}>
-          <View style={[styles.flowProgressFill, { width: `${((safeReviewIndex + 1) / reviewCards.length) * 100}%` }]} />
-        </View>
+        {renderAnimatedProgressBar()}
         <Text style={styles.quizTitle}>{reviewCard.sourceLabel}</Text>
         <Text style={styles.lessonTitle}>{reviewCard.title}</Text>
         <Text style={styles.quizQuestion}>{reviewCard.prompt}</Text>
@@ -1940,27 +2032,35 @@ const closeNarratorBio = () => {
           <View style={styles.dimOverlay} />
           <SafeAreaView style={[styles.welcomeContainer, { paddingBottom: insets.bottom }]}>
             <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-            <View style={styles.welcomeGlassCard}>
-              <Text style={styles.welcomeEyebrow}>A beginner-friendly app to learn, search, and memorise hadith step by step.</Text>
+            <Animated.View
+              style={[
+                styles.welcomeGlassCard,
+                {
+                  opacity: welcomeFadeAnim,
+                  transform: [{ translateY: welcomeSlideAnim }],
+                },
+              ]}
+            >
+              <Text style={styles.welcomeEyebrow}>Learn, search, and memorise hadith step by step.</Text>
               <Text style={styles.welcomeTitle}>Welcome to Takhrij</Text>
               <Text style={styles.welcomeText}>
-                Takhrij helps you explore hadith while learning the foundations of the sciences of hadith through guided cards, quizzes, daily review, and Arbain Nawawi memorisation.
+                Takhrij helps beginners explore hadith with guided learning pathways, daily review cards, Arbain Nawawi memorisation, quizzes, and accurate reference based search.
               </Text>
               <Text style={styles.welcomeSectionTitle}>Features include</Text>
               <View style={styles.welcomeBulletList}>
-                <Text style={styles.welcomeBullet}>• Search hadith by keywords or phrases</Text>
-                <Text style={styles.welcomeBullet}>• Learn Beginner, Intermediate, and Advanced hadith science pathways</Text>
-                <Text style={styles.welcomeBullet}>• Test yourself with short quizzes</Text>
-                <Text style={styles.welcomeBullet}>• Review cards daily to strengthen retention</Text>
-                <Text style={styles.welcomeBullet}>• Study and memorise the first 5 Hadith of Arbain Nawawi</Text>
+                <Text style={styles.welcomeBullet}>• Search hadith by keyword or reference</Text>
+                <Text style={styles.welcomeBullet}>• Learn the sciences of hadith through guided cards</Text>
+                <Text style={styles.welcomeBullet}>• Review daily to strengthen retention</Text>
+                <Text style={styles.welcomeBullet}>• Memorise selected hadith from Arbain Nawawi</Text>
+                <Text style={styles.welcomeBullet}>• Track progress across lessons and quizzes</Text>
               </View>
               <Text style={styles.welcomeDisclaimer}>
-                This app is an educational research aid. It does not replace qualified scholars, formal study, or scholarly takhrij.
+                Takhrij is an educational research aid and does not replace qualified scholars, formal study, or scholarly takhrij.
               </Text>
               <Pressable style={styles.welcomeButton} onPress={() => setShowWelcome(false)}>
                 <Text style={styles.welcomeButtonText}>Start Learning</Text>
               </Pressable>
-            </View>
+            </Animated.View>
           </SafeAreaView>
         </ImageBackground>
       </SafeAreaProvider>
@@ -2277,6 +2377,7 @@ const closeNarratorBio = () => {
               </Pressable>
             </View>
 
+            <Animated.View style={{ opacity: sectionFadeAnim, transform: [{ translateY: sectionSlideAnim }] }}>
             {activeSection === 'search' ? (
             <>
             <View style={styles.searchCard}>
@@ -2404,6 +2505,7 @@ const closeNarratorBio = () => {
             ) : (
               renderLearnSection()
             )}
+            </Animated.View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
