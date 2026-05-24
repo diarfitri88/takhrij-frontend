@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   ImageBackground,
   TextInput,
   ScrollView,
@@ -2404,9 +2405,18 @@ const closeNarratorBio = () => {
 </Modal>
 
         <LinearGradient colors={['#0f2f35', '#176b5f']} style={styles.header}>
-          <Text style={styles.headerText}>Takhrij</Text>
+          <View style={styles.headerBrand}>
+            <Image source={require('./assets/icon.png')} style={styles.headerLogo} />
+            <Text style={styles.headerText}>Takhrij</Text>
+          </View>
           <Pressable style={styles.headerSettingsButton} onPress={() => setSettingsVisible(true)}>
-            <Text style={styles.headerSettingsText}>Settings</Text>
+            <View style={styles.settingsGearOuter}>
+              <View style={[styles.settingsGearTooth, styles.settingsGearToothTop]} />
+              <View style={[styles.settingsGearTooth, styles.settingsGearToothRight]} />
+              <View style={[styles.settingsGearTooth, styles.settingsGearToothBottom]} />
+              <View style={[styles.settingsGearTooth, styles.settingsGearToothLeft]} />
+              <View style={styles.settingsGearCenter} />
+            </View>
           </Pressable>
         </LinearGradient>
 
@@ -2670,9 +2680,26 @@ const styles = StyleSheet.create({
   header: {
     minHeight: 88,
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
+    shadowColor: '#092225',
+    shadowOpacity: 0.18,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  headerBrand: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  headerLogo: {
+    width: 36,
+    height: 36,
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.32)',
   },
   headerText: {
     fontSize: 30,
@@ -2680,19 +2707,50 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   headerSettingsButton: {
-    position: 'absolute',
-    right: 16,
-    bottom: 18,
+    width: 44,
+    height: 44,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.42)',
+    borderColor: 'rgba(255,255,255,0.34)',
     borderRadius: 8,
-    paddingVertical: 7,
-    paddingHorizontal: 10,
+    backgroundColor: 'rgba(255,255,255,0.09)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  headerSettingsText: {
-    color: '#f7f1df',
-    fontSize: 12,
-    fontWeight: '800',
+  settingsGearOuter: {
+    width: 22,
+    height: 22,
+    borderWidth: 2,
+    borderColor: '#f7f1df',
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settingsGearCenter: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#f7f1df',
+  },
+  settingsGearTooth: {
+    position: 'absolute',
+    width: 4,
+    height: 7,
+    borderRadius: 2,
+    backgroundColor: '#f7f1df',
+  },
+  settingsGearToothTop: {
+    top: -5,
+  },
+  settingsGearToothRight: {
+    right: -5,
+    transform: [{ rotate: '90deg' }],
+  },
+  settingsGearToothBottom: {
+    bottom: -5,
+  },
+  settingsGearToothLeft: {
+    left: -5,
+    transform: [{ rotate: '90deg' }],
   },
   screenContainer: { flex: 1 },
   container: {
