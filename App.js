@@ -30,7 +30,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const lessons = require('./data/lessons.json');
 const quizzes = require('./data/quizzes.json');
-const nawawiPreview = require('./data/nawawiPreview.json');
+const arbainLearning = require('./data/arbainLearning.json');
+const nawawiIntroCards = arbainLearning.introCards || [];
+const nawawiPreview = arbainLearning.hadiths || [];
 
 const { width, height } = Dimensions.get('window');
 
@@ -86,15 +88,29 @@ const validPathwayIds = new Set(LEARNING_PATHWAYS.map(pathway => pathway.id));
 
 const getPathwayLessons = pathwayId => lessons.filter(lesson => lesson.pathway === pathwayId);
 const getPathwayQuizzes = pathwayId => quizzes.filter(quiz => quiz.pathway === pathwayId);
-const getNawawiCards = () => nawawiPreview.flatMap(hadith => [
-  { type: 'hadith', hadith },
-  ...(hadith.questions || []).map((question, index) => ({
-    type: 'question',
-    hadith,
-    question,
-    questionIndex: index,
-  })),
-]);
+const getNawawiCards = () => [
+  ...nawawiIntroCards.map(card => ({ type: 'intro', card })),
+  ...nawawiPreview.flatMap(hadith => [
+    { type: 'hadith', hadith },
+    { type: 'meaning', hadith },
+    { type: 'vocabulary', hadith },
+    { type: 'lessons', hadith },
+    ...(hadith.chunks || []).map((chunk, index) => ({
+      type: 'chunk',
+      hadith,
+      chunk,
+      chunkIndex: index,
+    })),
+    ...(hadith.questions || []).map((question, index) => ({
+      type: 'question',
+      hadith,
+      question,
+      questionIndex: index,
+    })),
+    { type: 'reflection', hadith },
+    { type: 'checklist', hadith },
+  ]),
+];
 
 const getStableHash = value => String(value).split('').reduce((hash, char) => {
   const nextHash = ((hash << 5) - hash) + char.charCodeAt(0);
@@ -1380,15 +1396,15 @@ const closeNarratorBio = () => {
     <View>
       <Pressable style={styles.learnCard} onPress={openNawawiItem}>
         <View style={styles.learnCardHeader}>
-          <Text style={styles.lessonLevel}>Free preview</Text>
+          <Text style={styles.lessonLevel}>Guided memorisation</Text>
           <Text style={styles.completedBadge}>5 hadith</Text>
         </View>
-        <Text style={styles.lessonTitle}>Arbain Nawawi Preview</Text>
-        <Text style={styles.lessonSummary}>Learn and memorise the first 5 hadith step by step.</Text>
-        <Text style={styles.lessonPoint}>Each hadith includes Arabic, a simple meaning, a checklist, and learning questions.</Text>
+        <Text style={styles.lessonTitle}>Arbain Nawawi Learning Path</Text>
+        <Text style={styles.lessonSummary}>Study and memorise the first 5 hadith through short guided cards.</Text>
+        <Text style={styles.lessonPoint}>Includes introduction cards, full matn, key vocabulary, lessons, memorisation chunks, active recall, and review checkpoints.</Text>
         <View style={styles.learnActionButton}>
           <Text style={styles.learnActionText}>
-            {learnProgress.currentNawawiCardIndex ? 'Continue Arbain Preview' : 'Start Arbain Preview'}
+            {learnProgress.currentNawawiCardIndex ? 'Continue Arbain Learning' : 'Start Arbain Learning'}
           </Text>
         </View>
       </Pressable>
@@ -1503,28 +1519,89 @@ const closeNarratorBio = () => {
     const card = nawawiCards[activeNawawiCardIndex] || nawawiCards[0];
     if (!card) return null;
     const { hadith } = card;
-    const tracker = learnProgress.memorisation?.[hadith.id] || {};
-    const questionChecks = learnProgress.nawawiQuestionChecks?.[hadith.id] || {};
+    const tracker = hadith ? learnProgress.memorisation?.[hadith.id] || {} : {};
+    const questionChecks = hadith ? learnProgress.nawawiQuestionChecks?.[hadith.id] || {} : {};
     const rawQuestionCheck = questionChecks[card.questionIndex];
     const questionReviewed = rawQuestionCheck || false;
     const progress = totalCards ? Math.min(100, ((activeNawawiCardIndex + 1) / totalCards) * 100) : 0;
+    const cardLabel = card.type === 'intro'
+      ? 'Introduction'
+      : card.type === 'hadith'
+        ? 'Full Matn'
+        : card.type === 'meaning'
+          ? 'Simple Meaning'
+          : card.type === 'vocabulary'
+            ? 'Key Vocabulary'
+            : card.type === 'lessons'
+              ? 'Main Lessons'
+              : card.type === 'chunk'
+                ? `Memorisation Chunk ${card.chunkIndex + 1}`
+                : card.type === 'reflection'
+                  ? 'Reflection'
+                  : card.type === 'checklist'
+                    ? 'Review Checklist'
+                    : 'Active Recall';
 
     return (
       <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim }]}>
         <View style={styles.learnCardHeader}>
-          <Text style={styles.lessonLevel}>Arbain Nawawi</Text>
+          <Text style={styles.lessonLevel}>Arbain Nawawi • {cardLabel}</Text>
           <Text style={styles.completedBadge}>{activeNawawiCardIndex + 1}/{totalCards}</Text>
         </View>
         <View style={styles.flowProgressTrack}>
           <View style={[styles.flowProgressFill, { width: `${progress}%` }]} />
         </View>
-        {card.type === 'hadith' ? (
+        {card.type === 'intro' ? (
+          <>
+            <Text style={styles.lessonTitle}>{card.card.title}</Text>
+            <Text style={styles.lessonSummary}>{card.card.body}</Text>
+          </>
+        ) : card.type === 'hadith' ? (
           <>
             <Text style={styles.lessonTitle}>{hadith.title}</Text>
             <Text style={styles.nawawiReference}>{hadith.reference}</Text>
             <Text style={styles.nawawiReference}>Narrator: {hadith.narrator}</Text>
             <Text style={styles.nawawiArabic}>{hadith.arabic}</Text>
+            <Text style={styles.flowHint}>Read the full matn slowly before practicing smaller chunks.</Text>
+          </>
+        ) : card.type === 'meaning' ? (
+          <>
+            <Text style={styles.lessonTitle}>{hadith.title}</Text>
             <Text style={styles.lessonSummary}>{hadith.english}</Text>
+            <Text style={styles.flowHint}>This is a simple learning meaning, not a detailed translation commentary.</Text>
+          </>
+        ) : card.type === 'vocabulary' ? (
+          <>
+            <Text style={styles.lessonTitle}>{hadith.title}</Text>
+            {(hadith.vocabulary || []).map(item => (
+              <View key={item.term} style={styles.vocabularyItem}>
+                <Text style={styles.vocabularyTerm}>{item.term}</Text>
+                <Text style={styles.lessonSummary}>{item.meaning}</Text>
+              </View>
+            ))}
+          </>
+        ) : card.type === 'lessons' ? (
+          <>
+            <Text style={styles.lessonTitle}>{hadith.title}</Text>
+            {(hadith.lessons || []).map(point => (
+              <Text key={point} style={styles.lessonPoint}>• {point}</Text>
+            ))}
+          </>
+        ) : card.type === 'chunk' ? (
+          <>
+            <Text style={styles.lessonTitle}>{hadith.title}</Text>
+            <Text style={styles.nawawiQuestionTitle}>Read this chunk aloud</Text>
+            <Text style={styles.nawawiArabic}>{card.chunk}</Text>
+            <Text style={styles.lessonSummary}>Cover the screen after reading, then try to recite this phrase from memory.</Text>
+          </>
+        ) : card.type === 'reflection' ? (
+          <>
+            <Text style={styles.lessonTitle}>{hadith.title}</Text>
+            <Text style={styles.lessonSummary}>{hadith.reflection}</Text>
+          </>
+        ) : card.type === 'checklist' ? (
+          <>
+            <Text style={styles.lessonTitle}>{hadith.title}</Text>
             <Text style={styles.flowHint}>
               Checklist progress: {hadith.stages.filter(stage => tracker[stage]).length}/{hadith.stages.length}
             </Text>
@@ -1545,7 +1622,7 @@ const closeNarratorBio = () => {
               })}
             </View>
           </>
-        ) : (
+        ) : hadith ? (
           <>
             <Text style={styles.nawawiQuestionTitle}>Learning Question</Text>
             {typeof card.question === 'string' ? (
@@ -1593,6 +1670,11 @@ const closeNarratorBio = () => {
               </>
             )}
           </>
+        ) : (
+          <>
+            <Text style={styles.lessonTitle}>Arbain Nawawi</Text>
+            <Text style={styles.lessonSummary}>This card is not available.</Text>
+          </>
         )}
         <View style={styles.flowControls}>
           <Pressable
@@ -1611,7 +1693,7 @@ const closeNarratorBio = () => {
           </Pressable>
         </View>
         <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode('overview')}>
-          <Text style={styles.secondaryTextButtonText}>Back to Arbain preview</Text>
+          <Text style={styles.secondaryTextButtonText}>Back to Arbain learning</Text>
         </Pressable>
       </Animated.View>
     );
@@ -1737,7 +1819,7 @@ const closeNarratorBio = () => {
           <Text style={styles.learnSectionTitle}>Pathway Previews</Text>
           {renderPathwayPreviews()}
 
-          <Text style={styles.learnSectionTitle}>Arbain Nawawi Preview</Text>
+          <Text style={styles.learnSectionTitle}>Arbain Nawawi Learning</Text>
           {renderNawawiOverview()}
 
           <Text style={styles.learnSectionTitle}>Future Paid Version</Text>
@@ -1774,7 +1856,7 @@ const closeNarratorBio = () => {
               <Text style={styles.welcomeEyebrow}>A beginner-friendly app to learn, search, and memorise hadith step by step.</Text>
               <Text style={styles.welcomeTitle}>Welcome to Takhrij</Text>
               <Text style={styles.welcomeText}>
-                Takhrij helps you explore hadith while learning the foundations of the sciences of hadith through guided cards, quizzes, daily review, and Arbain Nawawi memorisation previews.
+                Takhrij helps you explore hadith while learning the foundations of the sciences of hadith through guided cards, quizzes, daily review, and Arbain Nawawi memorisation.
               </Text>
               <Text style={styles.welcomeSectionTitle}>Features include</Text>
               <View style={styles.welcomeBulletList}>
@@ -1782,7 +1864,7 @@ const closeNarratorBio = () => {
                 <Text style={styles.welcomeBullet}>• Learn Beginner, Intermediate, and Advanced hadith science pathways</Text>
                 <Text style={styles.welcomeBullet}>• Test yourself with short quizzes</Text>
                 <Text style={styles.welcomeBullet}>• Review cards daily to strengthen retention</Text>
-                <Text style={styles.welcomeBullet}>• Preview and memorise the first 5 Hadith of Arbain Nawawi</Text>
+                <Text style={styles.welcomeBullet}>• Study and memorise the first 5 Hadith of Arbain Nawawi</Text>
               </View>
               <Text style={styles.welcomeDisclaimer}>
                 This app is an educational research aid. It does not replace qualified scholars, formal study, or scholarly takhrij.
@@ -2780,6 +2862,21 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginTop: 14,
     marginBottom: 8,
+  },
+  vocabularyItem: {
+    borderWidth: 1,
+    borderColor: '#d7dfd5',
+    backgroundColor: '#f7faf7',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: 8,
+  },
+  vocabularyTerm: {
+    color: '#176b5f',
+    fontSize: 14,
+    fontWeight: '900',
+    marginBottom: 4,
   },
   memorisationGrid: {
     flexDirection: 'row',

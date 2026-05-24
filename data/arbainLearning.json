@@ -1,0 +1,256 @@
+{
+  "introCards": [
+    {
+      "id": "arbain-intro-1",
+      "title": "What is Arbain Nawawi?",
+      "body": "Arbain Nawawi is a famous collection of foundational hadith gathered by Imam al-Nawawi. Although it is known as Forty Hadith, the collection contains slightly more than forty narrations. It is studied because many of the hadith are concise, authentic, and connected to major principles of belief, worship, character, and daily conduct."
+    },
+    {
+      "id": "arbain-intro-2",
+      "title": "Who was Imam Nawawi?",
+      "body": "Imam Yahya ibn Sharaf al-Nawawi was a major scholar of hadith and Islamic law. His works are valued for careful selection, clear organization, and benefit for students. In this app, his collection is used as a guided learning path for beginners, not as a replacement for teachers or formal study."
+    },
+    {
+      "id": "arbain-intro-3",
+      "title": "Why this collection matters",
+      "body": "Imam Nawawi chose hadith that point to broad foundations of the religion. Many are from Sahih al-Bukhari and Sahih Muslim. The collection became popular because it is short enough to memorise, but deep enough to introduce sincerity, worship, belief, following the Sunnah, and good conduct."
+    },
+    {
+      "id": "arbain-intro-4",
+      "title": "How to memorise effectively",
+      "body": "Read the full Arabic matn first, then learn one short phrase at a time. Repeat aloud, connect each phrase to its meaning, and test yourself without looking. Review the same day, then return after one day, three days, and one week to strengthen retention."
+    }
+  ],
+  "hadiths": [
+    {
+      "id": "nawawi-1",
+      "title": "Hadith 1: Intentions",
+      "narrator": "Umar ibn al-Khattab",
+      "reference": "Sahih al-Bukhari 1; Sahih Muslim 1907",
+      "arabic": "إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى، فَمَنْ كَانَتْ هِجْرَتُهُ إِلَى اللهِ وَرَسُولِهِ فَهِجْرَتُهُ إِلَى اللهِ وَرَسُولِهِ، وَمَنْ كَانَتْ هِجْرَتُهُ لِدُنْيَا يُصِيبُهَا أَوِ امْرَأَةٍ يَنْكِحُهَا فَهِجْرَتُهُ إِلَى مَا هَاجَرَ إِلَيْهِ.",
+      "english": "Actions are judged by intentions, and each person receives according to what they intended. A migration done for Allah and His Messenger is for Allah and His Messenger, while a migration done for a worldly aim is only for what the person intended.",
+      "vocabulary": [
+        { "term": "Niyyah", "meaning": "Intention; the purpose held in the heart." },
+        { "term": "A'mal", "meaning": "Actions or deeds." },
+        { "term": "Hijrah", "meaning": "Migration; here used as an example of a major action." }
+      ],
+      "lessons": [
+        "Allah knows the inner purpose behind every action.",
+        "The same outward deed can have different value depending on intention.",
+        "A learner should regularly renew intention before worship and study."
+      ],
+      "chunks": [
+        "إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ",
+        "وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى",
+        "فَمَنْ كَانَتْ هِجْرَتُهُ إِلَى اللهِ وَرَسُولِهِ",
+        "فَهِجْرَتُهُ إِلَى مَا هَاجَرَ إِلَيْهِ"
+      ],
+      "questions": [
+        {
+          "prompt": "Who narrated this hadith?",
+          "options": ["Umar ibn al-Khattab", "Abu Hurayrah", "Aisha bint Abi Bakr"],
+          "answerIndex": 0,
+          "explanation": "This hadith is narrated by Umar ibn al-Khattab."
+        },
+        {
+          "prompt": "What is the main lesson of this hadith?",
+          "options": ["Actions are judged by intentions", "Fasting is only in Ramadan", "Travel is always required"],
+          "answerIndex": 0,
+          "explanation": "The central lesson is that intention gives moral direction to actions."
+        },
+        {
+          "prompt": "What comes next after: إِنَّمَا الْأَعْمَالُ",
+          "options": ["بِالنِّيَّاتِ", "بِالصَّلَاةِ", "بِالزَّكَاةِ"],
+          "answerIndex": 0,
+          "explanation": "The phrase is: إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ."
+        }
+      ],
+      "reflection": "Before studying or doing worship, pause and ask: am I doing this to seek Allah's pleasure? This hadith teaches beginners that inner sincerity is not a side issue. It is part of how a deed is understood and valued.",
+      "stages": ["Read", "Understand", "Memorise", "Review"]
+    },
+    {
+      "id": "nawawi-2",
+      "title": "Hadith 2: Islam, Iman, Ihsan",
+      "narrator": "Umar ibn al-Khattab",
+      "reference": "Sahih Muslim 8",
+      "arabic": "بَيْنَمَا نَحْنُ جُلُوسٌ عِنْدَ رَسُولِ اللهِ ﷺ ذَاتَ يَوْمٍ، إِذْ طَلَعَ عَلَيْنَا رَجُلٌ شَدِيدُ بَيَاضِ الثِّيَابِ، شَدِيدُ سَوَادِ الشَّعَرِ، لَا يُرَى عَلَيْهِ أَثَرُ السَّفَرِ، وَلَا يَعْرِفُهُ مِنَّا أَحَدٌ، حَتَّى جَلَسَ إِلَى النَّبِيِّ ﷺ، فَأَسْنَدَ رُكْبَتَيْهِ إِلَى رُكْبَتَيْهِ، وَوَضَعَ كَفَّيْهِ عَلَى فَخِذَيْهِ، وَقَالَ: يَا مُحَمَّدُ، أَخْبِرْنِي عَنِ الْإِسْلَامِ. فَقَالَ رَسُولُ اللهِ ﷺ: الْإِسْلَامُ أَنْ تَشْهَدَ أَنْ لَا إِلَهَ إِلَّا اللهُ وَأَنَّ مُحَمَّدًا رَسُولُ اللهِ، وَتُقِيمَ الصَّلَاةَ، وَتُؤْتِيَ الزَّكَاةَ، وَتَصُومَ رَمَضَانَ، وَتَحُجَّ الْبَيْتَ إِنِ اسْتَطَعْتَ إِلَيْهِ سَبِيلًا. قَالَ: صَدَقْتَ. قَالَ: فَأَخْبِرْنِي عَنِ الْإِيمَانِ. قَالَ: أَنْ تُؤْمِنَ بِاللهِ، وَمَلَائِكَتِهِ، وَكُتُبِهِ، وَرُسُلِهِ، وَالْيَوْمِ الْآخِرِ، وَتُؤْمِنَ بِالْقَدَرِ خَيْرِهِ وَشَرِّهِ. قَالَ: صَدَقْتَ. قَالَ: فَأَخْبِرْنِي عَنِ الْإِحْسَانِ. قَالَ: أَنْ تَعْبُدَ اللهَ كَأَنَّكَ تَرَاهُ، فَإِنْ لَمْ تَكُنْ تَرَاهُ فَإِنَّهُ يَرَاكَ. قَالَ: فَأَخْبِرْنِي عَنِ السَّاعَةِ. قَالَ: مَا الْمَسْؤُولُ عَنْهَا بِأَعْلَمَ مِنَ السَّائِلِ. قَالَ: فَأَخْبِرْنِي عَنْ أَمَارَاتِهَا. قَالَ: أَنْ تَلِدَ الْأَمَةُ رَبَّتَهَا، وَأَنْ تَرَى الْحُفَاةَ الْعُرَاةَ الْعَالَةَ رِعَاءَ الشَّاءِ يَتَطَاوَلُونَ فِي الْبُنْيَانِ. ثُمَّ انْطَلَقَ، فَلَبِثْتُ مَلِيًّا، ثُمَّ قَالَ: يَا عُمَرُ، أَتَدْرِي مَنِ السَّائِلُ؟ قُلْتُ: اللهُ وَرَسُولُهُ أَعْلَمُ. قَالَ: فَإِنَّهُ جِبْرِيلُ أَتَاكُمْ يُعَلِّمُكُمْ دِينَكُمْ.",
+      "english": "Jibril came in the form of a man and asked the Prophet ﷺ about Islam, iman, ihsan, the Hour, and its signs. The Prophet ﷺ explained the outward pillars of Islam, the inner beliefs of iman, and ihsan: worshipping Allah with awareness that He sees you.",
+      "vocabulary": [
+        { "term": "Islam", "meaning": "Submission to Allah, shown through the pillars of worship." },
+        { "term": "Iman", "meaning": "Faith and belief in Allah and what He revealed." },
+        { "term": "Ihsan", "meaning": "Excellence in worship with awareness of Allah." }
+      ],
+      "lessons": [
+        "The religion includes outward actions, inward belief, and spiritual excellence.",
+        "Asking clear questions is a powerful way to teach and learn.",
+        "A Muslim should worship with the awareness that Allah sees them."
+      ],
+      "chunks": [
+        "الْإِسْلَامُ أَنْ تَشْهَدَ أَنْ لَا إِلَهَ إِلَّا اللهُ",
+        "وَتُقِيمَ الصَّلَاةَ، وَتُؤْتِيَ الزَّكَاةَ",
+        "أَنْ تُؤْمِنَ بِاللهِ، وَمَلَائِكَتِهِ، وَكُتُبِهِ",
+        "أَنْ تَعْبُدَ اللهَ كَأَنَّكَ تَرَاهُ"
+      ],
+      "questions": [
+        {
+          "prompt": "Who came to teach the companions in this hadith?",
+          "options": ["Jibril", "Musa", "Ibrahim"],
+          "answerIndex": 0,
+          "explanation": "At the end, the Prophet ﷺ explained that the questioner was Jibril."
+        },
+        {
+          "prompt": "Which term means excellence in worship?",
+          "options": ["Ihsan", "Hijrah", "Matn"],
+          "answerIndex": 0,
+          "explanation": "Ihsan is to worship Allah as though you see Him, knowing that He sees you."
+        },
+        {
+          "prompt": "What comes next after: أَنْ تَعْبُدَ اللهَ كَأَنَّكَ",
+          "options": ["تَرَاهُ", "تَسْمَعُهُ", "تَكْتُبُهُ"],
+          "answerIndex": 0,
+          "explanation": "The phrase is: أَنْ تَعْبُدَ اللهَ كَأَنَّكَ تَرَاهُ."
+        }
+      ],
+      "reflection": "This hadith helps beginners see Islam as complete and balanced: actions, beliefs, and inner awareness. It also shows that learning religion can begin with simple, sincere questions asked in the right way.",
+      "stages": ["Read", "Understand", "Memorise", "Review"]
+    },
+    {
+      "id": "nawawi-3",
+      "title": "Hadith 3: The Pillars of Islam",
+      "narrator": "Abdullah ibn Umar",
+      "reference": "Sahih al-Bukhari 8; Sahih Muslim 16",
+      "arabic": "بُنِيَ الْإِسْلَامُ عَلَى خَمْسٍ: شَهَادَةِ أَنْ لَا إِلَهَ إِلَّا اللهُ وَأَنَّ مُحَمَّدًا رَسُولُ اللهِ، وَإِقَامِ الصَّلَاةِ، وَإِيتَاءِ الزَّكَاةِ، وَحَجِّ الْبَيْتِ، وَصَوْمِ رَمَضَانَ.",
+      "english": "Islam is built upon five foundations: testifying that none has the right to be worshipped except Allah and that Muhammad is His Messenger, establishing prayer, giving zakat, performing Hajj, and fasting Ramadan.",
+      "vocabulary": [
+        { "term": "Shahadah", "meaning": "The testimony of faith." },
+        { "term": "Salah", "meaning": "The prescribed prayer." },
+        { "term": "Zakah", "meaning": "The required charity from eligible wealth." }
+      ],
+      "lessons": [
+        "The five pillars are foundations, not the whole building of Islam.",
+        "Prayer is described as something to establish, not merely to perform casually.",
+        "The pillars teach commitment through belief, worship, giving, fasting, and pilgrimage."
+      ],
+      "chunks": [
+        "بُنِيَ الْإِسْلَامُ عَلَى خَمْسٍ",
+        "شَهَادَةِ أَنْ لَا إِلَهَ إِلَّا اللهُ",
+        "وَإِقَامِ الصَّلَاةِ، وَإِيتَاءِ الزَّكَاةِ",
+        "وَحَجِّ الْبَيْتِ، وَصَوْمِ رَمَضَانَ"
+      ],
+      "questions": [
+        {
+          "prompt": "How many pillars are mentioned in this hadith?",
+          "options": ["Five", "Six", "Seven"],
+          "answerIndex": 0,
+          "explanation": "The hadith says Islam is built upon five."
+        },
+        {
+          "prompt": "Which pillar is described as establishing something?",
+          "options": ["Prayer", "Hajj", "Fasting"],
+          "answerIndex": 0,
+          "explanation": "The hadith says إِقَامِ الصَّلَاةِ, establishing prayer."
+        },
+        {
+          "prompt": "What comes next after: بُنِيَ الْإِسْلَامُ عَلَى",
+          "options": ["خَمْسٍ", "سَبْعٍ", "عَشْرٍ"],
+          "answerIndex": 0,
+          "explanation": "The phrase is: بُنِيَ الْإِسْلَامُ عَلَى خَمْسٍ."
+        }
+      ],
+      "reflection": "This hadith gives a beginner a clear map of Islam's foundations. It should encourage steady learning: understand the testimony, guard the prayer, give what is due, fast Ramadan, and learn Hajj when able.",
+      "stages": ["Read", "Understand", "Memorise", "Review"]
+    },
+    {
+      "id": "nawawi-4",
+      "title": "Hadith 4: Human Creation and Final Deeds",
+      "narrator": "Abdullah ibn Mas'ud",
+      "reference": "Sahih al-Bukhari 3208; Sahih Muslim 2643",
+      "arabic": "إِنَّ أَحَدَكُمْ يُجْمَعُ خَلْقُهُ فِي بَطْنِ أُمِّهِ أَرْبَعِينَ يَوْمًا نُطْفَةً، ثُمَّ يَكُونُ عَلَقَةً مِثْلَ ذَلِكَ، ثُمَّ يَكُونُ مُضْغَةً مِثْلَ ذَلِكَ، ثُمَّ يُرْسَلُ إِلَيْهِ الْمَلَكُ فَيَنْفُخُ فِيهِ الرُّوحَ، وَيُؤْمَرُ بِأَرْبَعِ كَلِمَاتٍ: بِكَتْبِ رِزْقِهِ، وَأَجَلِهِ، وَعَمَلِهِ، وَشَقِيٌّ أَوْ سَعِيدٌ. فَوَاللهِ الَّذِي لَا إِلَهَ غَيْرُهُ، إِنَّ أَحَدَكُمْ لَيَعْمَلُ بِعَمَلِ أَهْلِ الْجَنَّةِ حَتَّى مَا يَكُونُ بَيْنَهُ وَبَيْنَهَا إِلَّا ذِرَاعٌ، فَيَسْبِقُ عَلَيْهِ الْكِتَابُ فَيَعْمَلُ بِعَمَلِ أَهْلِ النَّارِ فَيَدْخُلُهَا، وَإِنَّ أَحَدَكُمْ لَيَعْمَلُ بِعَمَلِ أَهْلِ النَّارِ حَتَّى مَا يَكُونُ بَيْنَهُ وَبَيْنَهَا إِلَّا ذِرَاعٌ، فَيَسْبِقُ عَلَيْهِ الْكِتَابُ فَيَعْمَلُ بِعَمَلِ أَهْلِ الْجَنَّةِ فَيَدْخُلُهَا.",
+      "english": "The Prophet ﷺ described stages of human creation in the womb, the angel's writing of provision, lifespan, deeds, and final outcome, and the importance of how a person's life ends.",
+      "vocabulary": [
+        { "term": "Rizq", "meaning": "Provision from Allah." },
+        { "term": "Ajal", "meaning": "Appointed lifespan or time of death." },
+        { "term": "Qadar", "meaning": "Allah's decree and complete knowledge." }
+      ],
+      "lessons": [
+        "Allah knows a person's beginning, provision, lifespan, deeds, and final outcome.",
+        "A believer should keep working and not become complacent about past deeds.",
+        "Final deeds matter, so a Muslim keeps asking Allah for a good ending."
+      ],
+      "chunks": [
+        "إِنَّ أَحَدَكُمْ يُجْمَعُ خَلْقُهُ",
+        "فِي بَطْنِ أُمِّهِ أَرْبَعِينَ يَوْمًا",
+        "ثُمَّ يُرْسَلُ إِلَيْهِ الْمَلَكُ",
+        "بِكَتْبِ رِزْقِهِ، وَأَجَلِهِ، وَعَمَلِهِ"
+      ],
+      "questions": [
+        {
+          "prompt": "Which companion narrated this hadith?",
+          "options": ["Abdullah ibn Mas'ud", "Anas ibn Malik", "Abu Sa'id al-Khudri"],
+          "answerIndex": 0,
+          "explanation": "This hadith is narrated by Abdullah ibn Mas'ud."
+        },
+        {
+          "prompt": "What should this hadith encourage?",
+          "options": ["Continued effort and humility", "Guessing people's final state", "Giving up good deeds"],
+          "answerIndex": 0,
+          "explanation": "The hadith encourages humility, effort, and asking Allah for a good ending."
+        },
+        {
+          "prompt": "What comes next after: فِي بَطْنِ",
+          "options": ["أُمِّهِ", "أَبِيهِ", "أَخِيهِ"],
+          "answerIndex": 0,
+          "explanation": "The phrase is: فِي بَطْنِ أُمِّهِ."
+        }
+      ],
+      "reflection": "This hadith should not make a beginner passive. The commentary tradition highlights that people do not know their decree, so they keep working, repenting, and seeking Allah's help until the end of life.",
+      "stages": ["Read", "Understand", "Memorise", "Review"]
+    },
+    {
+      "id": "nawawi-5",
+      "title": "Hadith 5: Following the Sunnah",
+      "narrator": "Aisha bint Abi Bakr",
+      "reference": "Sahih al-Bukhari 2697; Sahih Muslim 1718",
+      "arabic": "مَنْ أَحْدَثَ فِي أَمْرِنَا هَذَا مَا لَيْسَ مِنْهُ فَهُوَ رَدٌّ. وَفِي رِوَايَةٍ لِمُسْلِمٍ: مَنْ عَمِلَ عَمَلًا لَيْسَ عَلَيْهِ أَمْرُنَا فَهُوَ رَدٌّ.",
+      "english": "Whoever introduces into this matter of ours what is not from it will have it rejected. In another wording: whoever does an action that is not according to our matter will have it rejected.",
+      "vocabulary": [
+        { "term": "Ahdatha", "meaning": "To introduce something new." },
+        { "term": "Amruna", "meaning": "Our matter; here, the religion and guidance of Islam." },
+        { "term": "Radd", "meaning": "Rejected or not accepted." }
+      ],
+      "lessons": [
+        "Sincerity alone is not enough; worship must also follow revealed guidance.",
+        "This hadith is a basic measure for outward religious practice.",
+        "A beginner should learn worship from sound sources and qualified teachers."
+      ],
+      "chunks": [
+        "مَنْ أَحْدَثَ فِي أَمْرِنَا هَذَا",
+        "مَا لَيْسَ مِنْهُ",
+        "فَهُوَ رَدٌّ",
+        "مَنْ عَمِلَ عَمَلًا لَيْسَ عَلَيْهِ أَمْرُنَا"
+      ],
+      "questions": [
+        {
+          "prompt": "Who narrated this hadith?",
+          "options": ["Aisha bint Abi Bakr", "Umm Salamah", "Hafsah bint Umar"],
+          "answerIndex": 0,
+          "explanation": "This hadith is narrated by Aisha bint Abi Bakr."
+        },
+        {
+          "prompt": "What does this hadith mainly protect?",
+          "options": ["Following the Prophet's guidance in religion", "Changing worship whenever people prefer", "Ignoring intention completely"],
+          "answerIndex": 0,
+          "explanation": "It teaches that religious deeds must follow the guidance of the Prophet ﷺ."
+        },
+        {
+          "prompt": "What completes this phrase: فَهُوَ",
+          "options": ["رَدٌّ", "جَدِيدٌ", "قَلِيلٌ"],
+          "answerIndex": 0,
+          "explanation": "The phrase is: فَهُوَ رَدٌّ, meaning it is rejected."
+        }
+      ],
+      "reflection": "This hadith balances Hadith 1. Intention matters, but worship also needs correct guidance. Beginners should see this as encouragement to learn the Sunnah carefully, not as a reason to argue without knowledge.",
+      "stages": ["Read", "Understand", "Memorise", "Review"]
+    }
+  ]
+}
