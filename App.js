@@ -1109,7 +1109,7 @@ const closeNarratorBio = () => {
     if (!q) return;
     const today = getTodayKey();
     const searchesUsed = dailySearchCounter.date === today ? dailySearchCounter.count : 0;
-    if (searchesUsed >= DAILY_FREE_SEARCH_LIMIT) {
+    if (!__DEV__ && searchesUsed >= DAILY_FREE_SEARCH_LIMIT) {
       setResult(
         `---\nEnglish Matn:\nYou have used your ${DAILY_FREE_SEARCH_LIMIT} free searches for today.\n\nCome back tomorrow for more free searches, or continue learning in the Learn section.\n\nReference: No Local Match\nNote: Daily free search limit reached.`
       );
@@ -1120,7 +1120,9 @@ const closeNarratorBio = () => {
     try {
       const data = await postJson('/search-hadith', { query: q });
       setResult(data.result || formatStructuredSearchResults(data.results) || '');
-      await incrementDailySearchCounter();
+      if (!__DEV__) {
+        await incrementDailySearchCounter();
+      }
     } catch {
       setResult('Error connecting to server.');
     } finally {
