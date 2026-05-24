@@ -2409,13 +2409,25 @@ const closeNarratorBio = () => {
             <Image source={require('./assets/icon.png')} style={styles.headerLogo} />
             <Text style={styles.headerText}>Takhrij</Text>
           </View>
-          <Pressable style={styles.headerSettingsButton} onPress={() => setSettingsVisible(true)}>
-            <View style={styles.settingsGearOuter}>
-              <View style={[styles.settingsGearTooth, styles.settingsGearToothTop]} />
-              <View style={[styles.settingsGearTooth, styles.settingsGearToothRight]} />
-              <View style={[styles.settingsGearTooth, styles.settingsGearToothBottom]} />
-              <View style={[styles.settingsGearTooth, styles.settingsGearToothLeft]} />
-              <View style={styles.settingsGearCenter} />
+          <Pressable
+            style={styles.headerSettingsButton}
+            onPress={() => setSettingsVisible(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Open settings"
+          >
+            <View style={styles.settingsSlidersIcon}>
+              <View style={styles.settingsSliderRow}>
+                <View style={styles.settingsSliderLine} />
+                <View style={[styles.settingsSliderKnob, styles.settingsSliderKnobLeft]} />
+              </View>
+              <View style={styles.settingsSliderRow}>
+                <View style={styles.settingsSliderLine} />
+                <View style={[styles.settingsSliderKnob, styles.settingsSliderKnobRight]} />
+              </View>
+              <View style={styles.settingsSliderRow}>
+                <View style={styles.settingsSliderLine} />
+                <View style={[styles.settingsSliderKnob, styles.settingsSliderKnobCenter]} />
+              </View>
             </View>
           </Pressable>
         </LinearGradient>
@@ -2505,7 +2517,8 @@ const closeNarratorBio = () => {
             </View>
 
 <TouchableOpacity style={styles.supportButton} onPress={() => setGlossaryModalVisible(true)}>
-  <Text style={styles.supportButtonText}>📚 Ulum Hadith (Sciences of Hadith) Glossary</Text>
+  <Text style={styles.supportButtonText}>Ulum Hadith Glossary</Text>
+  <Text style={styles.supportButtonSubtext}>Sciences of Hadith terms</Text>
 </TouchableOpacity>
 
 {!hasResults && (
@@ -2716,41 +2729,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  settingsGearOuter: {
+  settingsSlidersIcon: {
     width: 22,
-    height: 22,
-    borderWidth: 2,
-    borderColor: '#f7f1df',
-    borderRadius: 11,
-    alignItems: 'center',
+    gap: 5,
+  },
+  settingsSliderRow: {
+    height: 4,
     justifyContent: 'center',
   },
-  settingsGearCenter: {
+  settingsSliderLine: {
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: '#f7f1df',
+  },
+  settingsSliderKnob: {
+    position: 'absolute',
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: '#f7f1df',
+    top: -1,
   },
-  settingsGearTooth: {
-    position: 'absolute',
-    width: 4,
-    height: 7,
-    borderRadius: 2,
-    backgroundColor: '#f7f1df',
+  settingsSliderKnobLeft: {
+    left: 2,
   },
-  settingsGearToothTop: {
-    top: -5,
+  settingsSliderKnobRight: {
+    right: 2,
   },
-  settingsGearToothRight: {
-    right: -5,
-    transform: [{ rotate: '90deg' }],
-  },
-  settingsGearToothBottom: {
-    bottom: -5,
-  },
-  settingsGearToothLeft: {
-    left: -5,
-    transform: [{ rotate: '90deg' }],
+  settingsSliderKnobCenter: {
+    left: 8,
   },
   screenContainer: { flex: 1 },
   container: {
@@ -3601,6 +3608,13 @@ supportButtonText: {
   fontSize: 15,
   fontWeight: '800',
   textAlign: 'center',
+},
+supportButtonSubtext: {
+  color: '#cddbd4',
+  fontSize: 12,
+  fontWeight: '700',
+  textAlign: 'center',
+  marginTop: 3,
 },
 donateButtonText: {
   color: '#fff',
