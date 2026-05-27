@@ -51,6 +51,16 @@ const NARRATOR_BIO_TIMEOUT_MS = 60000;
 const DAILY_FREE_SEARCH_LIMIT = 5;
 const SEARCH_LIMIT_STORAGE_KEY = 'takhrij.dailySearchCounter';
 const LEARN_PROGRESS_STORAGE_KEY = 'takhrij.learnProgress';
+const USER_PREFERENCES_STORAGE_KEY = 'takhrij.userPreferences';
+const TEXT_SIZE_OPTIONS = [
+  { key: 'compact', label: 'Compact', scale: 0.94 },
+  { key: 'comfortable', label: 'Comfortable', scale: 1 },
+  { key: 'large', label: 'Large', scale: 1.12 },
+];
+const DEFAULT_USER_PREFERENCES = {
+  textSize: 'comfortable',
+  arabicTextSize: 'comfortable',
+};
 const DEFAULT_LEARN_PROGRESS = {
   completedLessons: {},
   quizAnswers: {},
@@ -88,6 +98,15 @@ const LEARNING_PATHWAYS = [
 
 const validLessonIds = new Set(lessons.map(lesson => lesson.id));
 const validPathwayIds = new Set(LEARNING_PATHWAYS.map(pathway => pathway.id));
+const getTextScale = key => TEXT_SIZE_OPTIONS.find(option => option.key === key)?.scale || 1;
+const sanitizeUserPreferences = preferences => ({
+  textSize: TEXT_SIZE_OPTIONS.some(option => option.key === preferences?.textSize)
+    ? preferences.textSize
+    : DEFAULT_USER_PREFERENCES.textSize,
+  arabicTextSize: TEXT_SIZE_OPTIONS.some(option => option.key === preferences?.arabicTextSize)
+    ? preferences.arabicTextSize
+    : DEFAULT_USER_PREFERENCES.arabicTextSize,
+});
 const NAWAWI_SELECTION_TITLES = {
   'nawawi-1': 'Hadith 1: Actions Are by Intentions',
   'nawawi-2': 'Hadith 2: Islam, Iman, Ihsan',
@@ -814,6 +833,7 @@ export default function App() {
   const [loadingCommentary, setLoadingCommentary] = useState(false);
   const [commentaryModalVisible, setCommentaryModalVisible] = useState(false);
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const [userPreferences, setUserPreferences] = useState(DEFAULT_USER_PREFERENCES);
   const [aboutVisible, setAboutVisible] = useState(false);
   const [glossaryModalVisible, setGlossaryModalVisible] = useState(false);
   const [commentaryData, setCommentaryData] = useState({
@@ -842,6 +862,10 @@ const cardFadeAnim = useRef(new Animated.Value(1)).current;
 const cardSlideAnim = useRef(new Animated.Value(0)).current;
 const progressAnim = useRef(new Animated.Value(0)).current;
 const checklistFeedbackAnim = useRef(new Animated.Value(1)).current;
+const textScale = getTextScale(userPreferences.textSize);
+const arabicTextScale = getTextScale(userPreferences.arabicTextSize);
+const scaledTextStyle = fontSize => ({ fontSize: Math.round(fontSize * textScale) });
+const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * arabicTextScale) });
 
   useEffect(() => {
     Animated.parallel([
@@ -928,9 +952,10 @@ const checklistFeedbackAnim = useRef(new Animated.Value(1)).current;
   useEffect(() => {
     const loadLocalProgress = async () => {
       try {
-        const [storedCounter, storedProgress] = await Promise.all([
+        const [storedCounter, storedProgress, storedPreferences] = await Promise.all([
           AsyncStorage.getItem(SEARCH_LIMIT_STORAGE_KEY),
           AsyncStorage.getItem(LEARN_PROGRESS_STORAGE_KEY),
+          AsyncStorage.getItem(USER_PREFERENCES_STORAGE_KEY),
         ]);
         const today = getTodayKey();
         try {
@@ -957,10 +982,17 @@ const checklistFeedbackAnim = useRef(new Animated.Value(1)).current;
           learnProgressRef.current = DEFAULT_LEARN_PROGRESS;
           setLearnProgress(DEFAULT_LEARN_PROGRESS);
         }
+        try {
+          const parsedPreferences = storedPreferences ? JSON.parse(storedPreferences) : DEFAULT_USER_PREFERENCES;
+          setUserPreferences(sanitizeUserPreferences(parsedPreferences));
+        } catch {
+          setUserPreferences(DEFAULT_USER_PREFERENCES);
+        }
       } catch {
         setDailySearchCounter({ date: getTodayKey(), count: 0 });
         learnProgressRef.current = DEFAULT_LEARN_PROGRESS;
         setLearnProgress(DEFAULT_LEARN_PROGRESS);
+        setUserPreferences(DEFAULT_USER_PREFERENCES);
       }
     };
 
@@ -986,6 +1018,19 @@ const checklistFeedbackAnim = useRef(new Animated.Value(1)).current;
     learnProgressRef.current = nextProgress;
     setLearnProgress(nextProgress);
     persistLearnProgress(nextProgress);
+  };
+
+  const updateUserPreference = async (key, value) => {
+    const nextPreferences = sanitizeUserPreferences({
+      ...userPreferences,
+      [key]: value,
+    });
+    setUserPreferences(nextPreferences);
+    try {
+      await AsyncStorage.setItem(USER_PREFERENCES_STORAGE_KEY, JSON.stringify(nextPreferences));
+    } catch {
+      // Preferences are local polish only; storage errors should not block the app.
+    }
   };
 
   const markLessonComplete = lessonId => {
@@ -1481,8 +1526,8 @@ const closeNarratorBio = () => {
               <Text style={styles.completedBadge}>{activePathwayPreviewIndex + 1}/{LEARNING_PATHWAYS.length}</Text>
             </View>
             <Text style={styles.lessonTitle}>{pathway.title}</Text>
-            <Text style={styles.lessonSummary}>{pathway.description}</Text>
-            <Text style={styles.lessonPoint}>
+            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{pathway.description}</Text>
+            <Text style={[styles.lessonPoint, scaledTextStyle(15)]}>
               Progress: {completedCount}/{pathwayLessons.length} lessons • {progress}%
             </Text>
             <Text style={styles.flowHint}>Study one card at a time, then try the pathway quiz.</Text>
@@ -1522,8 +1567,8 @@ const closeNarratorBio = () => {
           <Text style={styles.completedBadge}>5 hadith</Text>
         </View>
         <Text style={styles.lessonTitle}>Arbain Nawawi Learning Path</Text>
-        <Text style={styles.lessonSummary}>Study and memorise the first 5 hadith through short guided cards.</Text>
-        <Text style={styles.lessonPoint}>Includes introduction cards, full matn, key vocabulary, lessons, memorisation chunks, active recall, and review checkpoints.</Text>
+        <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>Study and memorise the first 5 hadith through short guided cards.</Text>
+        <Text style={[styles.lessonPoint, scaledTextStyle(15)]}>Includes introduction cards, full matn, key vocabulary, lessons, memorisation chunks, active recall, and review checkpoints.</Text>
         <View style={styles.learnActionButton}>
           <Text style={styles.learnActionText}>
             {learnProgress.currentNawawiCardIndex ? 'Continue Arbain Nawawi' : 'Explore Arbain Nawawi'}
@@ -1567,7 +1612,7 @@ const closeNarratorBio = () => {
           <View key={card.id} style={styles.learnCard}>
             <Text style={styles.lessonLevel}>Introduction</Text>
             <Text style={styles.lessonTitle}>{card.title}</Text>
-            <Text style={styles.lessonSummary}>{card.body}</Text>
+            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{card.body}</Text>
           </View>
         ))}
 
@@ -1587,7 +1632,7 @@ const closeNarratorBio = () => {
               </View>
               <Text style={styles.lessonTitle}>{NAWAWI_SELECTION_TITLES[hadith.id] || hadith.title}</Text>
               <Text style={styles.nawawiReference}>{hadith.reference}</Text>
-              <Text style={styles.lessonSummary}>{hadith.english}</Text>
+              <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{hadith.english}</Text>
               <View style={styles.learnActionButton}>
                 <Text style={styles.learnActionText}>{completedStages ? 'Continue Hadith' : 'Start Hadith'}</Text>
               </View>
@@ -1612,7 +1657,7 @@ const closeNarratorBio = () => {
       return (
         <View style={styles.learnCard}>
           <Text style={styles.lessonTitle}>Pathway unavailable</Text>
-          <Text style={styles.lessonSummary}>Please return to Learn and try another pathway.</Text>
+          <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>Please return to Learn and try another pathway.</Text>
         </View>
       );
     }
@@ -1627,9 +1672,9 @@ const closeNarratorBio = () => {
         {!isQuizCard && lesson && (
           <>
             <Text style={styles.lessonTitle}>{lesson.title}</Text>
-            <Text style={styles.lessonSummary}>{lesson.summary}</Text>
+            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{lesson.summary}</Text>
             {lesson.points.map(point => (
-              <Text key={point} style={styles.lessonPoint}>• {point}</Text>
+              <Text key={point} style={[styles.lessonPoint, scaledTextStyle(15)]}>• {point}</Text>
             ))}
             <Pressable
               style={[styles.learnActionButton, learnProgress.completedLessons?.[lesson.id] && styles.learnActionButtonSecondary]}
@@ -1643,7 +1688,7 @@ const closeNarratorBio = () => {
         {isQuizCard && quiz && (
           <>
             <Text style={styles.quizTitle}>{quiz.title}</Text>
-            <Text style={styles.quizQuestion}>{quiz.question}</Text>
+            <Text style={[styles.quizQuestion, scaledTextStyle(17)]}>{quiz.question}</Text>
             {getShuffledOptions(quiz.options, quiz.id).map(option => {
               const quizAnswer = learnProgress.quizAnswers?.[quiz.id];
               const correctAnswer = quiz.options[quiz.answerIndex];
@@ -1661,7 +1706,7 @@ const closeNarratorBio = () => {
                   ]}
                   onPress={() => answerQuiz(quiz.id, option, correctAnswer)}
                 >
-                  <Text style={styles.quizOptionText}>{option}</Text>
+                  <Text style={[styles.quizOptionText, scaledTextStyle(15)]}>{option}</Text>
                 </Pressable>
               );
             })}
@@ -1738,20 +1783,20 @@ const closeNarratorBio = () => {
         {card.type === 'intro' ? (
           <>
             <Text style={styles.lessonTitle}>{card.card.title}</Text>
-            <Text style={styles.lessonSummary}>{card.card.body}</Text>
+            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{card.card.body}</Text>
           </>
         ) : card.type === 'hadith' ? (
           <>
             <Text style={styles.lessonTitle}>{hadith.title}</Text>
             <Text style={styles.nawawiReference}>{hadith.reference}</Text>
             <Text style={styles.nawawiReference}>Narrator: {hadith.narrator}</Text>
-            <Text style={styles.nawawiArabic}>{hadith.arabic}</Text>
+            <Text style={[styles.nawawiArabic, scaledArabicTextStyle(22)]}>{hadith.arabic}</Text>
             <Text style={styles.flowHint}>Read the full matn slowly before practicing smaller chunks.</Text>
           </>
         ) : card.type === 'meaning' ? (
           <>
             <Text style={styles.lessonTitle}>{hadith.title}</Text>
-            <Text style={styles.lessonSummary}>{hadith.english}</Text>
+            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{hadith.english}</Text>
             <Text style={styles.flowHint}>This is a simple learning meaning, not a detailed translation commentary.</Text>
           </>
         ) : card.type === 'vocabulary' ? (
@@ -1760,7 +1805,7 @@ const closeNarratorBio = () => {
             {(hadith.vocabulary || []).map(item => (
               <View key={item.term} style={styles.vocabularyItem}>
                 <Text style={styles.vocabularyTerm}>{item.term}</Text>
-                <Text style={styles.lessonSummary}>{item.meaning}</Text>
+                <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{item.meaning}</Text>
               </View>
             ))}
           </>
@@ -1768,20 +1813,20 @@ const closeNarratorBio = () => {
           <>
             <Text style={styles.lessonTitle}>{hadith.title}</Text>
             {(hadith.lessons || []).map(point => (
-              <Text key={point} style={styles.lessonPoint}>• {point}</Text>
+              <Text key={point} style={[styles.lessonPoint, scaledTextStyle(15)]}>• {point}</Text>
             ))}
           </>
         ) : card.type === 'chunk' ? (
           <>
             <Text style={styles.lessonTitle}>{hadith.title}</Text>
             <Text style={styles.nawawiQuestionTitle}>Read this chunk aloud</Text>
-            <Text style={styles.nawawiArabic}>{card.chunk}</Text>
-            <Text style={styles.lessonSummary}>Cover the screen after reading, then try to recite this phrase from memory.</Text>
+            <Text style={[styles.nawawiArabic, scaledArabicTextStyle(22)]}>{card.chunk}</Text>
+            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>Cover the screen after reading, then try to recite this phrase from memory.</Text>
           </>
         ) : card.type === 'reflection' ? (
           <>
             <Text style={styles.lessonTitle}>{hadith.title}</Text>
-            <Text style={styles.lessonSummary}>{hadith.reflection}</Text>
+            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{hadith.reflection}</Text>
           </>
         ) : card.type === 'checklist' ? (
           <>
@@ -1812,8 +1857,8 @@ const closeNarratorBio = () => {
             <Text style={styles.nawawiQuestionTitle}>Learning Question</Text>
             {typeof card.question === 'string' ? (
               <>
-                <Text style={styles.quizQuestion}>{card.question}</Text>
-                <Text style={styles.lessonSummary}>Pause and answer in your own words before moving on.</Text>
+                <Text style={[styles.quizQuestion, scaledTextStyle(17)]}>{card.question}</Text>
+                <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>Pause and answer in your own words before moving on.</Text>
                 <Pressable
                   style={[styles.learnActionButton, questionReviewed && styles.learnActionButtonSecondary]}
                   onPress={() => toggleNawawiQuestionCheck(hadith.id, card.questionIndex)}
@@ -1823,7 +1868,7 @@ const closeNarratorBio = () => {
               </>
             ) : (
               <>
-                <Text style={styles.quizQuestion}>{card.question.prompt}</Text>
+                <Text style={[styles.quizQuestion, scaledTextStyle(17)]}>{card.question.prompt}</Text>
                 {getShuffledOptions(card.question.options, `${hadith.id}:${card.questionIndex}`).map(option => {
                   const correctAnswer = card.question.options[card.question.answerIndex];
                   const selected = questionReviewed?.selectedOption === option;
@@ -1840,7 +1885,7 @@ const closeNarratorBio = () => {
                       ]}
                       onPress={() => toggleNawawiQuestionCheck(hadith.id, card.questionIndex, option, correctAnswer)}
                     >
-                      <Text style={styles.quizOptionText}>{option}</Text>
+                      <Text style={[styles.quizOptionText, scaledTextStyle(15)]}>{option}</Text>
                     </Pressable>
                   );
                 })}
@@ -1858,7 +1903,7 @@ const closeNarratorBio = () => {
         ) : (
           <>
             <Text style={styles.lessonTitle}>Arbain Nawawi</Text>
-            <Text style={styles.lessonSummary}>This card is not available.</Text>
+            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>This card is not available.</Text>
           </>
         )}
         <View style={styles.flowControls}>
@@ -1894,7 +1939,7 @@ const closeNarratorBio = () => {
       return (
         <View style={styles.learnCard}>
           <Text style={styles.lessonTitle}>Today’s Review Complete</Text>
-          <Text style={styles.lessonSummary}>No review content available yet. Complete a lesson or quiz first.</Text>
+          <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>No review content available yet. Complete a lesson or quiz first.</Text>
           <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode('overview')}>
             <Text style={styles.secondaryTextButtonText}>Back to Learn</Text>
           </Pressable>
@@ -1911,8 +1956,8 @@ const closeNarratorBio = () => {
         {renderAnimatedProgressBar()}
         <Text style={styles.quizTitle}>{reviewCard.sourceLabel}</Text>
         <Text style={styles.lessonTitle}>{reviewCard.title}</Text>
-        <Text style={styles.quizQuestion}>{reviewCard.prompt}</Text>
-        {!!reviewCard.answer && <Text style={styles.lessonSummary}>{reviewCard.answer}</Text>}
+        <Text style={[styles.quizQuestion, scaledTextStyle(17)]}>{reviewCard.prompt}</Text>
+        {!!reviewCard.answer && <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{reviewCard.answer}</Text>}
         <Pressable
           style={[styles.reviewCheckButton, reviewSelfChecked && styles.reviewCheckButtonDone]}
           onPress={() => setReviewSelfChecked(true)}
@@ -2054,18 +2099,18 @@ const closeNarratorBio = () => {
               <Text style={styles.welcomeEyebrow}>Learn, search, and memorise hadith step by step.</Text>
               <Text style={styles.welcomeTitle}>Welcome to Takhrij</Text>
               <Text style={styles.welcomeText}>
-                Takhrij helps beginners explore hadith with guided learning pathways, daily review cards, Arbain Nawawi memorisation, quizzes, and accurate reference based search.
+                Takhrij is a beginner-friendly hadith learning tool that helps Muslims explore and appreciate the sciences of hadith without becoming overly technical.
               </Text>
               <Text style={styles.welcomeSectionTitle}>Features include</Text>
               <View style={styles.welcomeBulletList}>
                 <Text style={styles.welcomeBullet}>• Search hadith by keyword or reference</Text>
-                <Text style={styles.welcomeBullet}>• Learn the sciences of hadith through guided cards</Text>
-                <Text style={styles.welcomeBullet}>• Review daily to strengthen retention</Text>
+                <Text style={styles.welcomeBullet}>• Learn foundational hadith sciences through guided cards</Text>
+                <Text style={styles.welcomeBullet}>• Build consistent learning habits with Daily Review</Text>
                 <Text style={styles.welcomeBullet}>• Memorise selected hadith from Arbain Nawawi</Text>
-                <Text style={styles.welcomeBullet}>• Track progress across lessons and quizzes</Text>
+                <Text style={styles.welcomeBullet}>• Become familiar with hadith structure and preservation</Text>
               </View>
               <Text style={styles.welcomeDisclaimer}>
-                Takhrij is an educational research aid and does not replace qualified scholars, formal study, or scholarly takhrij.
+                Takhrij is for learning and reflection. It does not replace qualified scholars, formal study, or scholarly takhrij.
               </Text>
               <Pressable style={styles.welcomeButton} onPress={() => setShowWelcome(false)}>
                 <Text style={styles.welcomeButtonText}>Start Learning</Text>
@@ -2111,7 +2156,7 @@ const closeNarratorBio = () => {
                   <Text style={styles.authenticityCautionText}>{commentaryData.sourceCaution}</Text>
                 )}
                 <Text style={styles.sectionHeader}>Commentary</Text>
-                <Text style={styles.modalText}>{commentaryData.commentary}</Text>
+                <Text style={[styles.modalText, scaledTextStyle(16)]}>{commentaryData.commentary}</Text>
                 <Text style={styles.sectionHeader}>Chain of Narrators (click to view biography)</Text>
 <View style={styles.chainContainer}>
   {parseNarratorNames(commentaryData.chain).map((narrator, idx, arr) => (
@@ -2129,12 +2174,12 @@ const closeNarratorBio = () => {
     </React.Fragment>
   ))}
   {parseNarratorNames(commentaryData.chain).length === 0 && (
-    <Text style={styles.modalText}>Chain not available.</Text>
+    <Text style={[styles.modalText, scaledTextStyle(16)]}>Chain not available.</Text>
   )}
 </View>
               </ScrollView>
               <Text style={styles.modalDisclaimer}>
-                This AI assisted explanation is for learning and research support only. It may contain mistakes, inaccuracies, or incomplete information. Please verify religious matters with qualified scholars.
+                This explanation is for learning support only. It may contain mistakes, inaccuracies, or incomplete information. Please verify religious matters with qualified scholars.
               </Text>
               <View style={styles.shareCopyRow}>
                 <TouchableOpacity
@@ -2183,7 +2228,7 @@ const closeNarratorBio = () => {
                 <Markdown style={markdownStyles}>{narratorBioText}</Markdown>
               </ScrollView>
               <Text style={styles.modalDisclaimer}>
-                Narrator summaries are educational and may not be complete scholarly biographies. AI generated narrator information may contain errors. Please verify with classical rijāl sources such as Tahdhīb al-Tahdhīb, Taqrīb al-Tahdhīb, Siyar Aʿlām al-Nubalāʾ, and Mīzān al-Iʿtidāl.
+                Narrator summaries are educational and may not be complete scholarly biographies. They may contain errors. Please verify with classical rijāl sources such as Tahdhīb al-Tahdhīb, Taqrīb al-Tahdhīb, Siyar Aʿlām al-Nubalāʾ, and Mīzān al-Iʿtidāl.
               </Text>
               <TouchableOpacity
                 style={styles.modalCloseButton}
@@ -2205,10 +2250,10 @@ const closeNarratorBio = () => {
             <View style={styles.modalContent}>
               <Text style={styles.modalHeader}>Support Takhrij</Text>
               <ScrollView contentContainerStyle={styles.modalScrollContent}>
-                <Text style={styles.modalText}>
+                <Text style={[styles.modalText, scaledTextStyle(16)]}>
                   Your donation helps cover server costs, GPT credits, and further development of the app.
                 </Text>
-                <Text style={styles.modalText}>
+                <Text style={[styles.modalText, scaledTextStyle(16)]}>
                   Every contribution brings us closer to making authentic hadith knowledge accessible to all.
                 </Text>
 
@@ -2239,7 +2284,7 @@ const closeNarratorBio = () => {
           <View style={styles.modalBackdrop}>
             <View style={styles.modalContent}>
               <Text style={styles.modalHeader}>Thank You!</Text>
-              <Text style={styles.modalText}>
+              <Text style={[styles.modalText, scaledTextStyle(16)]}>
                 Your support means a lot. JazakAllahu khairan for helping us continue our work.
               </Text>
               <TouchableOpacity
@@ -2261,10 +2306,10 @@ const closeNarratorBio = () => {
   <View style={styles.modalBackdrop}>
     <View style={styles.modalContent}>
       <Text style={styles.modalHeader}>About Takhrij</Text>
-      <Text style={styles.modalText}>
-        In hadith studies, takhrij is the scholarly process of tracing narrations, identifying their sources, and researching their chains and references.{"\n\n"}
-        This app does not perform scholarly takhrij or authoritative hadith verification. It helps beginners search and explore hadith found within indexed datasets based on sources such as Sunnah.com collections and related reference data.{"\n\n"}
-        Takhrij is intended as an educational research-assistance tool for learning basic ulum al-hadith concepts, viewing references, exploring narrator chains, and reading concise AI assisted study notes. AI generated explanations may contain errors or incomplete information, so religious matters should be verified with qualified scholars and reliable works of hadith scholarship.
+      <Text style={[styles.modalText, scaledTextStyle(16)]}>
+        In hadith studies, takhrij is the scholarly process of tracing narrations and identifying their sources.{"\n\n"}
+        This app does not perform scholarly takhrij or authoritative hadith verification. It helps beginners search hadith, learn foundational hadith sciences, memorise selected narrations, and become more familiar with how hadith are structured and preserved.{"\n\n"}
+        Takhrij is designed as a calm, beginner-friendly learning tool for Muslims. It supports study and appreciation of hadith, but religious matters should still be verified with qualified scholars and reliable works of hadith scholarship.
       </Text>
       <TouchableOpacity
         style={styles.modalCloseButton}
@@ -2284,26 +2329,88 @@ const closeNarratorBio = () => {
 >
   <View style={styles.modalBackdrop}>
     <View style={styles.modalContent}>
-      <Text style={styles.modalHeader}>Settings</Text>
+      <Text style={styles.modalHeader}>Preferences & Information</Text>
       <ScrollView contentContainerStyle={styles.modalScrollContent}>
+        <Text style={styles.settingsGroupTitle}>Preferences</Text>
+        <Text style={styles.settingsSectionTitle}>Text size</Text>
+        <View style={styles.preferenceOptionRow}>
+          {TEXT_SIZE_OPTIONS.map(option => (
+            <Pressable
+              key={option.key}
+              style={[
+                styles.preferenceOption,
+                userPreferences.textSize === option.key && styles.preferenceOptionActive,
+              ]}
+              onPress={() => updateUserPreference('textSize', option.key)}
+            >
+              <Text
+                style={[
+                  styles.preferenceOptionText,
+                  userPreferences.textSize === option.key && styles.preferenceOptionTextActive,
+                ]}
+              >
+                {option.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <Text style={styles.settingsSectionTitle}>Arabic text size</Text>
+        <View style={styles.preferenceOptionRow}>
+          {TEXT_SIZE_OPTIONS.map(option => (
+            <Pressable
+              key={option.key}
+              style={[
+                styles.preferenceOption,
+                userPreferences.arabicTextSize === option.key && styles.preferenceOptionActive,
+              ]}
+              onPress={() => updateUserPreference('arabicTextSize', option.key)}
+            >
+              <Text
+                style={[
+                  styles.preferenceOptionText,
+                  userPreferences.arabicTextSize === option.key && styles.preferenceOptionTextActive,
+                ]}
+              >
+                {option.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <Text style={styles.settingsGroupTitle}>Information</Text>
         <Text style={styles.settingsSectionTitle}>About Takhrij</Text>
-        <Text style={styles.modalText}>
-          Takhrij helps beginners search hadith references and learn the sciences of hadith through guided cards, quizzes, Daily Review, and Arbain Nawawi memorisation.
+        <Text style={[styles.modalText, scaledTextStyle(16)]}>
+          Takhrij helps Muslims search hadith, learn foundational hadith sciences, memorise selected narrations, and build consistent learning habits through guided cards, quizzes, Daily Review, and Arbain Nawawi memorisation.
         </Text>
 
         <Text style={styles.settingsSectionTitle}>Educational Disclaimer</Text>
-        <Text style={styles.modalText}>
-          Takhrij is an educational research aid. It does not replace qualified scholars, formal study, or scholarly takhrij. AI assisted explanations may contain mistakes, so religious matters should be verified with reliable scholarship.
+        <Text style={[styles.modalText, scaledTextStyle(16)]}>
+          Takhrij is a beginner-friendly learning tool. It does not replace qualified scholars, formal study, or scholarly takhrij. Explanations may contain mistakes, so religious matters should be verified with reliable scholarship.
         </Text>
 
-        <Text style={styles.settingsSectionTitle}>App Version</Text>
-        <Text style={styles.modalText}>Version {APP_VERSION}</Text>
+        <Text style={styles.settingsSectionTitle}>Support Takhrij</Text>
+        <Text style={[styles.modalText, scaledTextStyle(16)]}>
+          Support helps cover hosting, search infrastructure, and careful development of learning features.
+        </Text>
+        <Pressable
+          style={styles.settingsSupportButton}
+          onPress={() => {
+            setSettingsVisible(false);
+            setDonationVisible(true);
+          }}
+        >
+          <Text style={styles.settingsSupportButtonText}>Support Takhrij</Text>
+        </Pressable>
 
         <Text style={styles.settingsSectionTitle}>Contact / Feedback</Text>
-        <Text style={styles.modalText}>Feedback form and support contact will be added in a future update.</Text>
+        <Text style={[styles.modalText, scaledTextStyle(16)]}>Feedback and support contact: takhrijapp@gmail.com</Text>
+
+        <Text style={styles.settingsSectionTitle}>App Version</Text>
+        <Text style={[styles.modalText, scaledTextStyle(16)]}>Version {APP_VERSION}</Text>
 
         <Text style={styles.settingsSectionTitle}>Restore Purchases</Text>
-        <Text style={styles.modalText}>Restore purchases will be available when premium features are introduced.</Text>
+        <Text style={[styles.modalText, scaledTextStyle(16)]}>Restore purchases will be available when premium features are introduced.</Text>
 
         {__DEV__ && (
           <Pressable style={styles.settingsResetButton} onPress={resetLearningProgress}>
@@ -2361,15 +2468,15 @@ const closeNarratorBio = () => {
         {item.term}
       </Text>
 
-      <Text style={styles.modalText}>
+      <Text style={[styles.modalText, scaledTextStyle(16)]}>
         Definition: {item.definition}
       </Text>
 
-      <Text style={styles.modalText}>
+      <Text style={[styles.modalText, scaledTextStyle(16)]}>
         Reference: {item.reference}
       </Text>
 
-      <Text style={styles.modalText}>
+      <Text style={[styles.modalText, scaledTextStyle(16)]}>
         Example: {item.example}
       </Text>
     </View>
@@ -2381,16 +2488,16 @@ const closeNarratorBio = () => {
 
                 <Text style={[styles.modalText, { marginTop: 10, fontWeight: 'bold' }]}>Arabic Sources:</Text>
                 <View style={{ marginLeft: 10 }}>
-                  <Text style={styles.modalText}>• Nuzhat al-Nazar by Ibn Hajar al-ʿAsqalānī</Text>
-                  <Text style={styles.modalText}>• Muqaddimah Ibn al-Salāh by Ibn al-Salāh</Text>
-                  <Text style={styles.modalText}>• Tadrīb al-Rāwī by al-Suyūtī</Text>
+                  <Text style={[styles.modalText, scaledTextStyle(16)]}>• Nuzhat al-Nazar by Ibn Hajar al-ʿAsqalānī</Text>
+                  <Text style={[styles.modalText, scaledTextStyle(16)]}>• Muqaddimah Ibn al-Salāh by Ibn al-Salāh</Text>
+                  <Text style={[styles.modalText, scaledTextStyle(16)]}>• Tadrīb al-Rāwī by al-Suyūtī</Text>
                 </View>
 
 <Text style={[styles.modalText, { marginTop: 10, fontWeight: 'bold' }]}>English Sources:</Text>
 <View style={{ marginLeft: 10 }}>
-  <Text style={styles.modalText}>• An Introduction to the Science of Hadith by Suhaib Hasan</Text>
-  <Text style={styles.modalText}>• Studies in Hadith Methodology and Literature by Muhammad Mustafa Azami</Text>
-  <Text style={styles.modalText}>• The Science of Hadith Terminology and Classification by Dr. Muhammad Saeed Mitwally ar-Rahawan</Text>
+  <Text style={[styles.modalText, scaledTextStyle(16)]}>• An Introduction to the Science of Hadith by Suhaib Hasan</Text>
+  <Text style={[styles.modalText, scaledTextStyle(16)]}>• Studies in Hadith Methodology and Literature by Muhammad Mustafa Azami</Text>
+  <Text style={[styles.modalText, scaledTextStyle(16)]}>• The Science of Hadith Terminology and Classification by Dr. Muhammad Saeed Mitwally ar-Rahawan</Text>
 </View>
   
 </ScrollView>
@@ -2413,21 +2520,12 @@ const closeNarratorBio = () => {
             style={styles.headerSettingsButton}
             onPress={() => setSettingsVisible(true)}
             accessibilityRole="button"
-            accessibilityLabel="Open settings"
+            accessibilityLabel="Open preferences and information"
           >
-            <View style={styles.settingsSlidersIcon}>
-              <View style={styles.settingsSliderRow}>
-                <View style={styles.settingsSliderLine} />
-                <View style={[styles.settingsSliderKnob, styles.settingsSliderKnobLeft]} />
-              </View>
-              <View style={styles.settingsSliderRow}>
-                <View style={styles.settingsSliderLine} />
-                <View style={[styles.settingsSliderKnob, styles.settingsSliderKnobRight]} />
-              </View>
-              <View style={styles.settingsSliderRow}>
-                <View style={styles.settingsSliderLine} />
-                <View style={[styles.settingsSliderKnob, styles.settingsSliderKnobCenter]} />
-              </View>
+            <View style={styles.overflowIcon}>
+              <View style={styles.overflowDot} />
+              <View style={styles.overflowDot} />
+              <View style={styles.overflowDot} />
             </View>
           </Pressable>
         </LinearGradient>
@@ -2505,10 +2603,10 @@ const closeNarratorBio = () => {
                   {showSearchHelp && (
                     <>
                       <Text style={styles.helpStaticText}>
-                        Search by keyword or exact phrase. Exact Arabic or English wording usually gives better results.
+                        Search by keyword, exact phrase, or Sunnah.com reference. Exact Arabic or English wording usually gives better results. You can also search references like “Bukhari 10”, “Muslim 45”, or “Tirmidhi 2970”.
                       </Text>
                       <Text style={[styles.helpStaticText, styles.helpDisclaimer]}>
-                        Takhrij is an educational research aid. It does not replace qualified scholars, formal study, or scholarly takhrij.
+                        Takhrij is a beginner-friendly learning tool. It does not replace qualified scholars, formal study, or scholarly takhrij.
                       </Text>
                     </>
                   )}
@@ -2524,10 +2622,6 @@ const closeNarratorBio = () => {
 {!hasResults && (
   
   <>
- <TouchableOpacity style={styles.supportButton} onPress={() => setDonationVisible(true)}>
-  <Text style={styles.supportButtonText}>❤️ Support our work and earn Sadaqah Jariyah</Text>
-</TouchableOpacity>
-
   <TouchableOpacity onPress={() => Linking.openURL('mailto:takhrijapp@gmail.com')}>
     <Text style={styles.contactText}>Contact us for feedback and suggestions</Text>
   </TouchableOpacity>
@@ -2559,11 +2653,11 @@ const closeNarratorBio = () => {
                     <Text style={styles.resultAuthenticityText}>Authenticity: {h.authenticityStatus}</Text>
                   </View>
                 )}
-                {h.arabic    && <Text style={styles.arabicMatn}>{h.arabic}</Text>}
+                {h.arabic    && <Text style={[styles.arabicMatn, scaledArabicTextStyle(21)]}>{h.arabic}</Text>}
                 {h.english && h.english.split('\n').map((para, index) => (
-  <Text key={`english-${index}`} style={styles.englishMatn}>{para.trim()}</Text>
+  <Text key={`english-${index}`} style={[styles.englishMatn, scaledTextStyle(16)]}>{para.trim()}</Text>
 ))}
-                {h.warning   && <Text style={styles.warning}>{h.warning}</Text>}
+                {h.warning   && <Text style={[styles.warning, scaledTextStyle(14)]}>{h.warning}</Text>}
                 {!isSearchSuggestionReference(h.reference) && (
                   <Pressable
                     style={styles.commentaryButton}
@@ -2575,12 +2669,6 @@ const closeNarratorBio = () => {
               </View>
             ))}
 
-
-            {hasResults && (
-  <TouchableOpacity style={styles.supportButton} onPress={() => setDonationVisible(true)}>
-    <Text style={styles.supportButtonText}>❤️ Support our work and earn Sadaqah Jariyah</Text>
-  </TouchableOpacity>
-)}
             </>
             ) : (
               renderLearnSection()
@@ -2729,35 +2817,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  settingsSlidersIcon: {
-    width: 22,
-    gap: 5,
-  },
-  settingsSliderRow: {
-    height: 4,
+  overflowIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
+    gap: 4,
   },
-  settingsSliderLine: {
-    height: 2,
-    borderRadius: 1,
-    backgroundColor: '#f7f1df',
-  },
-  settingsSliderKnob: {
-    position: 'absolute',
-    width: 6,
-    height: 6,
+  overflowDot: {
+    width: 5,
+    height: 5,
     borderRadius: 3,
     backgroundColor: '#f7f1df',
-    top: -1,
-  },
-  settingsSliderKnobLeft: {
-    left: 2,
-  },
-  settingsSliderKnobRight: {
-    right: 2,
-  },
-  settingsSliderKnobCenter: {
-    left: 8,
   },
   screenContainer: { flex: 1 },
   container: {
@@ -3504,6 +3574,13 @@ const styles = StyleSheet.create({
     lineHeight: 25,
     color: '#2f3d40',
   },
+  settingsGroupTitle: {
+    color: '#132f35',
+    fontSize: 17,
+    fontWeight: '900',
+    marginTop: 4,
+    marginBottom: 8,
+  },
   settingsSectionTitle: {
     color: '#176b5f',
     fontSize: 14,
@@ -3511,6 +3588,48 @@ const styles = StyleSheet.create({
     marginTop: 14,
     marginBottom: 6,
     textTransform: 'uppercase',
+  },
+  preferenceOptionRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 8,
+  },
+  preferenceOption: {
+    flex: 1,
+    minHeight: 42,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#d7dfd5',
+    backgroundColor: '#f7faf7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  preferenceOptionActive: {
+    borderColor: '#176b5f',
+    backgroundColor: '#edf4e8',
+  },
+  preferenceOptionText: {
+    color: '#41504d',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  preferenceOptionTextActive: {
+    color: '#176b5f',
+  },
+  settingsSupportButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#176b5f',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  settingsSupportButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '900',
   },
   settingsResetButton: {
     alignSelf: 'flex-start',
