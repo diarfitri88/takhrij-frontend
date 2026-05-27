@@ -2099,18 +2099,18 @@ const closeNarratorBio = () => {
               <Text style={styles.welcomeEyebrow}>Learn, search, and memorise hadith step by step.</Text>
               <Text style={styles.welcomeTitle}>Welcome to Takhrij</Text>
               <Text style={styles.welcomeText}>
-                Takhrij helps beginners explore hadith with guided learning pathways, daily review cards, Arbain Nawawi memorisation, quizzes, and accurate reference based search.
+                Takhrij is a beginner-friendly hadith learning tool that helps Muslims explore and appreciate the sciences of hadith without becoming overly technical.
               </Text>
               <Text style={styles.welcomeSectionTitle}>Features include</Text>
               <View style={styles.welcomeBulletList}>
                 <Text style={styles.welcomeBullet}>• Search hadith by keyword or reference</Text>
-                <Text style={styles.welcomeBullet}>• Learn the sciences of hadith through guided cards</Text>
-                <Text style={styles.welcomeBullet}>• Review daily to strengthen retention</Text>
+                <Text style={styles.welcomeBullet}>• Learn foundational hadith sciences through guided cards</Text>
+                <Text style={styles.welcomeBullet}>• Build consistent learning habits with Daily Review</Text>
                 <Text style={styles.welcomeBullet}>• Memorise selected hadith from Arbain Nawawi</Text>
-                <Text style={styles.welcomeBullet}>• Track progress across lessons and quizzes</Text>
+                <Text style={styles.welcomeBullet}>• Become familiar with hadith structure and preservation</Text>
               </View>
               <Text style={styles.welcomeDisclaimer}>
-                Takhrij is an educational research aid and does not replace qualified scholars, formal study, or scholarly takhrij.
+                Takhrij is for learning and reflection. It does not replace qualified scholars, formal study, or scholarly takhrij.
               </Text>
               <Pressable style={styles.welcomeButton} onPress={() => setShowWelcome(false)}>
                 <Text style={styles.welcomeButtonText}>Start Learning</Text>
@@ -2179,7 +2179,7 @@ const closeNarratorBio = () => {
 </View>
               </ScrollView>
               <Text style={styles.modalDisclaimer}>
-                This AI assisted explanation is for learning and research support only. It may contain mistakes, inaccuracies, or incomplete information. Please verify religious matters with qualified scholars.
+                This explanation is for learning support only. It may contain mistakes, inaccuracies, or incomplete information. Please verify religious matters with qualified scholars.
               </Text>
               <View style={styles.shareCopyRow}>
                 <TouchableOpacity
@@ -2228,7 +2228,7 @@ const closeNarratorBio = () => {
                 <Markdown style={markdownStyles}>{narratorBioText}</Markdown>
               </ScrollView>
               <Text style={styles.modalDisclaimer}>
-                Narrator summaries are educational and may not be complete scholarly biographies. AI generated narrator information may contain errors. Please verify with classical rijāl sources such as Tahdhīb al-Tahdhīb, Taqrīb al-Tahdhīb, Siyar Aʿlām al-Nubalāʾ, and Mīzān al-Iʿtidāl.
+                Narrator summaries are educational and may not be complete scholarly biographies. They may contain errors. Please verify with classical rijāl sources such as Tahdhīb al-Tahdhīb, Taqrīb al-Tahdhīb, Siyar Aʿlām al-Nubalāʾ, and Mīzān al-Iʿtidāl.
               </Text>
               <TouchableOpacity
                 style={styles.modalCloseButton}
@@ -2307,9 +2307,9 @@ const closeNarratorBio = () => {
     <View style={styles.modalContent}>
       <Text style={styles.modalHeader}>About Takhrij</Text>
       <Text style={[styles.modalText, scaledTextStyle(16)]}>
-        In hadith studies, takhrij is the scholarly process of tracing narrations, identifying their sources, and researching their chains and references.{"\n\n"}
-        This app does not perform scholarly takhrij or authoritative hadith verification. It helps beginners search and explore hadith found within indexed datasets based on sources such as Sunnah.com collections and related reference data.{"\n\n"}
-        Takhrij is intended as an educational research-assistance tool for learning basic ulum al-hadith concepts, viewing references, exploring narrator chains, and reading concise AI assisted study notes. AI generated explanations may contain errors or incomplete information, so religious matters should be verified with qualified scholars and reliable works of hadith scholarship.
+        In hadith studies, takhrij is the scholarly process of tracing narrations and identifying their sources.{"\n\n"}
+        This app does not perform scholarly takhrij or authoritative hadith verification. It helps beginners search hadith, learn foundational hadith sciences, memorise selected narrations, and become more familiar with how hadith are structured and preserved.{"\n\n"}
+        Takhrij is designed as a calm, beginner-friendly learning tool for Muslims. It supports study and appreciation of hadith, but religious matters should still be verified with qualified scholars and reliable works of hadith scholarship.
       </Text>
       <TouchableOpacity
         style={styles.modalCloseButton}
@@ -2381,12 +2381,12 @@ const closeNarratorBio = () => {
         <Text style={styles.settingsGroupTitle}>Information</Text>
         <Text style={styles.settingsSectionTitle}>About Takhrij</Text>
         <Text style={[styles.modalText, scaledTextStyle(16)]}>
-          Takhrij helps beginners search hadith references and learn the sciences of hadith through guided cards, quizzes, Daily Review, and Arbain Nawawi memorisation.
+          Takhrij helps Muslims search hadith, learn foundational hadith sciences, memorise selected narrations, and build consistent learning habits through guided cards, quizzes, Daily Review, and Arbain Nawawi memorisation.
         </Text>
 
         <Text style={styles.settingsSectionTitle}>Educational Disclaimer</Text>
         <Text style={[styles.modalText, scaledTextStyle(16)]}>
-          Takhrij is an educational research aid. It does not replace qualified scholars, formal study, or scholarly takhrij. AI assisted explanations may contain mistakes, so religious matters should be verified with reliable scholarship.
+          Takhrij is a beginner-friendly learning tool. It does not replace qualified scholars, formal study, or scholarly takhrij. Explanations may contain mistakes, so religious matters should be verified with reliable scholarship.
         </Text>
 
         <Text style={styles.settingsSectionTitle}>Support Takhrij</Text>
@@ -2606,7 +2606,7 @@ const closeNarratorBio = () => {
                         Search by keyword or exact phrase. Exact Arabic or English wording usually gives better results.
                       </Text>
                       <Text style={[styles.helpStaticText, styles.helpDisclaimer]}>
-                        Takhrij is an educational research aid. It does not replace qualified scholars, formal study, or scholarly takhrij.
+                        Takhrij is a beginner-friendly learning tool. It does not replace qualified scholars, formal study, or scholarly takhrij.
                       </Text>
                     </>
                   )}
