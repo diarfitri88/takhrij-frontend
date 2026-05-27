@@ -2603,7 +2603,7 @@ const closeNarratorBio = () => {
                   {showSearchHelp && (
                     <>
                       <Text style={styles.helpStaticText}>
-                        Search by keyword or exact phrase. Exact Arabic or English wording usually gives better results.
+                        Search by keyword, exact phrase, or Sunnah.com reference. Exact Arabic or English wording usually gives better results. You can also search references like “Bukhari 10”, “Muslim 45”, or “Tirmidhi 2970”.
                       </Text>
                       <Text style={[styles.helpStaticText, styles.helpDisclaimer]}>
                         Takhrij is a beginner-friendly learning tool. It does not replace qualified scholars, formal study, or scholarly takhrij.
