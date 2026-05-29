@@ -1,0 +1,646 @@
+[
+  {
+    "id": "dq-ulum-intro-1",
+    "lessonId": "ulum-intro",
+    "level": "beginner",
+    "questionType": "multiple_choice",
+    "question": "What does Ulum al-Hadith help students study?",
+    "options": ["How hadith reports are studied", "Only Arabic handwriting", "Only mosque architecture", "Modern news reports"],
+    "answer": "How hadith reports are studied"
+  },
+  {
+    "id": "dq-ulum-intro-2",
+    "lessonId": "ulum-intro",
+    "level": "beginner",
+    "questionType": "true_false",
+    "question": "Ulum al-Hadith should replace qualified teachers.",
+    "answer": "False"
+  },
+  {
+    "id": "dq-what-is-hadith-1",
+    "lessonId": "what-is-hadith",
+    "level": "beginner",
+    "questionType": "multiple_choice",
+    "question": "A hadith may report the Prophet's words, actions, approvals, or what else?",
+    "options": ["Personal qualities", "Weather charts", "Book prices", "City maps"],
+    "answer": "Personal qualities"
+  },
+  {
+    "id": "dq-what-is-hadith-2",
+    "lessonId": "what-is-hadith",
+    "level": "beginner",
+    "questionType": "fill_blank",
+    "question": "Hadith helps Muslims learn the ______.",
+    "answer": "Sunnah"
+  },
+  {
+    "id": "dq-sunnah-khabar-athar-1",
+    "lessonId": "sunnah-khabar-athar",
+    "level": "beginner",
+    "questionType": "multiple_choice",
+    "question": "Which term commonly refers to reports from Companions or Successors?",
+    "options": ["Athar", "Sanad", "Matn", "Ihsan"],
+    "answer": "Athar"
+  },
+  {
+    "id": "dq-quran-qudsi-1",
+    "lessonId": "quran-qudsi-matn-sanad",
+    "level": "beginner",
+    "questionType": "multiple_choice",
+    "question": "Which part of a hadith is the chain of narrators?",
+    "options": ["Matn", "Isnad", "Jarh", "Takhrij"],
+    "answer": "Isnad"
+  },
+  {
+    "id": "dq-quran-qudsi-2",
+    "lessonId": "quran-qudsi-matn-sanad",
+    "level": "beginner",
+    "questionType": "fill_blank",
+    "question": "The ______ is the wording or message of a hadith.",
+    "answer": "matn"
+  },
+  {
+    "id": "dq-receiving-hadith-1",
+    "lessonId": "receiving-hadith",
+    "level": "beginner",
+    "questionType": "multiple_choice",
+    "question": "What does al-sama mean?",
+    "options": ["Hearing directly from a teacher", "Guessing a chain", "Changing a text", "Printing a book"],
+    "answer": "Hearing directly from a teacher"
+  },
+  {
+    "id": "dq-classification-overview-1",
+    "lessonId": "classification-overview",
+    "level": "intermediate",
+    "questionType": "multiple_choice",
+    "question": "Which set contains authenticity terms?",
+    "options": ["Sahih, hasan, da'if", "Matn, sanad, rawi", "Makkah, Madinah, Kufa", "Read, memorise, review"],
+    "answer": "Sahih, hasan, da'if"
+  },
+  {
+    "id": "dq-ahad-categories-1",
+    "lessonId": "ahad-categories",
+    "level": "intermediate",
+    "questionType": "multiple_choice",
+    "question": "Which report is narrated through one narrator at a key level?",
+    "options": ["Gharib", "Mutawatir", "Qudsi", "Mudraj"],
+    "answer": "Gharib"
+  },
+  {
+    "id": "dq-ahad-categories-2",
+    "lessonId": "ahad-categories",
+    "level": "intermediate",
+    "questionType": "true_false",
+    "question": "Ahad reports do not reach the broad transmission level of mutawatir.",
+    "answer": "True"
+  },
+  {
+    "id": "dq-mutawatir-basics-1",
+    "lessonId": "mutawatir-basics",
+    "level": "intermediate",
+    "questionType": "multiple_choice",
+    "question": "What is a basic idea of mutawatir?",
+    "options": ["Many narrators transmit it across generations", "The whole chain is missing", "It is always a chapter title", "It means an inserted phrase"],
+    "answer": "Many narrators transmit it across generations"
+  },
+  {
+    "id": "dq-sahih-hasan-1",
+    "lessonId": "sahih-and-hasan",
+    "level": "intermediate",
+    "questionType": "multiple_choice",
+    "question": "Which is generally stronger?",
+    "options": ["Sahih", "Hasan", "Da'if", "Unknown"],
+    "answer": "Sahih"
+  },
+  {
+    "id": "dq-sahih-hasan-2",
+    "lessonId": "sahih-and-hasan",
+    "level": "intermediate",
+    "questionType": "true_false",
+    "question": "Beginners should independently grade hadith chains after one lesson.",
+    "answer": "False"
+  },
+  {
+    "id": "dq-daif-basics-1",
+    "lessonId": "daif-basics",
+    "level": "intermediate",
+    "questionType": "fill_blank",
+    "question": "Da'if means a report is ______.",
+    "answer": "weak"
+  },
+  {
+    "id": "dq-muallaq-basics-1",
+    "lessonId": "muallaq-basics",
+    "level": "advanced",
+    "questionType": "multiple_choice",
+    "question": "Where does a mu'allaq report have omission?",
+    "options": ["From the beginning of the chain", "Only in the translation", "Only in the page number", "Only in the chapter title"],
+    "answer": "From the beginning of the chain"
+  },
+  {
+    "id": "dq-mursal-basics-1",
+    "lessonId": "mursal-basics",
+    "level": "advanced",
+    "questionType": "multiple_choice",
+    "question": "In a mursal report, which link is not mentioned?",
+    "options": ["The Companion link", "The book cover", "The Arabic vowels", "The glossary"],
+    "answer": "The Companion link"
+  },
+  {
+    "id": "dq-mudhal-munqati-1",
+    "lessonId": "mudhal-munqati-basics",
+    "level": "advanced",
+    "questionType": "multiple_choice",
+    "question": "Which distinction is correct?",
+    "options": ["Muttasil is connected; munqati' has a break", "Muttasil is the text; munqati' is the book name", "Munqati' means always fabricated", "Muttasil means no narrator exists"],
+    "answer": "Muttasil is connected; munqati' has a break"
+  },
+  {
+    "id": "dq-mudallas-basics-1",
+    "lessonId": "mudallas-basics",
+    "level": "advanced",
+    "questionType": "true_false",
+    "question": "Tadlis may involve unclear wording about how a narrator received a report.",
+    "answer": "True"
+  },
+  {
+    "id": "dq-maudhu-origins-1",
+    "lessonId": "maudhu-origins",
+    "level": "advanced",
+    "questionType": "multiple_choice",
+    "question": "What does maudhu' mean?",
+    "options": ["Fabricated report", "Connected chain", "Sacred report", "Repeated pattern"],
+    "answer": "Fabricated report"
+  },
+  {
+    "id": "dq-maudhu-signs-1",
+    "lessonId": "maudhu-signs",
+    "level": "advanced",
+    "questionType": "multiple_choice",
+    "question": "What may scholars examine when warning about fabricated reports?",
+    "options": ["Both chain and text", "Only app colors", "Only page margins", "Only the reader's age"],
+    "answer": "Both chain and text"
+  },
+  {
+    "id": "dq-shadh-basics-1",
+    "lessonId": "shadh-basics",
+    "level": "advanced",
+    "questionType": "multiple_choice",
+    "question": "A shadh report often involves what kind of issue?",
+    "options": ["Contradiction needing scholarly comparison", "A memorisation checklist", "A missing app icon", "A payment method"],
+    "answer": "Contradiction needing scholarly comparison"
+  },
+  {
+    "id": "dq-mudraj-basics-1",
+    "lessonId": "mudraj-basics",
+    "level": "advanced",
+    "questionType": "multiple_choice",
+    "question": "Mudraj refers to what?",
+    "options": ["Inserted words mistaken as part of the hadith", "A chain with many narrators", "A report from one narrator only", "A book of fiqh rulings"],
+    "answer": "Inserted words mistaken as part of the hadith"
+  },
+  {
+    "id": "dq-maqlub-basics-1",
+    "lessonId": "maqlub-basics",
+    "level": "advanced",
+    "questionType": "multiple_choice",
+    "question": "Maqlub may involve what?",
+    "options": ["Reversal or switching in a chain or text", "A glossary definition only", "A daily search limit", "A payment unlock"],
+    "answer": "Reversal or switching in a chain or text"
+  },
+  {
+    "id": "dq-musalsal-basics-1",
+    "lessonId": "musalsal-basics",
+    "level": "advanced",
+    "questionType": "multiple_choice",
+    "question": "Musalsal reports share what?",
+    "options": ["A repeated pattern in transmission", "Only one page number", "No chain at all", "A fixed app color"],
+    "answer": "A repeated pattern in transmission"
+  },
+  {
+    "id": "dq-nawawi-1-1",
+    "lessonId": "nawawi-1",
+    "level": "arbain",
+    "questionType": "multiple_choice",
+    "question": "What is the main theme of Hadith 1?",
+    "options": ["Intentions", "Zakah amounts", "Travel distance", "Food rules"],
+    "answer": "Intentions"
+  },
+  {
+    "id": "dq-nawawi-1-2",
+    "lessonId": "nawawi-1",
+    "level": "arbain",
+    "questionType": "fill_blank",
+    "question": "Actions are judged by ______.",
+    "answer": "intentions"
+  },
+  {
+    "id": "dq-nawawi-2-1",
+    "lessonId": "nawawi-2",
+    "level": "arbain",
+    "questionType": "multiple_choice",
+    "question": "Which angel came to teach the companions in Hadith 2?",
+    "options": ["Jibril", "Mika'il", "Israfil", "Malik"],
+    "answer": "Jibril"
+  },
+  {
+    "id": "dq-nawawi-2-2",
+    "lessonId": "nawawi-2",
+    "level": "arbain",
+    "questionType": "multiple_choice",
+    "question": "Which term means excellence in worship?",
+    "options": ["Ihsan", "Hijrah", "Matn", "Sanad"],
+    "answer": "Ihsan"
+  },
+  {
+    "id": "dq-nawawi-3-1",
+    "lessonId": "nawawi-3",
+    "level": "arbain",
+    "questionType": "multiple_choice",
+    "question": "How many pillars are mentioned in Hadith 3?",
+    "options": ["Five", "Three", "Seven", "Ten"],
+    "answer": "Five"
+  },
+  {
+    "id": "dq-nawawi-3-2",
+    "lessonId": "nawawi-3",
+    "level": "arbain",
+    "questionType": "true_false",
+    "question": "Hadith 3 describes the pillars as foundations of Islam.",
+    "answer": "True"
+  },
+  {
+    "id": "dq-nawawi-4-1",
+    "lessonId": "nawawi-4",
+    "level": "arbain",
+    "questionType": "multiple_choice",
+    "question": "Which companion narrated Hadith 4?",
+    "options": ["Abdullah ibn Mas'ud", "Abu Hurayrah", "Anas ibn Malik", "Ibn Abbas"],
+    "answer": "Abdullah ibn Mas'ud"
+  },
+  {
+    "id": "dq-nawawi-4-2",
+    "lessonId": "nawawi-4",
+    "level": "arbain",
+    "questionType": "multiple_choice",
+    "question": "Hadith 4 encourages the believer to seek what?",
+    "options": ["A good ending", "Public praise", "Guessing the unseen", "Leaving good deeds"],
+    "answer": "A good ending"
+  },
+  {
+    "id": "dq-nawawi-5-1",
+    "lessonId": "nawawi-5",
+    "level": "arbain",
+    "questionType": "multiple_choice",
+    "question": "Who narrated Hadith 5?",
+    "options": ["Aisha bint Abi Bakr", "Umar ibn al-Khattab", "Abdullah ibn Umar", "Mu'adh ibn Jabal"],
+    "answer": "Aisha bint Abi Bakr"
+  },
+  {
+    "id": "dq-nawawi-5-2",
+    "lessonId": "nawawi-5",
+    "level": "arbain",
+    "questionType": "fill_blank",
+    "question": "The hadith teaches that actions not according to the Sunnah may be ______.",
+    "answer": "rejected"
+  },
+  {
+    "id": "dq-ulum-intro-3",
+    "lessonId": "ulum-intro",
+    "level": "beginner",
+    "questionType": "fill_blank",
+    "question": "This path introduces simple terms step by ______.",
+    "answer": "step"
+  },
+  {
+    "id": "dq-what-is-hadith-3",
+    "lessonId": "what-is-hadith",
+    "level": "beginner",
+    "questionType": "true_false",
+    "question": "A hadith may mention the Prophet's approvals.",
+    "answer": "True"
+  },
+  {
+    "id": "dq-sunnah-khabar-athar-2",
+    "lessonId": "sunnah-khabar-athar",
+    "level": "beginner",
+    "questionType": "fill_blank",
+    "question": "Khabar can be a broad word for transmitted ______.",
+    "answer": "reports"
+  },
+  {
+    "id": "dq-sunnah-khabar-athar-3",
+    "lessonId": "sunnah-khabar-athar",
+    "level": "beginner",
+    "questionType": "true_false",
+    "question": "Some scholars use Sunnah and Hadith closely together.",
+    "answer": "True"
+  },
+  {
+    "id": "dq-quran-qudsi-3",
+    "lessonId": "quran-qudsi-matn-sanad",
+    "level": "beginner",
+    "questionType": "multiple_choice",
+    "question": "What is a rawi?",
+    "options": ["A narrator", "A chapter heading", "A page number", "A book cover"],
+    "answer": "A narrator"
+  },
+  {
+    "id": "dq-receiving-hadith-2",
+    "lessonId": "receiving-hadith",
+    "level": "beginner",
+    "questionType": "multiple_choice",
+    "question": "What does al-qira'ah mean in this lesson?",
+    "options": ["Reading to a teacher for correction", "Hiding a chain", "Writing a glossary", "Changing the matn"],
+    "answer": "Reading to a teacher for correction"
+  },
+  {
+    "id": "dq-receiving-hadith-3",
+    "lessonId": "receiving-hadith",
+    "level": "beginner",
+    "questionType": "true_false",
+    "question": "Classical hadith students received hadith through careful learning methods.",
+    "answer": "True"
+  },
+  {
+    "id": "dq-classification-overview-2",
+    "lessonId": "classification-overview",
+    "level": "intermediate",
+    "questionType": "multiple_choice",
+    "question": "Which set describes narrator type?",
+    "options": ["Qudsi, marfu, mawquf, maqtu", "Sahih, hasan, da'if", "Read, understand, memorise", "Book, page, cover"],
+    "answer": "Qudsi, marfu, mawquf, maqtu"
+  },
+  {
+    "id": "dq-classification-overview-3",
+    "lessonId": "classification-overview",
+    "level": "intermediate",
+    "questionType": "fill_blank",
+    "question": "Number of narrators includes mutawatir and ______.",
+    "answer": "ahad"
+  },
+  {
+    "id": "dq-mutawatir-basics-2",
+    "lessonId": "mutawatir-basics",
+    "level": "intermediate",
+    "questionType": "multiple_choice",
+    "question": "Which type keeps the same wording?",
+    "options": ["Mutawatir lafzi", "Mutawatir ma'nawi", "Mursal", "Mudraj"],
+    "answer": "Mutawatir lafzi"
+  },
+  {
+    "id": "dq-mutawatir-basics-3",
+    "lessonId": "mutawatir-basics",
+    "level": "intermediate",
+    "questionType": "true_false",
+    "question": "Mutawatir ma'nawi shares meaning with different wording.",
+    "answer": "True"
+  },
+  {
+    "id": "dq-daif-basics-2",
+    "lessonId": "daif-basics",
+    "level": "intermediate",
+    "questionType": "multiple_choice",
+    "question": "Weakness may relate to what?",
+    "options": ["Chain or narrator information", "Only app settings", "Only font size", "Only the title color"],
+    "answer": "Chain or narrator information"
+  },
+  {
+    "id": "dq-daif-basics-3",
+    "lessonId": "daif-basics",
+    "level": "intermediate",
+    "questionType": "true_false",
+    "question": "Scholars discuss weak reports with care and conditions.",
+    "answer": "True"
+  },
+  {
+    "id": "dq-muallaq-basics-2",
+    "lessonId": "muallaq-basics",
+    "level": "advanced",
+    "questionType": "true_false",
+    "question": "A mu'allaq report may omit one narrator, several narrators, or more from the beginning.",
+    "answer": "True"
+  },
+  {
+    "id": "dq-muallaq-basics-3",
+    "lessonId": "muallaq-basics",
+    "level": "advanced",
+    "questionType": "fill_blank",
+    "question": "Students should notice when a chain is not fully ______.",
+    "answer": "shown"
+  },
+  {
+    "id": "dq-mursal-basics-2",
+    "lessonId": "mursal-basics",
+    "level": "advanced",
+    "questionType": "multiple_choice",
+    "question": "Who narrates directly from the Prophet in a mursal report?",
+    "options": ["A Tabi'i", "A publisher", "A modern editor", "A chapter title"],
+    "answer": "A Tabi'i"
+  },
+  {
+    "id": "dq-mursal-basics-3",
+    "lessonId": "mursal-basics",
+    "level": "advanced",
+    "questionType": "true_false",
+    "question": "Mursal reports are discussed carefully and with conditions.",
+    "answer": "True"
+  },
+  {
+    "id": "dq-mudhal-munqati-2",
+    "lessonId": "mudhal-munqati-basics",
+    "level": "advanced",
+    "questionType": "multiple_choice",
+    "question": "Mu'dal usually means how many narrators are missing in sequence?",
+    "options": ["Two or more", "Exactly one", "None", "All narrators are named"],
+    "answer": "Two or more"
+  },
+  {
+    "id": "dq-mudhal-munqati-3",
+    "lessonId": "mudhal-munqati-basics",
+    "level": "advanced",
+    "questionType": "fill_blank",
+    "question": "Munqati' means the chain is broken or not ______.",
+    "answer": "continuous"
+  },
+  {
+    "id": "dq-mudallas-basics-2",
+    "lessonId": "mudallas-basics",
+    "level": "advanced",
+    "questionType": "multiple_choice",
+    "question": "Tadlis can make a chain look what?",
+    "options": ["Stronger", "Longer in font size", "Like a glossary", "Like a payment screen"],
+    "answer": "Stronger"
+  },
+  {
+    "id": "dq-mudallas-basics-3",
+    "lessonId": "mudallas-basics",
+    "level": "advanced",
+    "questionType": "fill_blank",
+    "question": "Scholars study wording such as 'from' and how the narrator ______ the report.",
+    "answer": "received"
+  },
+  {
+    "id": "dq-maudhu-origins-2",
+    "lessonId": "maudhu-origins",
+    "level": "advanced",
+    "questionType": "true_false",
+    "question": "Scholars warned strongly against attributing false words to the Prophet.",
+    "answer": "True"
+  },
+  {
+    "id": "dq-maudhu-origins-3",
+    "lessonId": "maudhu-origins",
+    "level": "advanced",
+    "questionType": "multiple_choice",
+    "question": "Which claim should be checked before sharing?",
+    "options": ["A specific religious claim", "The app background color", "A font setting", "A button label"],
+    "answer": "A specific religious claim"
+  },
+  {
+    "id": "dq-maudhu-signs-2",
+    "lessonId": "maudhu-signs",
+    "level": "advanced",
+    "questionType": "multiple_choice",
+    "question": "Which may be a text sign scholars examine?",
+    "options": ["Extreme rewards", "Screen brightness", "Device model", "App version"],
+    "answer": "Extreme rewards"
+  },
+  {
+    "id": "dq-maudhu-signs-3",
+    "lessonId": "maudhu-signs",
+    "level": "advanced",
+    "questionType": "true_false",
+    "question": "Beginners should not judge fabrication alone.",
+    "answer": "True"
+  },
+  {
+    "id": "dq-shadh-basics-2",
+    "lessonId": "shadh-basics",
+    "level": "advanced",
+    "questionType": "fill_blank",
+    "question": "Scholars compare chains, narrators, and ______.",
+    "answer": "wording"
+  },
+  {
+    "id": "dq-shadh-basics-3",
+    "lessonId": "shadh-basics",
+    "level": "advanced",
+    "questionType": "true_false",
+    "question": "Strong-looking reports may still need careful comparison.",
+    "answer": "True"
+  },
+  {
+    "id": "dq-mudraj-basics-2",
+    "lessonId": "mudraj-basics",
+    "level": "advanced",
+    "questionType": "multiple_choice",
+    "question": "Where may mudraj addition appear?",
+    "options": ["Text or chain", "Only app settings", "Only payment cards", "Only search tips"],
+    "answer": "Text or chain"
+  },
+  {
+    "id": "dq-mudraj-basics-3",
+    "lessonId": "mudraj-basics",
+    "level": "advanced",
+    "questionType": "true_false",
+    "question": "Scholars separate the Prophet's wording from added wording.",
+    "answer": "True"
+  },
+  {
+    "id": "dq-maqlub-basics-2",
+    "lessonId": "maqlub-basics",
+    "level": "advanced",
+    "questionType": "multiple_choice",
+    "question": "What might be switched in a maqlub report?",
+    "options": ["A narrator's name", "The app icon", "The payment plan", "The splash screen"],
+    "answer": "A narrator's name"
+  },
+  {
+    "id": "dq-maqlub-basics-3",
+    "lessonId": "maqlub-basics",
+    "level": "advanced",
+    "questionType": "fill_blank",
+    "question": "This topic shows why exact names and ______ matter.",
+    "answer": "wording"
+  },
+  {
+    "id": "dq-musalsal-basics-2",
+    "lessonId": "musalsal-basics",
+    "level": "advanced",
+    "questionType": "multiple_choice",
+    "question": "A musalsal pattern may involve wording, action, time, place, or what?",
+    "options": ["Narrator state", "Phone model", "Search limit", "Button color"],
+    "answer": "Narrator state"
+  },
+  {
+    "id": "dq-musalsal-basics-3",
+    "lessonId": "musalsal-basics",
+    "level": "advanced",
+    "questionType": "true_false",
+    "question": "Musalsal reminds students that hadith study records how knowledge was passed on.",
+    "answer": "True"
+  },
+  {
+    "id": "dq-nawawi-1-3",
+    "lessonId": "nawawi-1",
+    "level": "arbain",
+    "questionType": "multiple_choice",
+    "question": "Who narrated Hadith 1?",
+    "options": ["Umar ibn al-Khattab", "Aisha bint Abi Bakr", "Abdullah ibn Umar", "Abu Hurayrah"],
+    "answer": "Umar ibn al-Khattab"
+  },
+  {
+    "id": "dq-nawawi-2-3",
+    "lessonId": "nawawi-2",
+    "level": "arbain",
+    "questionType": "multiple_choice",
+    "question": "Hadith 2 discusses Islam, iman, and what?",
+    "options": ["Ihsan", "Hijrah", "Mursal", "Maqlub"],
+    "answer": "Ihsan"
+  },
+  {
+    "id": "dq-nawawi-3-3",
+    "lessonId": "nawawi-3",
+    "level": "arbain",
+    "questionType": "fill_blank",
+    "question": "Islam is built upon ______ foundations.",
+    "answer": "five"
+  },
+  {
+    "id": "dq-nawawi-4-3",
+    "lessonId": "nawawi-4",
+    "level": "arbain",
+    "questionType": "multiple_choice",
+    "question": "Hadith 4 mentions provision, lifespan, deeds, and what else?",
+    "options": ["Final outcome", "Book price", "Glossary order", "Search history"],
+    "answer": "Final outcome"
+  },
+  {
+    "id": "dq-nawawi-5-3",
+    "lessonId": "nawawi-5",
+    "level": "arbain",
+    "questionType": "multiple_choice",
+    "question": "What is the main theme of Hadith 5?",
+    "options": ["Following the Sunnah", "Counting narrators", "Travel planning", "Book printing"],
+    "answer": "Following the Sunnah"
+  },
+  {
+    "id": "dq-ahad-categories-3",
+    "lessonId": "ahad-categories",
+    "level": "intermediate",
+    "questionType": "multiple_choice",
+    "question": "Which ahad category has at least two narrators at a key level?",
+    "options": ["Aziz", "Gharib", "Mutawatir", "Mudallas"],
+    "answer": "Aziz"
+  },
+  {
+    "id": "dq-sahih-hasan-3",
+    "lessonId": "sahih-and-hasan",
+    "level": "intermediate",
+    "questionType": "multiple_choice",
+    "question": "How is hasan described compared with sahih in this lesson?",
+    "options": ["Similar, but narrator precision may be slightly lower", "Always fabricated", "A missing chapter title", "A report with no wording"],
+    "answer": "Similar, but narrator precision may be slightly lower"
+  }
+]
