@@ -125,8 +125,8 @@
     "lessonId": "daif-basics",
     "level": "intermediate",
     "questionType": "fill_blank",
-    "question": "Da'if means a report is ______.",
-    "answer": "weak"
+    "question": "A weak report is called ______.",
+    "answer": "daif"
   },
   {
     "id": "dq-muallaq-basics-1",
@@ -308,9 +308,10 @@
     "id": "dq-ulum-intro-3",
     "lessonId": "ulum-intro",
     "level": "beginner",
-    "questionType": "fill_blank",
-    "question": "This path introduces simple terms step by ______.",
-    "answer": "step"
+    "questionType": "multiple_choice",
+    "question": "How does the Beginner Pathway introduce hadith terms?",
+    "options": ["Step by step", "All at once", "Only through memorisation", "Only through legal rulings"],
+    "answer": "Step by step"
   },
   {
     "id": "dq-what-is-hadith-3",
@@ -425,9 +426,10 @@
     "id": "dq-muallaq-basics-3",
     "lessonId": "muallaq-basics",
     "level": "advanced",
-    "questionType": "fill_blank",
-    "question": "Students should notice when a chain is not fully ______.",
-    "answer": "shown"
+    "questionType": "multiple_choice",
+    "question": "What should students notice in a mu'allaq discussion?",
+    "options": ["When a chain is not fully shown", "When the app changes color", "When a glossary opens", "When a payment screen appears"],
+    "answer": "When a chain is not fully shown"
   },
   {
     "id": "dq-mursal-basics-2",
@@ -460,8 +462,8 @@
     "lessonId": "mudhal-munqati-basics",
     "level": "advanced",
     "questionType": "fill_blank",
-    "question": "Munqati' means the chain is broken or not ______.",
-    "answer": "continuous"
+    "question": "A connected chain is called ______.",
+    "answer": "muttasil"
   },
   {
     "id": "dq-mudallas-basics-2",
@@ -476,9 +478,10 @@
     "id": "dq-mudallas-basics-3",
     "lessonId": "mudallas-basics",
     "level": "advanced",
-    "questionType": "fill_blank",
-    "question": "Scholars study wording such as 'from' and how the narrator ______ the report.",
-    "answer": "received"
+    "questionType": "multiple_choice",
+    "question": "In tadlis, scholars pay close attention to what?",
+    "options": ["How a narrator received the report", "Only the app layout", "Only the page color", "Only the book cover"],
+    "answer": "How a narrator received the report"
   },
   {
     "id": "dq-maudhu-origins-2",
@@ -518,9 +521,10 @@
     "id": "dq-shadh-basics-2",
     "lessonId": "shadh-basics",
     "level": "advanced",
-    "questionType": "fill_blank",
-    "question": "Scholars compare chains, narrators, and ______.",
-    "answer": "wording"
+    "questionType": "multiple_choice",
+    "question": "When studying shadh reports, what do scholars compare?",
+    "options": ["Chains, narrators, and wording", "Only page numbers", "Only app settings", "Only translations"],
+    "answer": "Chains, narrators, and wording"
   },
   {
     "id": "dq-shadh-basics-3",
@@ -560,9 +564,10 @@
     "id": "dq-maqlub-basics-3",
     "lessonId": "maqlub-basics",
     "level": "advanced",
-    "questionType": "fill_blank",
-    "question": "This topic shows why exact names and ______ matter.",
-    "answer": "wording"
+    "questionType": "multiple_choice",
+    "question": "What does maqlub show students to pay attention to?",
+    "options": ["Exact names and wording", "Only app tabs", "Only button labels", "Only search history"],
+    "answer": "Exact names and wording"
   },
   {
     "id": "dq-musalsal-basics-2",

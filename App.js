@@ -1683,9 +1683,10 @@ const closeNarratorBio = () => {
             style={styles.flowButton}
             onPress={() => setActivePathwayPreviewIndex(index => Math.max(0, index - 1))}
           >
-            <Text style={styles.flowButtonText}>
-              {activePathwayPreviewIndex === 1 ? '← Back to Basics' : '← Back to Intermediate'}
-            </Text>
+            <View style={styles.flowButtonContent}>
+              <Text style={styles.flowButtonChevron}>{'\u2039'}</Text>
+              <Text style={styles.flowButtonText}>{activePathwayPreviewIndex === 1 ? 'Back to Basics' : 'Back to Intermediate'}</Text>
+            </View>
           </Pressable>
         )}
         {activePathwayPreviewIndex < LEARNING_PATHWAYS.length - 1 && (
@@ -1693,9 +1694,10 @@ const closeNarratorBio = () => {
             style={styles.flowButton}
             onPress={() => setActivePathwayPreviewIndex(index => Math.min(LEARNING_PATHWAYS.length - 1, index + 1))}
           >
-            <Text style={styles.flowButtonText}>
-              {activePathwayPreviewIndex === 0 ? 'Continue to Intermediate →' : 'Continue to Advanced →'}
-            </Text>
+            <View style={styles.flowButtonContent}>
+              <Text style={styles.flowButtonText}>{activePathwayPreviewIndex === 0 ? 'Continue to Intermediate' : 'Continue to Advanced'}</Text>
+              <Text style={styles.flowButtonChevron}>{'\u203a'}</Text>
+            </View>
           </Pressable>
         )}
       </View>
@@ -2170,6 +2172,13 @@ const closeNarratorBio = () => {
               placeholder="Type your answer"
               placeholderTextColor="#8a9995"
               autoCapitalize="none"
+              returnKeyType="done"
+              onFocus={() => {
+                setTimeout(() => {
+                  scrollRef.current?.scrollToEnd({ animated: true });
+                }, 120);
+              }}
+              onSubmitEditing={() => handleDailyQuizAnswer(dailyQuizInput)}
             />
             <Pressable
               style={[styles.learnActionButton, !dailyQuizInput.trim() && styles.learnActionButtonDisabled]}
@@ -2205,7 +2214,6 @@ const closeNarratorBio = () => {
       ? `Continue ${currentPathway.title}: Quiz ${safePathwayIndex - currentPathwayLessonCardCount + 1} of ${currentPathwayQuizzes.length}`
       : `${currentPathway.title}: Lesson ${Math.min(resumeLessonIndex + 1, currentPathwayLessons.length)} of ${currentPathwayLessons.length}`;
     const dailyQuizCards = selectDailyQuizQuestions(safeProgress);
-    const eligibleDailyQuizCount = getEligibleDailyQuizQuestions(safeProgress).length;
     const dailyQuizStreakCount = getDailyQuizStreakCount(safeProgress);
 
     if (learnMode === 'nawawi') {
@@ -2249,7 +2257,7 @@ const closeNarratorBio = () => {
               : 'Complete a lesson first to unlock your Daily Quiz.'}
           </Text>
           <Text style={styles.continueLearningMeta}>
-            Daily quiz streak: {dailyQuizStreakCount} day{dailyQuizStreakCount === 1 ? '' : 's'} • {eligibleDailyQuizCount} questions unlocked
+            Daily quiz streak: {dailyQuizStreakCount} day{dailyQuizStreakCount === 1 ? '' : 's'} • Questions are based on lessons you completed.
           </Text>
           <Pressable
             style={[styles.reviewStartButton, !dailyQuizCards.length && styles.learnActionButtonDisabled]}
@@ -2743,9 +2751,14 @@ const closeNarratorBio = () => {
 
         <KeyboardAvoidingView
           style={styles.screenContainer}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <ScrollView
+            ref={scrollRef}
+            contentContainerStyle={styles.container}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+          >
             <View style={styles.sectionTabs}>
               <Pressable
                 style={[styles.sectionTab, activeSection === 'search' && styles.sectionTabActive]}
@@ -3680,6 +3693,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#176b5f',
     borderRadius: 8,
     paddingVertical: 11,
+    paddingHorizontal: 10,
     alignItems: 'center',
   },
   flowButtonDisabled: {
@@ -3689,6 +3703,19 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '800',
+    textAlign: 'center',
+  },
+  flowButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+  },
+  flowButtonChevron: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '900',
+    lineHeight: 18,
   },
   flowHint: {
     color: '#607174',
