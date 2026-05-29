@@ -69,6 +69,11 @@ const DEFAULT_LEARN_PROGRESS = {
   reviewSchedule: {},
   reviewStreak: { count: 0, lastReviewDate: '' },
 };
+const DEFAULT_REVIEW_SESSION_SUMMARY = {
+  reviewed: 0,
+  remembered: 0,
+  reviewAgain: 0,
+};
 const REVIEW_INTERVAL_DAYS = [1, 3, 7];
 const clampLearningIndex = (value, length) => {
   const index = Number(value);
@@ -828,7 +833,8 @@ export default function App() {
   const [selectedNawawiHadithId, setSelectedNawawiHadithId] = useState(nawawiPreview[0]?.id || '');
   const [activeNawawiCardIndex, setActiveNawawiCardIndex] = useState(0);
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
-  const [reviewSelfChecked, setReviewSelfChecked] = useState(false);
+  const [activeReviewCards, setActiveReviewCards] = useState([]);
+  const [reviewSessionSummary, setReviewSessionSummary] = useState(DEFAULT_REVIEW_SESSION_SUMMARY);
   const [showSearchHelp, setShowSearchHelp] = useState(false);
   const [loadingCommentary, setLoadingCommentary] = useState(false);
   const [commentaryModalVisible, setCommentaryModalVisible] = useState(false);
@@ -942,12 +948,12 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
       const totalCards = getNawawiCards(selectedNawawiHadithId).length;
       animateProgressTo(totalCards ? ((activeNawawiCardIndex + 1) / totalCards) * 100 : 0);
     } else if (learnMode === 'review') {
-      const totalCards = getReadyReviewCards(sanitizeLearnProgress(learnProgressRef.current || DEFAULT_LEARN_PROGRESS)).length;
+      const totalCards = activeReviewCards.length;
       animateProgressTo(totalCards ? ((activeReviewIndex + 1) / totalCards) * 100 : 0);
     } else {
       progressAnim.setValue(0);
     }
-  }, [learnMode, selectedPathwayId, activePathwayCardIndex, selectedNawawiHadithId, activeNawawiCardIndex, activeReviewIndex, progressAnim]);
+  }, [learnMode, selectedPathwayId, activePathwayCardIndex, selectedNawawiHadithId, activeNawawiCardIndex, activeReviewIndex, activeReviewCards.length, progressAnim]);
 
   useEffect(() => {
     const loadLocalProgress = async () => {
@@ -1139,7 +1145,8 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
             setSelectedNawawiHadithId(nawawiPreview[0]?.id || '');
             setActiveNawawiCardIndex(0);
             setActiveReviewIndex(0);
-            setReviewSelfChecked(false);
+            setActiveReviewCards([]);
+            setReviewSessionSummary(DEFAULT_REVIEW_SESSION_SUMMARY);
             setLearnMode('overview');
             try {
               await AsyncStorage.removeItem(LEARN_PROGRESS_STORAGE_KEY);
@@ -1461,20 +1468,21 @@ const closeNarratorBio = () => {
   };
 
   const openReviewFlow = () => {
+    const reviewCards = getReadyReviewCards(sanitizeLearnProgress(learnProgressRef.current || DEFAULT_LEARN_PROGRESS));
+    setActiveReviewCards(reviewCards);
     setActiveReviewIndex(0);
-    setReviewSelfChecked(false);
+    setReviewSessionSummary(DEFAULT_REVIEW_SESSION_SUMMARY);
     setLearnMode('review');
   };
 
-  const completeReviewCard = reviewCard => {
+  const completeReviewCard = (reviewCard, remembered = true) => {
     if (!reviewCard) return;
     updateLearnProgress(previousProgress => {
       const today = getTodayKey();
       const currentSchedule = previousProgress.reviewSchedule?.[reviewCard.id] || { intervalIndex: 0 };
-      const nextIntervalIndex = Math.min(
-        (currentSchedule.intervalIndex || 0) + 1,
-        REVIEW_INTERVAL_DAYS.length - 1
-      );
+      const nextIntervalIndex = remembered
+        ? Math.min((currentSchedule.intervalIndex || 0) + 1, REVIEW_INTERVAL_DAYS.length - 1)
+        : 0;
       const lastReviewDate = previousProgress.reviewStreak?.lastReviewDate || '';
       let streakCount = previousProgress.reviewStreak?.count || 0;
       if (lastReviewDate !== today) {
@@ -1499,7 +1507,18 @@ const closeNarratorBio = () => {
         },
       };
     });
-    setReviewSelfChecked(false);
+  };
+
+  const handleReviewResponse = remembered => {
+    const reviewCard = activeReviewCards[activeReviewIndex];
+    if (!reviewCard) return;
+    completeReviewCard(reviewCard, remembered);
+    setReviewSessionSummary(previousSummary => ({
+      reviewed: previousSummary.reviewed + 1,
+      remembered: previousSummary.remembered + (remembered ? 1 : 0),
+      reviewAgain: previousSummary.reviewAgain + (remembered ? 0 : 1),
+    }));
+    setActiveReviewIndex(index => index + 1);
   };
 
   const renderPathwayPreviews = () => (
@@ -1930,10 +1949,35 @@ const closeNarratorBio = () => {
   };
 
   const renderReviewFlow = () => {
-    const safeProgress = sanitizeLearnProgress(learnProgress);
-    const reviewCards = getReadyReviewCards(safeProgress);
-    const safeReviewIndex = clampLearningIndex(activeReviewIndex, reviewCards.length || 1);
-    const reviewCard = reviewCards[safeReviewIndex];
+    const reviewCards = activeReviewCards;
+    const reviewCard = reviewCards[activeReviewIndex];
+
+    if (reviewSessionSummary.reviewed > 0 && activeReviewIndex >= reviewCards.length) {
+      return (
+        <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim, transform: [{ translateY: cardSlideAnim }] }]}>
+          <Text style={styles.lessonLevel}>Today's Review</Text>
+          <Text style={styles.lessonTitle}>Review Complete</Text>
+          <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>Your review progress has been saved.</Text>
+          <View style={styles.reviewSummaryGrid}>
+            <View style={styles.reviewSummaryItem}>
+              <Text style={styles.reviewSummaryNumber}>{reviewSessionSummary.reviewed}</Text>
+              <Text style={styles.reviewSummaryLabel}>Cards reviewed</Text>
+            </View>
+            <View style={styles.reviewSummaryItem}>
+              <Text style={styles.reviewSummaryNumber}>{reviewSessionSummary.remembered}</Text>
+              <Text style={styles.reviewSummaryLabel}>Remembered</Text>
+            </View>
+            <View style={styles.reviewSummaryItem}>
+              <Text style={styles.reviewSummaryNumber}>{reviewSessionSummary.reviewAgain}</Text>
+              <Text style={styles.reviewSummaryLabel}>Review again</Text>
+            </View>
+          </View>
+          <Pressable style={styles.learnActionButton} onPress={() => setLearnMode('overview')}>
+            <Text style={styles.learnActionText}>Back to Learn</Text>
+          </Pressable>
+        </Animated.View>
+      );
+    }
 
     if (!reviewCard) {
       return (
@@ -1951,31 +1995,22 @@ const closeNarratorBio = () => {
       <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim, transform: [{ translateY: cardSlideAnim }] }]}>
         <View style={styles.learnCardHeader}>
           <Text style={styles.lessonLevel}>Today’s Review</Text>
-          <Text style={styles.completedBadge}>{safeReviewIndex + 1}/{reviewCards.length}</Text>
+          <Text style={styles.completedBadge}>{activeReviewIndex + 1}/{reviewCards.length}</Text>
         </View>
         {renderAnimatedProgressBar()}
         <Text style={styles.quizTitle}>{reviewCard.sourceLabel}</Text>
         <Text style={styles.lessonTitle}>{reviewCard.title}</Text>
         <Text style={[styles.quizQuestion, scaledTextStyle(17)]}>{reviewCard.prompt}</Text>
         {!!reviewCard.answer && <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{reviewCard.answer}</Text>}
-        <Pressable
-          style={[styles.reviewCheckButton, reviewSelfChecked && styles.reviewCheckButtonDone]}
-          onPress={() => setReviewSelfChecked(true)}
-        >
-          <Text style={[styles.reviewCheckText, reviewSelfChecked && styles.reviewCheckTextDone]}>
-            {reviewSelfChecked ? 'Self check completed' : reviewCard.selfCheckText || 'I reviewed this carefully'}
-          </Text>
-        </Pressable>
-        <Pressable
-          style={[styles.learnActionButton, !reviewSelfChecked && styles.learnActionButtonDisabled]}
-          disabled={!reviewSelfChecked}
-          onPress={() => {
-            completeReviewCard(reviewCard);
-            setActiveReviewIndex(index => Math.min(index, Math.max(reviewCards.length - 2, 0)));
-          }}
-        >
-          <Text style={styles.learnActionText}>Continue</Text>
-        </Pressable>
+        {!!reviewCard.selfCheckText && <Text style={[styles.reviewHintText, scaledTextStyle(14)]}>{reviewCard.selfCheckText}</Text>}
+        <View style={styles.reviewActionRow}>
+          <Pressable style={[styles.reviewActionButton, styles.reviewRememberButton]} onPress={() => handleReviewResponse(true)}>
+            <Text style={styles.reviewRememberText}>I remember this</Text>
+          </Pressable>
+          <Pressable style={[styles.reviewActionButton, styles.reviewAgainButton]} onPress={() => handleReviewResponse(false)}>
+            <Text style={styles.reviewAgainText}>Review again</Text>
+          </Pressable>
+        </View>
         <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode('overview')}>
           <Text style={styles.secondaryTextButtonText}>Back to Learn</Text>
         </Pressable>
@@ -3322,27 +3357,72 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '800',
   },
-  reviewCheckButton: {
-    borderWidth: 1,
-    borderColor: '#d7dfd5',
-    backgroundColor: '#f7faf7',
+  reviewHintText: {
+    color: '#667774',
+    lineHeight: 21,
+    marginTop: 4,
+  },
+  reviewActionRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+  },
+  reviewActionButton: {
+    flex: 1,
     borderRadius: 8,
     paddingVertical: 13,
-    paddingHorizontal: 13,
-    marginTop: 6,
+    paddingHorizontal: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
+  },
+  reviewRememberButton: {
+    backgroundColor: '#176b5f',
+  },
+  reviewAgainButton: {
+    borderWidth: 1,
+    borderColor: '#ccd8d4',
+    backgroundColor: '#f8faf8',
+  },
+  reviewRememberText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  reviewAgainText: {
+    color: '#176b5f',
+    fontSize: 14,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  reviewSummaryGrid: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
     marginBottom: 4,
   },
-  reviewCheckButtonDone: {
-    borderColor: '#176b5f',
-    backgroundColor: '#edf4e8',
+  reviewSummaryItem: {
+    flex: 1,
+    backgroundColor: '#f5f8f6',
+    borderWidth: 1,
+    borderColor: '#dde7e3',
+    borderRadius: 8,
+    paddingVertical: 11,
+    paddingHorizontal: 8,
+    alignItems: 'center',
   },
-  reviewCheckText: {
-    color: '#41504d',
-    fontSize: 15,
+  reviewSummaryNumber: {
+    color: '#0f3d3e',
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  reviewSummaryLabel: {
+    color: '#667774',
+    fontSize: 11,
     fontWeight: '800',
-  },
-  reviewCheckTextDone: {
-    color: '#176b5f',
+    textAlign: 'center',
+    marginTop: 3,
   },
   lockedPathwayNotice: {
     color: '#607174',
