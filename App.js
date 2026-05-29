@@ -122,6 +122,9 @@ const NAWAWI_SELECTION_TITLES = {
 
 const getPathwayLessons = pathwayId => lessons.filter(lesson => lesson.pathway === pathwayId);
 const getPathwayQuizzes = pathwayId => quizzes.filter(quiz => quiz.pathway === pathwayId);
+const getPathwayCardCount = pathwayId => (
+  (getPathwayLessons(pathwayId).length * 2) + getPathwayQuizzes(pathwayId).length
+);
 const getNawawiHadithCards = hadith => [
   { type: 'hadith', hadith },
   { type: 'meaning', hadith },
@@ -273,7 +276,7 @@ const sanitizeLearnProgress = progress => {
   const currentPathwayId = validPathwayIds.has(source.currentPathwayId)
     ? source.currentPathwayId
     : 'beginner';
-  const pathwayCardCount = getPathwayLessons(currentPathwayId).length + getPathwayQuizzes(currentPathwayId).length;
+  const pathwayCardCount = getPathwayCardCount(currentPathwayId);
 
   return {
     ...DEFAULT_LEARN_PROGRESS,
@@ -942,7 +945,7 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
 
   useEffect(() => {
     if (learnMode === 'pathway') {
-      const totalCards = getPathwayLessons(selectedPathwayId).length + getPathwayQuizzes(selectedPathwayId).length;
+      const totalCards = getPathwayCardCount(selectedPathwayId);
       animateProgressTo(totalCards ? ((activePathwayCardIndex + 1) / totalCards) * 100 : 0);
     } else if (learnMode === 'nawawiHadith') {
       const totalCards = getNawawiCards(selectedNawawiHadithId).length;
@@ -981,7 +984,7 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
           setLearnProgress(safeProgress);
           persistLearnProgress(safeProgress);
           setSelectedPathwayId(safeProgress.currentPathwayId);
-          const pathwayCardCount = getPathwayLessons(safeProgress.currentPathwayId).length + getPathwayQuizzes(safeProgress.currentPathwayId).length;
+          const pathwayCardCount = getPathwayCardCount(safeProgress.currentPathwayId);
           setActivePathwayCardIndex(clampLearningIndex(safeProgress.currentPathwayCardIndex, pathwayCardCount || 1));
           setActiveNawawiCardIndex(clampLearningIndex(safeProgress.currentNawawiCardIndex, getNawawiCards().length || 1));
         } catch {
@@ -1447,7 +1450,7 @@ const closeNarratorBio = () => {
     const savedProgress = sanitizeLearnProgress(learnProgressRef.current || DEFAULT_LEARN_PROGRESS);
     const lockMessage = getPathwayLockMessage(pathwayId, savedProgress);
     if (lockMessage) return;
-    const pathwayCardCount = getPathwayLessons(pathwayId).length + getPathwayQuizzes(pathwayId).length;
+    const pathwayCardCount = getPathwayCardCount(pathwayId);
     setSelectedPathwayId(pathwayId);
     setActivePathwayCardIndex(
       savedProgress.currentPathwayId === pathwayId
@@ -1560,20 +1563,26 @@ const closeNarratorBio = () => {
         );
       })()}
       <View style={styles.flowControls}>
-        <Pressable
-          style={[styles.flowButton, activePathwayPreviewIndex === 0 && styles.flowButtonDisabled]}
-          disabled={activePathwayPreviewIndex === 0}
-          onPress={() => setActivePathwayPreviewIndex(index => Math.max(0, index - 1))}
-        >
-          <Text style={styles.flowButtonText}>Previous</Text>
-        </Pressable>
-        <Pressable
-          style={[styles.flowButton, activePathwayPreviewIndex === LEARNING_PATHWAYS.length - 1 && styles.flowButtonDisabled]}
-          disabled={activePathwayPreviewIndex === LEARNING_PATHWAYS.length - 1}
-          onPress={() => setActivePathwayPreviewIndex(index => Math.min(LEARNING_PATHWAYS.length - 1, index + 1))}
-        >
-          <Text style={styles.flowButtonText}>Next</Text>
-        </Pressable>
+        {activePathwayPreviewIndex > 0 && (
+          <Pressable
+            style={styles.flowButton}
+            onPress={() => setActivePathwayPreviewIndex(index => Math.max(0, index - 1))}
+          >
+            <Text style={styles.flowButtonText}>
+              {activePathwayPreviewIndex === 1 ? '<- Back to Basics' : '<- Back to Intermediate'}
+            </Text>
+          </Pressable>
+        )}
+        {activePathwayPreviewIndex < LEARNING_PATHWAYS.length - 1 && (
+          <Pressable
+            style={styles.flowButton}
+            onPress={() => setActivePathwayPreviewIndex(index => Math.min(LEARNING_PATHWAYS.length - 1, index + 1))}
+          >
+            <Text style={styles.flowButtonText}>
+              {activePathwayPreviewIndex === 0 ? 'Go to Intermediate ->' : 'Go to Advanced ->'}
+            </Text>
+          </Pressable>
+        )}
       </View>
     </View>
   );
@@ -1666,10 +1675,13 @@ const closeNarratorBio = () => {
     const pathway = LEARNING_PATHWAYS.find(item => item.id === selectedPathwayId) || LEARNING_PATHWAYS[0];
     const pathwayLessons = getPathwayLessons(pathway.id);
     const pathwayQuizzes = getPathwayQuizzes(pathway.id);
-    const totalCards = pathwayLessons.length + pathwayQuizzes.length;
-    const isQuizCard = activePathwayCardIndex >= pathwayLessons.length;
-    const lesson = pathwayLessons[activePathwayCardIndex];
-    const quiz = pathwayQuizzes[activePathwayCardIndex - pathwayLessons.length];
+    const totalCards = getPathwayCardCount(pathway.id);
+    const lessonCardCount = pathwayLessons.length * 2;
+    const isQuizCard = activePathwayCardIndex >= lessonCardCount;
+    const lessonIndex = isQuizCard ? -1 : Math.floor(activePathwayCardIndex / 2);
+    const isLessonCompletionCard = !isQuizCard && activePathwayCardIndex % 2 === 1;
+    const lesson = !isQuizCard ? pathwayLessons[lessonIndex] : null;
+    const quiz = isQuizCard ? pathwayQuizzes[activePathwayCardIndex - lessonCardCount] : null;
     const progress = totalCards ? Math.min(100, ((activePathwayCardIndex + 1) / totalCards) * 100) : 0;
 
     if (!totalCards) {
@@ -1688,21 +1700,36 @@ const closeNarratorBio = () => {
           <Text style={styles.completedBadge}>{activePathwayCardIndex + 1}/{totalCards}</Text>
         </View>
         {renderAnimatedProgressBar()}
-        {!isQuizCard && lesson && (
+        {!isQuizCard && lesson && !isLessonCompletionCard && (
           <>
             <Text style={styles.lessonTitle}>{lesson.title}</Text>
             <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{lesson.summary}</Text>
             {lesson.points.map(point => (
               <Text key={point} style={[styles.lessonPoint, scaledTextStyle(15)]}>• {point}</Text>
             ))}
+            <Text style={styles.flowHint}>Continue to the completion card when you are ready to save this lesson.</Text>
+          </>
+        )}
+        {!isQuizCard && lesson && isLessonCompletionCard && (
+          <View style={styles.lessonCompletionPanel}>
+            <Text style={styles.lessonCompletionEyebrow}>Lesson {lessonIndex + 1}</Text>
+            <Text style={styles.lessonCompletionTitle}>Lesson Complete</Text>
+            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>You have reached the end of this lesson.</Text>
             <Pressable
-              style={[styles.learnActionButton, learnProgress.completedLessons?.[lesson.id] && styles.learnActionButtonSecondary]}
+              style={[styles.lessonCompletionButton, learnProgress.completedLessons?.[lesson.id] && styles.learnActionButtonSecondary]}
               onPress={() => markLessonComplete(lesson.id)}
               disabled={!!learnProgress.completedLessons?.[lesson.id]}
             >
-              <Text style={styles.learnActionText}>{learnProgress.completedLessons?.[lesson.id] ? 'Completed' : 'Mark Complete'}</Text>
+              <Text style={styles.lessonCompletionButtonText}>
+                {learnProgress.completedLessons?.[lesson.id] ? 'Completed' : '✓ Mark Complete'}
+              </Text>
             </Pressable>
-          </>
+            <Text style={styles.flowHint}>
+              {learnProgress.completedLessons?.[lesson.id]
+                ? 'Saved. This lesson can now appear in Today’s Review.'
+                : 'Marking complete saves your progress and adds this lesson to Daily Review.'}
+            </Text>
+          </View>
         )}
         {isQuizCard && quiz && (
           <>
@@ -1745,14 +1772,14 @@ const closeNarratorBio = () => {
             disabled={activePathwayCardIndex === 0}
             onPress={() => setActivePathwayCardIndex(index => Math.max(0, index - 1))}
           >
-            <Text style={styles.flowButtonText}>Previous</Text>
+            <Text style={styles.flowButtonText}>Back</Text>
           </Pressable>
           <Pressable
             style={[styles.flowButton, activePathwayCardIndex === totalCards - 1 && styles.flowButtonDisabled]}
             disabled={activePathwayCardIndex === totalCards - 1}
             onPress={() => setActivePathwayCardIndex(index => Math.min(totalCards - 1, index + 1))}
           >
-            <Text style={styles.flowButtonText}>Next</Text>
+            <Text style={styles.flowButtonText}>Continue</Text>
           </Pressable>
         </View>
         <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode('overview')}>
@@ -3356,6 +3383,43 @@ const styles = StyleSheet.create({
   learnActionText: {
     color: '#fff',
     fontWeight: '800',
+  },
+  lessonCompletionPanel: {
+    borderWidth: 1,
+    borderColor: '#d8e2dc',
+    backgroundColor: '#f7faf7',
+    borderRadius: 8,
+    padding: 18,
+    marginTop: 4,
+  },
+  lessonCompletionEyebrow: {
+    color: '#176b5f',
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  lessonCompletionTitle: {
+    color: '#132f35',
+    fontSize: 22,
+    fontWeight: '900',
+    marginBottom: 10,
+  },
+  lessonCompletionButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#176b5f',
+    borderRadius: 8,
+    paddingVertical: 15,
+    paddingHorizontal: 18,
+    marginTop: 8,
+    marginBottom: 8,
+    minHeight: 54,
+  },
+  lessonCompletionButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '900',
   },
   reviewHintText: {
     color: '#667774',
