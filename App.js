@@ -572,6 +572,15 @@ const isBayquniyyahComplete = progress => (
   bayquniyyahLessons.length > 0 && bayquniyyahLessons.every(lesson => !!progress.bayquniyyahCompletedLessons?.[lesson.id])
 );
 
+const getBayquniyyahLessonIndex = lessonId => bayquniyyahLessons.findIndex(lesson => lesson.id === lessonId);
+
+const isBayquniyyahLessonUnlocked = (lessonId, progress) => {
+  const lessonIndex = getBayquniyyahLessonIndex(lessonId);
+  if (lessonIndex <= 0) return lessonIndex === 0;
+  const previousLesson = bayquniyyahLessons[lessonIndex - 1];
+  return !!progress.bayquniyyahCompletedLessons?.[previousLesson?.id];
+};
+
 const getCompletedLearningIds = progress => {
   const completedIds = new Set();
   lessons.forEach(lesson => {
@@ -1761,6 +1770,7 @@ const closeNarratorBio = () => {
 
   const openBayquniyyahLesson = (lessonId, options = {}) => {
     const savedProgress = sanitizeLearnProgress(learnProgressRef.current || DEFAULT_LEARN_PROGRESS);
+    if (!isBayquniyyahLessonUnlocked(lessonId, savedProgress)) return;
     setSelectedBayquniyyahLessonId(lessonId);
     setActiveBayquniyyahCardIndex(
       options.revise
@@ -2165,6 +2175,12 @@ const closeNarratorBio = () => {
           </View>
         ))}
 
+        <View style={styles.learnCard}>
+          <Text style={styles.lessonLevel}>Bayquniyyah Progress</Text>
+          <Text style={styles.lessonTitle}>{completedCount} / 34 Lessons Completed</Text>
+          {renderStaticProgressBar((completedCount / 34) * 100)}
+        </View>
+
         {bayquniyyahComplete && (
           <View style={[styles.learnCard, styles.learnCardCompleted]}>
             <View style={styles.pathwayCompletionPanel}>
@@ -2196,22 +2212,38 @@ const closeNarratorBio = () => {
         <Text style={styles.learnSectionTitle}>Choose a Lesson</Text>
         {bayquniyyahLessons.map(lesson => {
           const completed = !!safeProgress.bayquniyyahCompletedLessons?.[lesson.id];
+          const unlocked = isBayquniyyahLessonUnlocked(lesson.id, safeProgress);
           return (
             <Pressable
               key={lesson.id}
-              style={[styles.learnCard, completed && styles.learnCardCompleted]}
+              style={[
+                styles.learnCard,
+                completed && styles.learnCardCompleted,
+                !unlocked && styles.learnCardLocked,
+              ]}
               onPress={() => openBayquniyyahLesson(lesson.id, { revise: completed })}
+              disabled={!unlocked}
             >
               <View style={styles.learnCardHeader}>
                 <Text style={styles.lessonLevel}>Lesson {lesson.number}</Text>
                 <Text style={completed ? styles.completedStatusBadge : styles.completedBadge}>
-                  {completed ? '✓ Completed' : lesson.keyTerm}
+                  {completed ? '✓ Completed' : unlocked ? lesson.keyTerm : 'Locked'}
                 </Text>
               </View>
               <Text style={styles.lessonTitle}>{lesson.title}</Text>
               <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{lesson.explanation}</Text>
-              <View style={[styles.learnActionButton, completed && styles.learnActionButtonCompleted]}>
-                <Text style={styles.learnActionText}>{completed ? 'Revise Again' : 'Start Lesson'}</Text>
+              {!unlocked && (
+                <View style={styles.lockedLessonNoticeRow}>
+                  <Ionicons name="lock-closed" size={15} color="#607174" style={styles.lockedLessonIcon} />
+                  <Text style={styles.lockedPathwayNotice}>Complete the previous lesson to unlock</Text>
+                </View>
+              )}
+              <View style={[
+                styles.learnActionButton,
+                completed && styles.learnActionButtonCompleted,
+                !unlocked && styles.learnActionButtonDisabled,
+              ]}>
+                <Text style={styles.learnActionText}>{!unlocked ? 'Locked' : completed ? 'Revise Again' : 'Start Lesson'}</Text>
               </View>
             </Pressable>
           );
@@ -4498,6 +4530,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     lineHeight: 20,
+    marginTop: 8,
+  },
+  lockedLessonNoticeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  lockedLessonIcon: {
+    marginRight: 6,
     marginTop: 8,
   },
   secondaryTextButton: {
