@@ -8,13 +8,13 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "plugins": [
-      "./plugins/withAdiRegistration"
+      "./plugins/withAdiRegistration",
+      "expo-font"
     ],
     "splash": {
       "image": "./assets/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
-      
     },
     "ios": {
       "supportsTablet": true

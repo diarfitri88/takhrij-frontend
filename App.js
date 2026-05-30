@@ -23,6 +23,7 @@ import {
   Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import * as Notifications from 'expo-notifications';
@@ -1904,10 +1905,13 @@ const closeNarratorBio = () => {
   );
 
   const renderCompletionIcon = () => (
-    <View style={styles.completionIconCircle} accessible accessibilityLabel="Completed">
-      <View style={styles.completionCheckShort} />
-      <View style={styles.completionCheckLong} />
-    </View>
+    <Ionicons
+      name="checkmark-circle"
+      size={82}
+      color="#176b5f"
+      style={styles.completionIconVector}
+      accessibilityLabel="Completed"
+    />
   );
 
   const renderNawawiPage = () => {
@@ -3954,39 +3958,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: 'center',
   },
-  completionIconCircle: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: '#176b5f',
-    alignItems: 'center',
-    justifyContent: 'center',
+  completionIconVector: {
     marginBottom: 12,
-    shadowColor: '#102a2e',
-    shadowOpacity: 0.12,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  completionCheckShort: {
-    position: 'absolute',
-    width: 11,
-    height: 4,
-    borderRadius: 999,
-    backgroundColor: '#fff',
-    left: 15,
-    top: 29,
-    transform: [{ rotate: '42deg' }],
-  },
-  completionCheckLong: {
-    position: 'absolute',
-    width: 24,
-    height: 4,
-    borderRadius: 999,
-    backgroundColor: '#fff',
-    left: 22,
-    top: 25,
-    transform: [{ rotate: '-45deg' }],
+    textAlign: 'center',
   },
   completionIcon: {
     color: '#176b5f',
