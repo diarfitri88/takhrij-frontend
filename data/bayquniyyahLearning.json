@@ -1,0 +1,390 @@
+{
+  "introCards": [
+    {
+      "id": "bayq-intro-1",
+      "title": "What is Bayquniyyah?",
+      "body": "Bayquniyyah is a beginner poem in mustalah al-hadith. It introduces important hadith science terms in short lines that students traditionally memorise before deeper study. It helps learners recognise terms such as sahih, hasan, da'if, mursal, mu'allaq, mudallas, shadh, munkar, mawdu', and others."
+    },
+    {
+      "id": "bayq-intro-2",
+      "title": "How to Study Bayquniyyah",
+      "body": "Read the Arabic line first, understand the simple meaning, then memorise gradually. Revise daily and test yourself with short questions. As you study hadith, use these terms to recognise how scholars describe reports, chains, narrators, and defects."
+    }
+  ],
+  "lessons": [
+    {
+      "id": "bayq-1",
+      "number": 1,
+      "title": "Opening and Purpose",
+      "keyTerm": "Introduction",
+      "arabic": "أَبْدَأُ بِالْحَمْدِ مُصَلِّيًا عَلَى مُحَمَّدٍ خَيْرِ نَبِيٍّ أُرْسِلَا",
+      "english": "Begin I do with praise, and prayers and salutations, on Muhammad the Noble Prophet, the finest ever commissioned.",
+      "explanation": "The poem begins with praise of Allah and prayers upon the Prophet Muhammad, peace be upon him. This reminds learners that Islamic knowledge begins with humility, gratitude, and love for the Messenger whose hadith are being studied.",
+      "memorisePrompt": { "prompt": "أبدأ بالحمد مصليًا على ______", "answer": "محمد" },
+      "quiz": { "question": "How does the poem begin?", "options": ["With praise and prayers upon the Prophet", "With a legal ruling", "With a narrator list"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-2",
+      "number": 2,
+      "title": "Hadith Divisions",
+      "keyTerm": "Aqsam al-Hadith",
+      "arabic": "وَذِي مِنْ أَقْسَامِ الْحَدِيثِ عِدَّهْ وَكُلُّ وَاحِدٍ أَتَى وَحَدَّهْ",
+      "english": "So what follows are a number of the hadith divisions, and all of them do come with their definitions.",
+      "explanation": "Bayquniyyah is organised around categories of hadith. Each term is introduced with a short definition. Beginners should treat these as first steps toward understanding how hadith scholars describe reports.",
+      "memorisePrompt": { "prompt": "وذي من أقسام الحديث ______", "answer": "عده" },
+      "quiz": { "question": "What does this line introduce?", "options": ["Hadith categories and definitions", "A biography", "A fiqh chapter"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-3",
+      "number": 3,
+      "title": "Sahih Hadith",
+      "keyTerm": "Sahih",
+      "arabic": "أَوَّلُهَا الصَّحِيحُ وَهْوَ مَا اتَّصَلْ إِسْنَادُهُ وَلَمْ يَشُذَّ أَوْ يُعَلْ",
+      "english": "The first of them is Sound: its chain is connected, and it does not contradict or have a hidden failing.",
+      "explanation": "A sahih hadith has a connected chain and is free from serious contradiction and hidden defects. This is a beginner definition; actual grading requires qualified scholarship and detailed study.",
+      "memorisePrompt": { "prompt": "أولها الصحيح وهو ما ______ إسناده", "answer": "اتصل" },
+      "quiz": { "question": "Which term means a sound hadith?", "options": ["Sahih", "Mursal", "Mawdu'"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-4",
+      "number": 4,
+      "title": "Reliable Transmission",
+      "keyTerm": "Adl and Dabt",
+      "arabic": "يَرْوِيهِ عَدْلٌ ضَابِطٌ عَنْ مِثْلِهِ مُعْتَمَدٌ فِي ضَبْطِهِ وَنَقْلِهِ",
+      "english": "One upright and precise narrates from his like, reliable in precision as well as transmission.",
+      "explanation": "The poem continues the definition of sahih. It points to upright narrators and accurate preservation. These are technical areas, so beginners should learn the vocabulary without attempting independent narrator judgement.",
+      "memorisePrompt": { "prompt": "يرويه عدل ______ عن مثله", "answer": "ضابط" },
+      "quiz": { "question": "What does dabt relate to?", "options": ["Accuracy and precision", "Poetry style", "Book titles"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-5",
+      "number": 5,
+      "title": "Hasan Hadith",
+      "keyTerm": "Hasan",
+      "arabic": "وَالْحَسَنُ الْمَعْرُوفُ طُرْقًا وَغَدَتْ رِجَالُهُ لَا كَالصَّحِيحِ اشْتَهَرَتْ",
+      "english": "The tradition that is Fair is one whose routes are known; its narrators are not as famed as those of the Sound.",
+      "explanation": "Hasan is often translated as fair or good. It is below sahih in strength but still recognised in hadith terminology. This line helps learners distinguish basic authenticity terms.",
+      "memorisePrompt": { "prompt": "والحسن المعروف ______", "answer": "طرقا" },
+      "quiz": { "question": "Which term is commonly translated as fair or good?", "options": ["Hasan", "Munkar", "Mudallas"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-6",
+      "number": 6,
+      "title": "Da'if Hadith",
+      "keyTerm": "Da'if",
+      "arabic": "وَكُلُّ مَا عَنْ رُتْبَةِ الْحُسْنِ قَصُرْ فَهْوَ الضَّعِيفُ وَهْوَ أَقْسَامٌ كُثُرْ",
+      "english": "All that falls below the rank of the Fair tradition is Weak, with many subdivisions.",
+      "explanation": "Da'if means weak. Weakness has many types and levels. Beginners should avoid using weak reports to establish specific beliefs or practices unless guided by qualified scholarship.",
+      "memorisePrompt": { "prompt": "فهو الضعيف وهو أقسام ______", "answer": "كثر" },
+      "quiz": { "question": "What does da'if mean?", "options": ["Weak", "Connected", "Raised"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-7",
+      "number": 7,
+      "title": "Marfu' and Maqtu'",
+      "keyTerm": "Marfu' / Maqtu'",
+      "arabic": "وَمَا أُضِيفَ لِلنَّبِيِّ الْمَرْفُوعُ وَمَا لِتَابِعٍ هُوَ الْمَقْطُوعُ",
+      "english": "What is attributed to the Prophet is Raised; what belongs to a Successor is Maqtu'.",
+      "explanation": "Marfu' refers to a report attributed to the Prophet, peace be upon him. Maqtu' refers to a report from a Successor. This is about attribution, not automatically authenticity.",
+      "memorisePrompt": { "prompt": "وما أضيف للنبي ______", "answer": "المرفوع" },
+      "quiz": { "question": "A report attributed to the Prophet is called:", "options": ["Marfu'", "Maqtu'", "Mubham"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-8",
+      "number": 8,
+      "title": "Musnad",
+      "keyTerm": "Musnad",
+      "arabic": "وَالْمُسْنَدُ الْمُتَّصِلُ الْإِسْنَادِ مِنْ رَاوِيهِ حَتَّى الْمُصْطَفَى وَلَمْ يَبِنْ",
+      "english": "The Musnad has a connected chain from its narrator to the Chosen One, without a break.",
+      "explanation": "Musnad here describes a report with a connected chain reaching the Prophet, peace be upon him. It teaches learners to notice whether a chain is continuous.",
+      "memorisePrompt": { "prompt": "والمسند المتصل ______", "answer": "الإسناد" },
+      "quiz": { "question": "Musnad in this line points to:", "options": ["A connected chain to the Prophet", "A missing narrator only", "A fabricated report"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-9",
+      "number": 9,
+      "title": "Muttasil",
+      "keyTerm": "Muttasil",
+      "arabic": "وَمَا بِسَمْعِ كُلِّ رَاوٍ يَتَّصِلْ إِسْنَادُهُ لِلْمُصْطَفَى فَالْمُتَّصِلْ",
+      "english": "What is connected by the hearing of every narrator through to the Chosen One is Connected.",
+      "explanation": "Muttasil means connected. Each narrator received the report from the one before him. This is one of the first chain concepts beginners should learn.",
+      "memorisePrompt": { "prompt": "فالمتصل means the chain is ______", "answer": "connected" },
+      "quiz": { "question": "Muttasil means:", "options": ["Connected", "Hidden", "Discarded"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-10",
+      "number": 10,
+      "title": "Musalsal",
+      "keyTerm": "Musalsal",
+      "arabic": "مُسَلْسَلٌ قُلْ مَا عَلَى وَصْفٍ أَتَى مِثْلُ أَمَا وَاللَّهِ أَنْبَأَنِي الْفَتَى",
+      "english": "Linked is the tradition that comes with a repeated description, such as: By Allah, the lad informed me.",
+      "explanation": "Musalsal reports have a repeated feature in the chain or wording, such as narrators using the same phrase or action. It is a special transmission pattern.",
+      "memorisePrompt": { "prompt": "مسلسل قل ما على ______ أتى", "answer": "وصف" },
+      "quiz": { "question": "Musalsal usually involves:", "options": ["A repeated feature in transmission", "No chain at all", "Only one narrator"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-11",
+      "number": 11,
+      "title": "More Musalsal Examples",
+      "keyTerm": "Musalsal",
+      "arabic": "كَذَاكَ قَدْ حَدَّثَنِيهِ قَائِمَا أَوْ بَعْدَ أَنْ حَدَّثَنِي تَبَسَّمَا",
+      "english": "Likewise: He told me while standing, or after he told me, he smiled.",
+      "explanation": "This line gives examples of repeated descriptions in musalsal transmission. The repeated action or wording becomes part of how the report is identified.",
+      "memorisePrompt": { "prompt": "أو بعد أن حدثني ______", "answer": "تبسما" },
+      "quiz": { "question": "This line gives examples of which term?", "options": ["Musalsal", "Mawdu'", "Mursal"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-12",
+      "number": 12,
+      "title": "Aziz and Mashhur",
+      "keyTerm": "Aziz / Mashhur",
+      "arabic": "عَزِيزٌ مَرْوِي اثْنَيْنِ أَوْ ثَلَاثَهْ مَشْهُورٌ مَرْوِي فَوْقَ مَا ثَلَاثَهْ",
+      "english": "Aziz is related by two or three; Mashhur is related by more than three.",
+      "explanation": "These terms relate to the number of transmitters. Aziz has a small number, while mashhur is more widely narrated. This is about spread, not automatically authenticity.",
+      "memorisePrompt": { "prompt": "مشهور مروي فوق ما ______", "answer": "ثلاثه" },
+      "quiz": { "question": "Mashhur means narrated by:", "options": ["More than three", "No one", "Only one"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-13",
+      "number": 13,
+      "title": "Mu'an'an and Mubham",
+      "keyTerm": "Mu'an'an / Mubham",
+      "arabic": "مُعَنْعَنٌ كَعَنْ سَعِيدٍ عَنْ كَرَمْ وَمُبْهَمٌ مَا فِيهِ رَاوٍ لَمْ يُسَمْ",
+      "english": "Mu'an'an is like 'from Sa'id from Karam'; Mubham contains a narrator who has not been named.",
+      "explanation": "Mu'an'an uses wording such as 'from'. Mubham means an unnamed person appears in the chain. Both terms help learners pay attention to chain wording.",
+      "memorisePrompt": { "prompt": "ومبهم ما فيه راو لم ______", "answer": "يسم" },
+      "quiz": { "question": "Mubham means:", "options": ["An unnamed narrator appears", "The matn is poetry", "The report is always sahih"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-14",
+      "number": 14,
+      "title": "Ali and Nazil Chains",
+      "keyTerm": "Isnad Ali / Nazil",
+      "arabic": "وَكُلُّ مَا قَلَّتْ رِجَالُهُ عَلاَ وَضِدُّهُ ذَاكَ الَّذِي قَدْ نَزَلاَ",
+      "english": "Those whose men are few are Uplifted; the opposite are Descended.",
+      "explanation": "A higher chain has fewer narrators between the collector and the source. A lower chain has more narrators. This is a chain-length concept.",
+      "memorisePrompt": { "prompt": "وكل ما قلت رجاله ______", "answer": "علا" },
+      "quiz": { "question": "A chain with fewer narrators is called:", "options": ["Ali", "Nazil", "Mawdu'"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-15",
+      "number": 15,
+      "title": "Mawquf",
+      "keyTerm": "Mawquf",
+      "arabic": "وَمَا أَضَفْتَهُ إِلَى الأَصْحَابِ مِنْ قَوْلٍ وَفِعْلٍ فَهْوَ مَوْقُوفٌ زُكِنْ",
+      "english": "What you attribute to the Companions from speech or action is known as Mawquf.",
+      "explanation": "Mawquf refers to reports stopped at a Companion. It is not the same as a statement directly attributed to the Prophet, peace be upon him.",
+      "memorisePrompt": { "prompt": "فهو موقوف ______", "answer": "زكن" },
+      "quiz": { "question": "Mawquf is attributed to:", "options": ["A Companion", "Only a later poet", "No narrator"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-16",
+      "number": 16,
+      "title": "Mursal and Gharib",
+      "keyTerm": "Mursal / Gharib",
+      "arabic": "وَمُرْسَلٌ مِنْهُ الصَّحَابِيُّ سَقَطْ وَقُلْ غَرِيبٌ مَا رَوَى رَاوٍ فَقَطْ",
+      "english": "Mursal is where the Companion is omitted; Gharib is what only one narrator related.",
+      "explanation": "Mursal has a missing Companion link in this beginner definition. Gharib refers to a report narrated by one narrator at a point in the chain.",
+      "memorisePrompt": { "prompt": "وقل غريب ما روى راو ______", "answer": "فقط" },
+      "quiz": { "question": "Gharib relates to:", "options": ["A single narrator at a point", "Many thousands of narrators", "A book title"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-17",
+      "number": 17,
+      "title": "Munqati'",
+      "keyTerm": "Munqati'",
+      "arabic": "وَكُلُّ مَا لَمْ يَتَّصِلْ بِحَالِ إِسْنَادُهُ مُنْقَطِعُ الأَوْصَالِ",
+      "english": "Every report whose chain is not connected is severed in its links.",
+      "explanation": "Munqati' means disconnected. A break somewhere in the chain prevents the isnad from being fully connected.",
+      "memorisePrompt": { "prompt": "إسناده منقطع ______", "answer": "الأوصال" },
+      "quiz": { "question": "Munqati' means the chain is:", "options": ["Disconnected", "Always famous", "A vocabulary list"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-18",
+      "number": 18,
+      "title": "Mu'dal and Mudallas",
+      "keyTerm": "Mu'dal / Mudallas",
+      "arabic": "وَالْمُعْضَلُ السَّاقِطُ مِنْهُ اثْنَانِ وَمَا أَتَى مُدَلَّسًا نَوْعَانِ",
+      "english": "Mu'dal is the one from which two are fallen; what comes as Mudallas has two types.",
+      "explanation": "Mu'dal has two missing narrators in sequence. Mudallas involves concealment in transmission. These are more advanced chain-defect terms.",
+      "memorisePrompt": { "prompt": "والمعضل الساقط منه ______", "answer": "اثنان" },
+      "quiz": { "question": "Mu'dal involves:", "options": ["Two missing narrators", "A famous narrator only", "A poem ending"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-19",
+      "number": 19,
+      "title": "First Type of Tadlis",
+      "keyTerm": "Tadlis al-Isnad",
+      "arabic": "الأَوَّلُ الإِسْقَاطُ لِلشَّيْخِ وَأَنْ يَنْقُلَ عَمَّنْ فَوْقَهُ بِعَنْ وَأَنْ",
+      "english": "The first is dropping the teacher and narrating from one above him using terms like 'from' and 'that'.",
+      "explanation": "This line describes a form of tadlis where a narrator conceals the immediate teacher. Beginners should learn the idea, not use it to judge narrators independently.",
+      "memorisePrompt": { "prompt": "الأول الإسقاط ______", "answer": "للشيخ" },
+      "quiz": { "question": "This type of tadlis may hide:", "options": ["The immediate teacher", "The book cover", "The poem title"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-20",
+      "number": 20,
+      "title": "Second Type of Tadlis",
+      "keyTerm": "Tadlis al-Shuyukh",
+      "arabic": "وَالثَّانِ لاَ يُسْقِطُهُ لَكِنْ يَصِفْ أَوْصَافَهُ بِمَا بِهِ لاَ يَنْعَرِفْ",
+      "english": "The second does not drop him, but describes him with traits by which he is not recognised.",
+      "explanation": "Another form of tadlis is describing a teacher in an unfamiliar way. The teacher is present, but the wording may make identification difficult.",
+      "memorisePrompt": { "prompt": "والثان لا يسقطه لكن ______", "answer": "يصف" },
+      "quiz": { "question": "This type makes the teacher:", "options": ["Hard to recognise", "Always unnamed in the matn", "The final narrator only"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-21",
+      "number": 21,
+      "title": "Shadh and Maqlub",
+      "keyTerm": "Shadh / Maqlub",
+      "arabic": "وَمَا يُخَالِفْ ثِقَةٌ بِهِ الْمَلَا فَالشَّاذُ وَالْمَقْلُوبُ قِسْمَانِ تَلَا",
+      "english": "What a trusted narrator reports in contradiction to the greater number is Shadh; Maqlub has two kinds.",
+      "explanation": "Shadh involves a contradiction by a reliable narrator against stronger or more numerous narrations. Maqlub means something has been switched.",
+      "memorisePrompt": { "prompt": "فالشاذ والمقلوب ______ تلا", "answer": "قسمان" },
+      "quiz": { "question": "Shadh involves:", "options": ["Contradicting stronger reports", "No Arabic wording", "Only a Companion report"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-22",
+      "number": 22,
+      "title": "Types of Maqlub",
+      "keyTerm": "Maqlub",
+      "arabic": "إِبْدَالُ رَاوٍ مَا بِرَاوٍ قِسْمُ وَقَلْبُ إِسْنَادٍ لِمَتْنٍ قِسْمُ",
+      "english": "One type is switching one narrator for another; another is attaching a chain to a different text.",
+      "explanation": "Maqlub means switched or reversed. It may involve a narrator being swapped or a chain being attached to the wrong matn.",
+      "memorisePrompt": { "prompt": "إبدال راو ما براو ______", "answer": "قسم" },
+      "quiz": { "question": "Maqlub means something is:", "options": ["Switched", "Always accepted", "Only memorised"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-23",
+      "number": 23,
+      "title": "Fard",
+      "keyTerm": "Fard",
+      "arabic": "وَالْفَرْدُ مَا قَيَّدْتَهُ بِثِقَةٍ أَوْ جَمْعٍ أَوْ قَصْرٍ عَلَى رِوَايَةٍ",
+      "english": "Fard is what you restrict to a trustworthy person, a group, or a region by way of narration.",
+      "explanation": "Fard refers to singularity or restriction in transmission. It may be singular through a narrator, group, place, or route.",
+      "memorisePrompt": { "prompt": "والفرد ما قيدته ______", "answer": "بثقة" },
+      "quiz": { "question": "Fard relates to:", "options": ["Singularity in transmission", "A smile in narration", "A fabricated report"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-24",
+      "number": 24,
+      "title": "Mu'allal",
+      "keyTerm": "Mu'allal",
+      "arabic": "وَمَا بِعِلَّةٍ غُمُوضٍ أَوْ خَفَا مُعَلَّلٌ عِنْدَهُمْ قَدْ عُرِفَا",
+      "english": "Whatever contains a subtle or hidden flaw is known among them as Mu'allal.",
+      "explanation": "Mu'allal refers to a report with a hidden defect. This is one of the most delicate areas of hadith criticism and requires expert scholarship.",
+      "memorisePrompt": { "prompt": "وما بعلة غموض أو ______", "answer": "خفا" },
+      "quiz": { "question": "Mu'allal involves:", "options": ["A hidden defect", "A famous poem only", "No chain"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-25",
+      "number": 25,
+      "title": "Mudtarib",
+      "keyTerm": "Mudtarib",
+      "arabic": "وَذُو اخْتِلَافِ سَنَدٍ أَوْ مَتْنِ مُضْطَرِبٌ عِنْدَ أُهَيْلِ الْفَنِّ",
+      "english": "Those that contain variance in their text or chain are called Mudtarib by the masters of this field.",
+      "explanation": "Mudtarib refers to conflicting forms of a report where the differences cannot be reconciled or preferred. It can occur in the chain or text.",
+      "memorisePrompt": { "prompt": "وذو اختلاف سند أو ______", "answer": "متن" },
+      "quiz": { "question": "Mudtarib involves conflict in:", "options": ["Chain or text", "Only page numbers", "Only book titles"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-26",
+      "number": 26,
+      "title": "Mudraj",
+      "keyTerm": "Mudraj",
+      "arabic": "وَالْمُدْرَجَاتُ فِي الْحَدِيثِ مَا أَتَتْ مِنْ بَعْضِ أَلْفَاظِ الرُّوَاةِ اتَّصَلَتْ",
+      "english": "Interjections in hadith are words that came from some narrators and became connected to the report.",
+      "explanation": "Mudraj means inserted wording. A narrator's words may appear within a report, so scholars identify what belongs to the hadith and what is inserted.",
+      "memorisePrompt": { "prompt": "والمدرجات في الحديث ما ______", "answer": "أتت" },
+      "quiz": { "question": "Mudraj means:", "options": ["Inserted wording", "A disconnected chain", "A raised report"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-27",
+      "number": 27,
+      "title": "Mudabbaj",
+      "keyTerm": "Mudabbaj",
+      "arabic": "وَمَا رَوَى كُلُّ قَرِينٍ عَنْ أَخِيهِ مُدَبَّجٌ فَاعْرِفْهُ حَقًّا وَانْتَخِهِ",
+      "english": "When each peer narrates from his companion, it is Mudabbaj, so know it well.",
+      "explanation": "Mudabbaj occurs when peers narrate from one another. It is a relationship term in transmission, showing how narrators may narrate mutually.",
+      "memorisePrompt": { "prompt": "وما روى كل قرين عن ______", "answer": "أخيه" },
+      "quiz": { "question": "Mudabbaj involves:", "options": ["Peers narrating from each other", "A missing Companion", "A hidden defect only"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-28",
+      "number": 28,
+      "title": "Muttafiq and Muftariq",
+      "keyTerm": "Muttafiq / Muftariq",
+      "arabic": "مُتَّفِقٌ لَفْظًا وَخَطًّا مُتَّفِقْ وَضِدُّهُ فِيمَا ذَكَرْنَا الْمُفْتَرِقْ",
+      "english": "Agreeing in wording and script is Muttafiq; its opposite is Muftariq.",
+      "explanation": "These terms relate to names that may look or sound alike. They help scholars distinguish narrators and avoid confusing identities.",
+      "memorisePrompt": { "prompt": "متفق لفظا وخطا ______", "answer": "متفق" },
+      "quiz": { "question": "These terms help with:", "options": ["Distinguishing names", "Counting pages", "Choosing a font"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-29",
+      "number": 29,
+      "title": "Mu'talif and Mukhtalif",
+      "keyTerm": "Mu'talif / Mukhtalif",
+      "arabic": "مُؤْتَلِفٌ مُتَّفِقُ الْخَطِّ فَقَطْ وَضِدُّهُ مُخْتَلِفٌ فَاخْشَ الْغَلَطْ",
+      "english": "Mu'talif agrees only in script; its opposite is Mukhtalif, so beware of mistakes.",
+      "explanation": "This line warns about names that may be written similarly but pronounced or identified differently. Careful reading protects against narrator confusion.",
+      "memorisePrompt": { "prompt": "وضده مختلف فاخش ______", "answer": "الغلط" },
+      "quiz": { "question": "The warning here is to avoid:", "options": ["Mistakes in names", "Memorising Arabic", "Daily review"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-30",
+      "number": 30,
+      "title": "Munkar",
+      "keyTerm": "Munkar",
+      "arabic": "وَالْمُنْكَرُ الْفَرْدُ بِهِ رَاوٍ غَدَا تَعْدِيلُهُ لاَ يَحْمِلُ التَّفَرُّدَا",
+      "english": "Munkar is the solitary report of a narrator whose reliability cannot bear that singularity.",
+      "explanation": "Munkar is a criticism term connected to a problematic solitary report. Beginners should recognise the word but not use it to grade reports independently.",
+      "memorisePrompt": { "prompt": "والمنكر الفرد به ______ غدا", "answer": "راو" },
+      "quiz": { "question": "Munkar is a term of:", "options": ["Hadith criticism", "Prayer timing", "Book binding"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-31",
+      "number": 31,
+      "title": "Matruk",
+      "keyTerm": "Matruk",
+      "arabic": "مَتْرُوكُهُ مَا وَاحِدٌ بِهِ انْفَرَدْ وَأَجْمَعُوا لِضَعْفِهِ فَهُوَ كَرَدْ",
+      "english": "Matruk is what one person alone related, while scholars agreed on his weakness, so it is rejected.",
+      "explanation": "Matruk means abandoned or discarded. It is a serious weakness term. This should be understood as terminology, not applied without scholarship.",
+      "memorisePrompt": { "prompt": "متروكه ما واحد به ______", "answer": "انفرد" },
+      "quiz": { "question": "Matruk means:", "options": ["Abandoned or discarded", "Connected", "Popular"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-32",
+      "number": 32,
+      "title": "Mawdu'",
+      "keyTerm": "Mawdu'",
+      "arabic": "وَالْكَذِبُ الْمُخْتَلَقُ الْمَصْنُوعُ عَلَى النَّبِيِّ فَذَلِكَ الْمَوْضُوعُ",
+      "english": "The lie, concocted and contrived upon the Prophet, is Fabricated.",
+      "explanation": "Mawdu' means fabricated. It refers to a report falsely attributed to the Prophet, peace be upon him. This is a severe term and must be handled carefully.",
+      "memorisePrompt": { "prompt": "فذلك ______", "answer": "الموضوع" },
+      "quiz": { "question": "Mawdu' means:", "options": ["Fabricated", "Fair", "Connected"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-33",
+      "number": 33,
+      "title": "Naming the Poem",
+      "keyTerm": "Bayquniyyah",
+      "arabic": "وَقَدْ أَتَتْ كَالْجَوْهَرِ الْمَكْنُونِ سَمَّيْتُهَا مَنْظُومَةَ الْبَيْقُونِي",
+      "english": "It has come like a hidden pearl; I named it the Ode of Bayquni.",
+      "explanation": "The author names the poem and presents it as a concise collection of terms. Its short format made it easy for beginners to memorise and review.",
+      "memorisePrompt": { "prompt": "سميتها منظومة ______", "answer": "البيقوني" },
+      "quiz": { "question": "What is the poem called?", "options": ["Bayquniyyah", "Arbain Nawawi", "Bulugh al-Maram"], "answerIndex": 0 }
+    },
+    {
+      "id": "bayq-34",
+      "number": 34,
+      "title": "Completion of the Poem",
+      "keyTerm": "Thirty-four Terms",
+      "arabic": "فَوْقَ الثَّلاَثِينَ بِأَرْبَعٍ أَتَتْ أَقْسَامُهَا تَمَّتْ بِخَيْرٍ خُتِمَتْ",
+      "english": "By four beyond thirty the divisions have come; their lines are complete and ended with good.",
+      "explanation": "The poem closes by noting that its categories are thirty-four. This gives learners a complete beginner map of key mustalah al-hadith terms.",
+      "memorisePrompt": { "prompt": "فوق الثلاثين بأربع ______", "answer": "أتت" },
+      "quiz": { "question": "How many divisions does the poem point to?", "options": ["34", "5", "100"], "answerIndex": 0 }
+    }
+  ]
+}
