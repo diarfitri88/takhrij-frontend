@@ -2,7 +2,7 @@
   "expo": {
     "name": "Takhrij",
     "slug": "daleel-frontend",
-    "version": "1.0.3",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -26,7 +26,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.diarfitri88.daleelfrontend",
-      "versionCode": 7
+      "versionCode": 9
     },
     "web": {
       "favicon": "./assets/favicon.png"
