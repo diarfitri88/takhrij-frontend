@@ -1736,6 +1736,7 @@ const closeNarratorBio = () => {
   ]);
 
   const premiumFeatures = [
+    'Remaining Arbain Nawawi Hadith',
     'Bulugh al-Maram memorisation',
     'Riyadh al-Salihin memorisation',
     'Top 100 Hadith Narrator Biographies',
@@ -4531,11 +4532,14 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     lineHeight: 20,
     marginTop: 8,
+    flexShrink: 1,
+    flexWrap: 'wrap',
   },
   lockedLessonNoticeRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginTop: 8,
+    width: '100%',
   },
   lockedLessonIcon: {
     marginRight: 6,
