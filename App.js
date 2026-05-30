@@ -32,6 +32,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const lessons = require('./data/lessons.json');
 const quizzes = require('./data/quizzes.json');
 const arbainLearning = require('./data/arbainLearning.json');
+const dailyQuizQuestions = require('./data/dailyQuizQuestions.json');
 const appConfig = require('./app.json');
 const nawawiIntroCards = arbainLearning.introCards || [];
 const nawawiPreview = arbainLearning.hadiths || [];
@@ -68,11 +69,18 @@ const DEFAULT_LEARN_PROGRESS = {
   nawawiQuestionChecks: {},
   reviewSchedule: {},
   reviewStreak: { count: 0, lastReviewDate: '' },
+  dailyQuizHistory: {
+    date: '',
+    questionIds: [],
+    answers: {},
+    completed: false,
+    recentQuestionIds: [],
+  },
 };
-const DEFAULT_REVIEW_SESSION_SUMMARY = {
-  reviewed: 0,
-  remembered: 0,
-  reviewAgain: 0,
+const DEFAULT_DAILY_QUIZ_SESSION = {
+  answered: 0,
+  correct: 0,
+  answers: [],
 };
 const REVIEW_INTERVAL_DAYS = [1, 3, 7];
 const clampLearningIndex = (value, length) => {
@@ -125,6 +133,7 @@ const getPathwayQuizzes = pathwayId => quizzes.filter(quiz => quiz.pathway === p
 const getPathwayCardCount = pathwayId => (
   (getPathwayLessons(pathwayId).length * 2) + getPathwayQuizzes(pathwayId).length
 );
+const getPathwayFlowCardCount = pathwayId => getPathwayCardCount(pathwayId) + 1;
 const getNawawiHadithCards = hadith => [
   { type: 'hadith', hadith },
   { type: 'meaning', hadith },
@@ -273,10 +282,35 @@ const sanitizeLearnProgress = progress => {
       }
     : DEFAULT_LEARN_PROGRESS.reviewStreak;
 
+  const validDailyQuizIds = new Set(dailyQuizQuestions.map(question => question.id));
+  const rawDailyQuizHistory = source.dailyQuizHistory && typeof source.dailyQuizHistory === 'object'
+    ? source.dailyQuizHistory
+    : DEFAULT_LEARN_PROGRESS.dailyQuizHistory;
+  const dailyQuizAnswers = {};
+  Object.entries(rawDailyQuizHistory.answers || {}).forEach(([questionId, answer]) => {
+    if (!validDailyQuizIds.has(questionId) || !answer || typeof answer !== 'object') return;
+    dailyQuizAnswers[questionId] = {
+      selectedAnswer: typeof answer.selectedAnswer === 'string' ? answer.selectedAnswer : '',
+      correctAnswer: typeof answer.correctAnswer === 'string' ? answer.correctAnswer : '',
+      correct: answer.correct === true,
+    };
+  });
+  const dailyQuizHistory = {
+    date: typeof rawDailyQuizHistory.date === 'string' ? rawDailyQuizHistory.date : '',
+    questionIds: Array.isArray(rawDailyQuizHistory.questionIds)
+      ? rawDailyQuizHistory.questionIds.filter(questionId => validDailyQuizIds.has(questionId)).slice(0, 3)
+      : [],
+    answers: dailyQuizAnswers,
+    completed: rawDailyQuizHistory.completed === true,
+    recentQuestionIds: Array.isArray(rawDailyQuizHistory.recentQuestionIds)
+      ? rawDailyQuizHistory.recentQuestionIds.filter(questionId => validDailyQuizIds.has(questionId)).slice(-12)
+      : [],
+  };
+
   const currentPathwayId = validPathwayIds.has(source.currentPathwayId)
     ? source.currentPathwayId
     : 'beginner';
-  const pathwayCardCount = getPathwayCardCount(currentPathwayId);
+  const pathwayCardCount = getPathwayFlowCardCount(currentPathwayId);
 
   return {
     ...DEFAULT_LEARN_PROGRESS,
@@ -287,6 +321,7 @@ const sanitizeLearnProgress = progress => {
     nawawiQuestionChecks,
     reviewSchedule,
     reviewStreak,
+    dailyQuizHistory,
     currentPathwayId,
     currentPathwayCardIndex: clampLearningIndex(source.currentPathwayCardIndex, pathwayCardCount || 1),
     currentNawawiCardIndex: clampLearningIndex(source.currentNawawiCardIndex, getNawawiCards().length || 1),
@@ -453,6 +488,63 @@ const getCurrentReviewStreakCount = (progress, todayKey = getTodayKey()) => {
   }
   return 0;
 };
+
+const normalizeQuizAnswer = value =>
+  String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
+
+const isNawawiHadithComplete = (hadith, progress) => {
+  const tracker = progress.memorisation?.[hadith.id] || {};
+  return (hadith.stages || []).length > 0 && hadith.stages.every(stage => tracker[stage]);
+};
+
+const isArbainPathwayComplete = progress => (
+  nawawiPreview.length > 0 && nawawiPreview.every(hadith => isNawawiHadithComplete(hadith, progress))
+);
+
+const getCompletedLearningIds = progress => {
+  const completedIds = new Set();
+  lessons.forEach(lesson => {
+    if (progress.completedLessons?.[lesson.id]) completedIds.add(lesson.id);
+  });
+  nawawiPreview.forEach(hadith => {
+    if (isNawawiHadithComplete(hadith, progress)) completedIds.add(hadith.id);
+  });
+  return completedIds;
+};
+
+const getEligibleDailyQuizQuestions = progress => {
+  const completedIds = getCompletedLearningIds(progress);
+  return dailyQuizQuestions.filter(question => completedIds.has(question.lessonId));
+};
+
+const selectDailyQuizQuestions = (progress, todayKey = getTodayKey()) => {
+  const eligibleQuestions = getEligibleDailyQuizQuestions(progress);
+  const todayHistory = progress.dailyQuizHistory?.date === todayKey
+    ? progress.dailyQuizHistory
+    : null;
+  if (todayHistory?.questionIds?.length) {
+    return todayHistory.questionIds
+      .map(questionId => eligibleQuestions.find(question => question.id === questionId))
+      .filter(Boolean)
+      .slice(0, 3);
+  }
+
+  const recentIds = new Set(progress.dailyQuizHistory?.recentQuestionIds || []);
+  const rankedQuestions = eligibleQuestions
+    .map(question => ({
+      question,
+      rank: getStableHash(`${todayKey}:${question.id}`),
+      recentlyUsed: recentIds.has(question.id),
+    }))
+    .sort((a, b) => Number(a.recentlyUsed) - Number(b.recentlyUsed) || a.rank - b.rank)
+    .map(item => item.question);
+  return rankedQuestions.slice(0, 3);
+};
+
+const getDailyQuizStreakCount = getCurrentReviewStreakCount;
 
 const parseNarratorNames = (chain = '') => {
   const normalizedChain = String(chain)
@@ -837,7 +929,8 @@ export default function App() {
   const [activeNawawiCardIndex, setActiveNawawiCardIndex] = useState(0);
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
   const [activeReviewCards, setActiveReviewCards] = useState([]);
-  const [reviewSessionSummary, setReviewSessionSummary] = useState(DEFAULT_REVIEW_SESSION_SUMMARY);
+  const [reviewSessionSummary, setReviewSessionSummary] = useState(DEFAULT_DAILY_QUIZ_SESSION);
+  const [dailyQuizInput, setDailyQuizInput] = useState('');
   const [showSearchHelp, setShowSearchHelp] = useState(false);
   const [loadingCommentary, setLoadingCommentary] = useState(false);
   const [commentaryModalVisible, setCommentaryModalVisible] = useState(false);
@@ -945,10 +1038,13 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
 
   useEffect(() => {
     if (learnMode === 'pathway') {
-      const totalCards = getPathwayCardCount(selectedPathwayId);
+      const totalCards = getPathwayFlowCardCount(selectedPathwayId);
       animateProgressTo(totalCards ? ((activePathwayCardIndex + 1) / totalCards) * 100 : 0);
     } else if (learnMode === 'nawawiHadith') {
-      const totalCards = getNawawiCards(selectedNawawiHadithId).length;
+      const selectedHadith = nawawiPreview.find(hadith => hadith.id === selectedNawawiHadithId);
+      const includesCompletionCard = selectedHadith?.id === nawawiPreview[nawawiPreview.length - 1]?.id
+        && isArbainPathwayComplete(sanitizeLearnProgress(learnProgressRef.current || DEFAULT_LEARN_PROGRESS));
+      const totalCards = getNawawiCards(selectedNawawiHadithId).length + (includesCompletionCard ? 1 : 0);
       animateProgressTo(totalCards ? ((activeNawawiCardIndex + 1) / totalCards) * 100 : 0);
     } else if (learnMode === 'review') {
       const totalCards = activeReviewCards.length;
@@ -984,7 +1080,7 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
           setLearnProgress(safeProgress);
           persistLearnProgress(safeProgress);
           setSelectedPathwayId(safeProgress.currentPathwayId);
-          const pathwayCardCount = getPathwayCardCount(safeProgress.currentPathwayId);
+          const pathwayCardCount = getPathwayFlowCardCount(safeProgress.currentPathwayId);
           setActivePathwayCardIndex(clampLearningIndex(safeProgress.currentPathwayCardIndex, pathwayCardCount || 1));
           setActiveNawawiCardIndex(clampLearningIndex(safeProgress.currentNawawiCardIndex, getNawawiCards().length || 1));
         } catch {
@@ -1149,7 +1245,8 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
             setActiveNawawiCardIndex(0);
             setActiveReviewIndex(0);
             setActiveReviewCards([]);
-            setReviewSessionSummary(DEFAULT_REVIEW_SESSION_SUMMARY);
+            setReviewSessionSummary(DEFAULT_DAILY_QUIZ_SESSION);
+            setDailyQuizInput('');
             setLearnMode('overview');
             try {
               await AsyncStorage.removeItem(LEARN_PROGRESS_STORAGE_KEY);
@@ -1450,7 +1547,7 @@ const closeNarratorBio = () => {
     const savedProgress = sanitizeLearnProgress(learnProgressRef.current || DEFAULT_LEARN_PROGRESS);
     const lockMessage = getPathwayLockMessage(pathwayId, savedProgress);
     if (lockMessage) return;
-    const pathwayCardCount = getPathwayCardCount(pathwayId);
+    const pathwayCardCount = getPathwayFlowCardCount(pathwayId);
     setSelectedPathwayId(pathwayId);
     setActivePathwayCardIndex(
       savedProgress.currentPathwayId === pathwayId
@@ -1471,57 +1568,99 @@ const closeNarratorBio = () => {
   };
 
   const openReviewFlow = () => {
-    const reviewCards = getReadyReviewCards(sanitizeLearnProgress(learnProgressRef.current || DEFAULT_LEARN_PROGRESS));
-    setActiveReviewCards(reviewCards);
+    const safeProgress = sanitizeLearnProgress(learnProgressRef.current || DEFAULT_LEARN_PROGRESS);
+    const today = getTodayKey();
+    const dailyQuizCards = selectDailyQuizQuestions(safeProgress, today);
+    setActiveReviewCards(dailyQuizCards);
     setActiveReviewIndex(0);
-    setReviewSessionSummary(DEFAULT_REVIEW_SESSION_SUMMARY);
+    setReviewSessionSummary(DEFAULT_DAILY_QUIZ_SESSION);
+    setDailyQuizInput('');
+    if (dailyQuizCards.length) {
+      updateLearnProgress(previousProgress => ({
+        ...previousProgress,
+        dailyQuizHistory: {
+          ...(previousProgress.dailyQuizHistory || DEFAULT_LEARN_PROGRESS.dailyQuizHistory),
+          date: today,
+          questionIds: dailyQuizCards.map(question => question.id),
+          answers: previousProgress.dailyQuizHistory?.date === today
+            ? previousProgress.dailyQuizHistory.answers || {}
+            : {},
+          completed: previousProgress.dailyQuizHistory?.date === today
+            ? previousProgress.dailyQuizHistory.completed === true
+            : false,
+        },
+      }));
+    }
     setLearnMode('review');
   };
 
-  const completeReviewCard = (reviewCard, remembered = true) => {
-    if (!reviewCard) return;
+  const saveDailyQuizAnswer = (question, selectedAnswer, isLastQuestion) => {
+    const correct = normalizeQuizAnswer(selectedAnswer) === normalizeQuizAnswer(question.answer);
+    const today = getTodayKey();
+    const nextAnsweredCount = reviewSessionSummary.answered + 1;
+    const nextCorrectCount = reviewSessionSummary.correct + (correct ? 1 : 0);
+    const passedDailyQuiz = isLastQuestion && activeReviewCards.length > 0 && nextCorrectCount === activeReviewCards.length;
     updateLearnProgress(previousProgress => {
-      const today = getTodayKey();
-      const currentSchedule = previousProgress.reviewSchedule?.[reviewCard.id] || { intervalIndex: 0 };
-      const nextIntervalIndex = remembered
-        ? Math.min((currentSchedule.intervalIndex || 0) + 1, REVIEW_INTERVAL_DAYS.length - 1)
-        : 0;
+      const previousHistory = previousProgress.dailyQuizHistory || DEFAULT_LEARN_PROGRESS.dailyQuizHistory;
       const lastReviewDate = previousProgress.reviewStreak?.lastReviewDate || '';
       let streakCount = previousProgress.reviewStreak?.count || 0;
-      if (lastReviewDate !== today) {
+      if (passedDailyQuiz && lastReviewDate !== today) {
         streakCount = lastReviewDate === addDaysToDateKey(today, -1)
           ? streakCount + 1
           : 1;
       }
-
       return {
         ...previousProgress,
-        reviewSchedule: {
-          ...previousProgress.reviewSchedule,
-          [reviewCard.id]: {
-            intervalIndex: nextIntervalIndex,
-            dueDate: addDaysToDateKey(today, REVIEW_INTERVAL_DAYS[nextIntervalIndex]),
-            lastReviewed: today,
+        dailyQuizHistory: {
+          ...previousHistory,
+          date: today,
+          questionIds: activeReviewCards.map(card => card.id),
+          answers: {
+            ...(previousHistory.date === today ? previousHistory.answers : {}),
+            [question.id]: {
+              selectedAnswer,
+              correctAnswer: question.answer,
+              correct,
+            },
           },
+          completed: passedDailyQuiz,
+          recentQuestionIds: [
+            ...new Set([
+              ...(previousHistory.recentQuestionIds || []),
+              ...activeReviewCards.map(card => card.id),
+            ]),
+          ].slice(-12),
         },
-        reviewStreak: {
-          count: streakCount,
-          lastReviewDate: today,
-        },
+        reviewStreak: passedDailyQuiz
+          ? {
+              count: streakCount,
+              lastReviewDate: today,
+            }
+          : previousProgress.reviewStreak,
       };
     });
+    setReviewSessionSummary(previousSummary => ({
+      answered: nextAnsweredCount,
+      correct: nextCorrectCount,
+      answers: [
+        ...(previousSummary.answers || []),
+        { questionId: question.id, correct },
+      ],
+    }));
+    setDailyQuizInput('');
+    setActiveReviewIndex(index => index + 1);
   };
 
-  const handleReviewResponse = remembered => {
-    const reviewCard = activeReviewCards[activeReviewIndex];
-    if (!reviewCard) return;
-    completeReviewCard(reviewCard, remembered);
-    setReviewSessionSummary(previousSummary => ({
-      reviewed: previousSummary.reviewed + 1,
-      remembered: previousSummary.remembered + (remembered ? 1 : 0),
-      reviewAgain: previousSummary.reviewAgain + (remembered ? 0 : 1),
-    }));
-    setActiveReviewIndex(index => index + 1);
+  const handleDailyQuizAnswer = selectedAnswer => {
+    const question = activeReviewCards[activeReviewIndex];
+    if (!question || !String(selectedAnswer || '').trim()) return;
+    saveDailyQuizAnswer(question, String(selectedAnswer).trim(), activeReviewIndex >= activeReviewCards.length - 1);
+  };
+
+  const retryDailyQuiz = () => {
+    setActiveReviewIndex(0);
+    setReviewSessionSummary(DEFAULT_DAILY_QUIZ_SESSION);
+    setDailyQuizInput('');
   };
 
   const renderPathwayPreviews = () => (
@@ -1568,9 +1707,10 @@ const closeNarratorBio = () => {
             style={styles.flowButton}
             onPress={() => setActivePathwayPreviewIndex(index => Math.max(0, index - 1))}
           >
-            <Text style={styles.flowButtonText}>
-              {activePathwayPreviewIndex === 1 ? '<- Back to Basics' : '<- Back to Intermediate'}
-            </Text>
+            <View style={styles.flowButtonContent}>
+              <Text style={styles.flowButtonChevron}>{'\u2039'}</Text>
+              <Text style={styles.flowButtonText}>{activePathwayPreviewIndex === 1 ? 'Back to Basics' : 'Back to Intermediate'}</Text>
+            </View>
           </Pressable>
         )}
         {activePathwayPreviewIndex < LEARNING_PATHWAYS.length - 1 && (
@@ -1578,9 +1718,10 @@ const closeNarratorBio = () => {
             style={styles.flowButton}
             onPress={() => setActivePathwayPreviewIndex(index => Math.min(LEARNING_PATHWAYS.length - 1, index + 1))}
           >
-            <Text style={styles.flowButtonText}>
-              {activePathwayPreviewIndex === 0 ? 'Go to Intermediate ->' : 'Go to Advanced ->'}
-            </Text>
+            <View style={styles.flowButtonContent}>
+              <Text style={styles.flowButtonText}>{activePathwayPreviewIndex === 0 ? 'Continue to Intermediate' : 'Continue to Advanced'}</Text>
+              <Text style={styles.flowButtonChevron}>{'\u203a'}</Text>
+            </View>
           </Pressable>
         )}
       </View>
@@ -1675,16 +1816,18 @@ const closeNarratorBio = () => {
     const pathway = LEARNING_PATHWAYS.find(item => item.id === selectedPathwayId) || LEARNING_PATHWAYS[0];
     const pathwayLessons = getPathwayLessons(pathway.id);
     const pathwayQuizzes = getPathwayQuizzes(pathway.id);
-    const totalCards = getPathwayCardCount(pathway.id);
+    const contentCardCount = getPathwayCardCount(pathway.id);
+    const totalCards = getPathwayFlowCardCount(pathway.id);
     const lessonCardCount = pathwayLessons.length * 2;
-    const isQuizCard = activePathwayCardIndex >= lessonCardCount;
+    const isPathwayCompletionCard = activePathwayCardIndex >= contentCardCount;
+    const isQuizCard = !isPathwayCompletionCard && activePathwayCardIndex >= lessonCardCount;
     const lessonIndex = isQuizCard ? -1 : Math.floor(activePathwayCardIndex / 2);
     const isLessonCompletionCard = !isQuizCard && activePathwayCardIndex % 2 === 1;
     const lesson = !isQuizCard ? pathwayLessons[lessonIndex] : null;
     const quiz = isQuizCard ? pathwayQuizzes[activePathwayCardIndex - lessonCardCount] : null;
     const progress = totalCards ? Math.min(100, ((activePathwayCardIndex + 1) / totalCards) * 100) : 0;
 
-    if (!totalCards) {
+    if (!contentCardCount) {
       return (
         <View style={styles.learnCard}>
           <Text style={styles.lessonTitle}>Pathway unavailable</Text>
@@ -1700,6 +1843,21 @@ const closeNarratorBio = () => {
           <Text style={styles.completedBadge}>{activePathwayCardIndex + 1}/{totalCards}</Text>
         </View>
         {renderAnimatedProgressBar()}
+        {isPathwayCompletionCard && (
+          <View style={styles.pathwayCompletionPanel}>
+            <Text style={styles.completionIcon}>✓</Text>
+            <Text style={styles.lessonCompletionTitle}>Alhamdulillah!</Text>
+            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
+              You have completed the {pathway.title}.
+            </Text>
+            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
+              May Allah increase you in beneficial knowledge and steadfastness upon the Sunnah.
+            </Text>
+            <Pressable style={styles.lessonCompletionButton} onPress={() => setLearnMode('overview')}>
+              <Text style={styles.lessonCompletionButtonText}>Return to Home</Text>
+            </Pressable>
+          </View>
+        )}
         {!isQuizCard && lesson && !isLessonCompletionCard && (
           <>
             <Text style={styles.lessonTitle}>{lesson.title}</Text>
@@ -1726,8 +1884,8 @@ const closeNarratorBio = () => {
             </Pressable>
             <Text style={styles.flowHint}>
               {learnProgress.completedLessons?.[lesson.id]
-                ? 'Saved. This lesson can now appear in Today’s Review.'
-                : 'Marking complete saves your progress and adds this lesson to Daily Review.'}
+                ? 'Saved. This lesson can now appear in Daily Quiz.'
+                : 'Marking complete saves your progress and unlocks Daily Quiz questions.'}
             </Text>
           </View>
         )}
@@ -1766,7 +1924,8 @@ const closeNarratorBio = () => {
             )}
           </>
         )}
-        <View style={styles.flowControls}>
+        {!isPathwayCompletionCard && (
+          <View style={styles.flowControls}>
           <Pressable
             style={[styles.flowButton, activePathwayCardIndex === 0 && styles.flowButtonDisabled]}
             disabled={activePathwayCardIndex === 0}
@@ -1781,7 +1940,8 @@ const closeNarratorBio = () => {
           >
             <Text style={styles.flowButtonText}>Continue</Text>
           </Pressable>
-        </View>
+          </View>
+        )}
         <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode('overview')}>
           <Text style={styles.secondaryTextButtonText}>Back to pathways</Text>
         </Pressable>
@@ -1792,16 +1952,22 @@ const closeNarratorBio = () => {
   const renderNawawiFlow = () => {
     const selectedHadith = nawawiPreview.find(hadith => hadith.id === selectedNawawiHadithId) || nawawiPreview[0];
     const nawawiCards = getNawawiCards(selectedHadith?.id);
-    const totalCards = nawawiCards.length;
+    const safeProgress = sanitizeLearnProgress(learnProgress);
+    const isFinalNawawiHadith = selectedHadith?.id === nawawiPreview[nawawiPreview.length - 1]?.id;
+    const showArbainCompletionCard = isFinalNawawiHadith && isArbainPathwayComplete(safeProgress);
+    const totalCards = nawawiCards.length + (showArbainCompletionCard ? 1 : 0);
+    const isArbainCompletionCard = showArbainCompletionCard && activeNawawiCardIndex >= nawawiCards.length;
     const card = nawawiCards[activeNawawiCardIndex] || nawawiCards[0];
-    if (!card) return null;
-    const { hadith } = card;
+    if (!card && !isArbainCompletionCard) return null;
+    const { hadith } = card || {};
     const tracker = hadith ? learnProgress.memorisation?.[hadith.id] || {} : {};
     const questionChecks = hadith ? learnProgress.nawawiQuestionChecks?.[hadith.id] || {} : {};
-    const rawQuestionCheck = questionChecks[card.questionIndex];
+    const rawQuestionCheck = card ? questionChecks[card.questionIndex] : false;
     const questionReviewed = rawQuestionCheck || false;
     const progress = totalCards ? Math.min(100, ((activeNawawiCardIndex + 1) / totalCards) * 100) : 0;
-    const cardLabel = card.type === 'intro'
+    const cardLabel = isArbainCompletionCard
+      ? 'Complete'
+      : card.type === 'intro'
       ? 'Introduction'
       : card.type === 'hadith'
         ? 'Full Matn'
@@ -1826,7 +1992,21 @@ const closeNarratorBio = () => {
           <Text style={styles.completedBadge}>{activeNawawiCardIndex + 1}/{totalCards}</Text>
         </View>
         {renderAnimatedProgressBar()}
-        {card.type === 'intro' ? (
+        {isArbainCompletionCard ? (
+          <View style={styles.pathwayCompletionPanel}>
+            <Text style={styles.completionIcon}>✓</Text>
+            <Text style={styles.lessonCompletionTitle}>Alhamdulillah!</Text>
+            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
+              You have completed the Arbain Nawawi Pathway.
+            </Text>
+            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
+              May Allah increase you in beneficial knowledge and steadfastness upon the Sunnah.
+            </Text>
+            <Pressable style={styles.lessonCompletionButton} onPress={() => setLearnMode('overview')}>
+              <Text style={styles.lessonCompletionButtonText}>Return to Home</Text>
+            </Pressable>
+          </View>
+        ) : card.type === 'intro' ? (
           <>
             <Text style={styles.lessonTitle}>{card.card.title}</Text>
             <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{card.card.body}</Text>
@@ -1952,6 +2132,7 @@ const closeNarratorBio = () => {
             <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>This card is not available.</Text>
           </>
         )}
+        {!isArbainCompletionCard && (
         <View style={styles.flowControls}>
           <Pressable
             style={[styles.flowButton, activeNawawiCardIndex === 0 && styles.flowButtonDisabled]}
@@ -1968,6 +2149,7 @@ const closeNarratorBio = () => {
             <Text style={styles.flowButtonText}>Next</Text>
           </Pressable>
         </View>
+        )}
         <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode('nawawi')}>
           <Text style={styles.secondaryTextButtonText}>Back to Arbain</Text>
         </Pressable>
@@ -1976,41 +2158,83 @@ const closeNarratorBio = () => {
   };
 
   const renderReviewFlow = () => {
-    const reviewCards = activeReviewCards;
-    const reviewCard = reviewCards[activeReviewIndex];
+    const quizCards = activeReviewCards;
+    const quizCard = quizCards[activeReviewIndex];
 
-    if (reviewSessionSummary.reviewed > 0 && activeReviewIndex >= reviewCards.length) {
+    if (reviewSessionSummary.answered > 0 && activeReviewIndex >= quizCards.length) {
+      const totalQuestions = quizCards.length || reviewSessionSummary.answered || 3;
+      const score = totalQuestions
+        ? Math.round((reviewSessionSummary.correct / totalQuestions) * 100)
+        : 0;
+      const passedDailyQuiz = reviewSessionSummary.correct === totalQuestions;
+      const answerResults = reviewSessionSummary.answers || [];
       return (
         <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim, transform: [{ translateY: cardSlideAnim }] }]}>
-          <Text style={styles.lessonLevel}>Today's Review</Text>
-          <Text style={styles.lessonTitle}>Review Complete</Text>
-          <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>Your review progress has been saved.</Text>
+          <Text style={styles.lessonLevel}>Daily Quiz</Text>
+          <Text style={styles.lessonTitle}>{passedDailyQuiz ? 'Excellent!' : 'Daily Quiz Results'}</Text>
+          {passedDailyQuiz ? (
+            <>
+              <Text style={styles.completionIcon}>🎉</Text>
+              <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>You achieved 100%.</Text>
+              <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>Daily Quiz Completed.</Text>
+              <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
+                Keep reviewing your lessons and continue seeking beneficial knowledge.
+              </Text>
+            </>
+          ) : (
+            <>
+              <View style={styles.quizResultList}>
+                {answerResults.map((answer, index) => (
+                  <View key={`${answer.questionId}-${index}`} style={styles.quizResultRow}>
+                    <Text style={styles.quizResultText}>Question {index + 1}</Text>
+                    <Text style={answer.correct ? styles.quizResultCorrect : styles.quizResultWrong}>
+                      {answer.correct ? '✅ Correct' : '❌ Incorrect'}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+              <Text style={styles.quizScoreText}>Score: {reviewSessionSummary.correct}/{totalQuestions}</Text>
+              <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>You did not achieve 100%.</Text>
+              <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>Please review and try again.</Text>
+            </>
+          )}
           <View style={styles.reviewSummaryGrid}>
             <View style={styles.reviewSummaryItem}>
-              <Text style={styles.reviewSummaryNumber}>{reviewSessionSummary.reviewed}</Text>
-              <Text style={styles.reviewSummaryLabel}>Cards reviewed</Text>
+              <Text style={styles.reviewSummaryNumber}>{reviewSessionSummary.answered}</Text>
+              <Text style={styles.reviewSummaryLabel}>Questions answered</Text>
             </View>
             <View style={styles.reviewSummaryItem}>
-              <Text style={styles.reviewSummaryNumber}>{reviewSessionSummary.remembered}</Text>
-              <Text style={styles.reviewSummaryLabel}>Remembered</Text>
+              <Text style={styles.reviewSummaryNumber}>{reviewSessionSummary.correct}</Text>
+              <Text style={styles.reviewSummaryLabel}>Correct</Text>
             </View>
             <View style={styles.reviewSummaryItem}>
-              <Text style={styles.reviewSummaryNumber}>{reviewSessionSummary.reviewAgain}</Text>
-              <Text style={styles.reviewSummaryLabel}>Review again</Text>
+              <Text style={styles.reviewSummaryNumber}>{score}%</Text>
+              <Text style={styles.reviewSummaryLabel}>Score</Text>
             </View>
           </View>
-          <Pressable style={styles.learnActionButton} onPress={() => setLearnMode('overview')}>
-            <Text style={styles.learnActionText}>Back to Learn</Text>
-          </Pressable>
+          {passedDailyQuiz ? (
+            <Pressable style={styles.learnActionButton} onPress={() => setLearnMode('overview')}>
+              <Text style={styles.learnActionText}>Back to Learn</Text>
+            </Pressable>
+          ) : (
+            <>
+              <Pressable style={styles.learnActionButton} onPress={retryDailyQuiz}>
+                <Text style={styles.learnActionText}>Retry Quiz</Text>
+              </Pressable>
+              <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode('overview')}>
+                <Text style={styles.secondaryTextButtonText}>Back to Learn</Text>
+              </Pressable>
+            </>
+          )}
         </Animated.View>
       );
     }
 
-    if (!reviewCard) {
+    if (!quizCard) {
       return (
         <View style={styles.learnCard}>
-          <Text style={styles.lessonTitle}>Today’s Review Complete</Text>
-          <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>No review content available yet. Complete a lesson or quiz first.</Text>
+          <Text style={styles.lessonTitle}>Daily Quiz</Text>
+          <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>No quiz questions are available yet. Complete a lesson first, then come back for a short daily quiz.</Text>
           <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode('overview')}>
             <Text style={styles.secondaryTextButtonText}>Back to Learn</Text>
           </Pressable>
@@ -2021,23 +2245,54 @@ const closeNarratorBio = () => {
     return (
       <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim, transform: [{ translateY: cardSlideAnim }] }]}>
         <View style={styles.learnCardHeader}>
-          <Text style={styles.lessonLevel}>Today’s Review</Text>
-          <Text style={styles.completedBadge}>{activeReviewIndex + 1}/{reviewCards.length}</Text>
+          <Text style={styles.lessonLevel}>Daily Quiz</Text>
+          <Text style={styles.completedBadge}>{activeReviewIndex + 1}/{quizCards.length}</Text>
         </View>
         {renderAnimatedProgressBar()}
-        <Text style={styles.quizTitle}>{reviewCard.sourceLabel}</Text>
-        <Text style={styles.lessonTitle}>{reviewCard.title}</Text>
-        <Text style={[styles.quizQuestion, scaledTextStyle(17)]}>{reviewCard.prompt}</Text>
-        {!!reviewCard.answer && <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{reviewCard.answer}</Text>}
-        {!!reviewCard.selfCheckText && <Text style={[styles.reviewHintText, scaledTextStyle(14)]}>{reviewCard.selfCheckText}</Text>}
-        <View style={styles.reviewActionRow}>
-          <Pressable style={[styles.reviewActionButton, styles.reviewRememberButton]} onPress={() => handleReviewResponse(true)}>
-            <Text style={styles.reviewRememberText}>I remember this</Text>
-          </Pressable>
-          <Pressable style={[styles.reviewActionButton, styles.reviewAgainButton]} onPress={() => handleReviewResponse(false)}>
-            <Text style={styles.reviewAgainText}>Review again</Text>
-          </Pressable>
-        </View>
+        <Text style={styles.quizTitle}>{quizCard.level === 'arbain' ? 'Arbain Nawawi' : `${quizCard.level} pathway`}</Text>
+        <Text style={[styles.quizQuestion, scaledTextStyle(17)]}>{quizCard.question}</Text>
+        {(quizCard.questionType === 'multiple_choice' || quizCard.questionType === 'true_false') && (
+          <>
+            {getShuffledOptions(
+              quizCard.questionType === 'true_false' ? ['True', 'False'] : quizCard.options,
+              `${getTodayKey()}:${quizCard.id}`
+            ).map(option => (
+              <Pressable
+                key={option}
+                style={styles.quizOption}
+                onPress={() => handleDailyQuizAnswer(option)}
+              >
+                <Text style={[styles.quizOptionText, scaledTextStyle(15)]}>{option}</Text>
+              </Pressable>
+            ))}
+          </>
+        )}
+        {quizCard.questionType === 'fill_blank' && (
+          <>
+            <TextInput
+              style={[styles.dailyQuizInput, scaledTextStyle(16)]}
+              value={dailyQuizInput}
+              onChangeText={setDailyQuizInput}
+              placeholder="Type your answer"
+              placeholderTextColor="#8a9995"
+              autoCapitalize="none"
+              returnKeyType="done"
+              onFocus={() => {
+                setTimeout(() => {
+                  scrollRef.current?.scrollToEnd({ animated: true });
+                }, 120);
+              }}
+              onSubmitEditing={() => handleDailyQuizAnswer(dailyQuizInput)}
+            />
+            <Pressable
+              style={[styles.learnActionButton, !dailyQuizInput.trim() && styles.learnActionButtonDisabled]}
+              disabled={!dailyQuizInput.trim()}
+              onPress={() => handleDailyQuizAnswer(dailyQuizInput)}
+            >
+              <Text style={styles.learnActionText}>Submit Answer</Text>
+            </Pressable>
+          </>
+        )}
         <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode('overview')}>
           <Text style={styles.secondaryTextButtonText}>Back to Learn</Text>
         </Pressable>
@@ -2055,13 +2310,19 @@ const closeNarratorBio = () => {
     const currentPathway = LEARNING_PATHWAYS.find(item => item.id === safeProgress.currentPathwayId || item.id === selectedPathwayId) || LEARNING_PATHWAYS[0];
     const currentPathwayLessons = getPathwayLessons(currentPathway.id);
     const currentPathwayQuizzes = getPathwayQuizzes(currentPathway.id);
-    const safePathwayIndex = clampLearningIndex(safeProgress.currentPathwayCardIndex, currentPathwayLessons.length + currentPathwayQuizzes.length || 1);
-    const isResumeQuiz = safePathwayIndex >= currentPathwayLessons.length;
-    const currentLessonLabel = isResumeQuiz
-      ? `Continue ${currentPathway.title}: Quiz ${safePathwayIndex - currentPathwayLessons.length + 1} of ${currentPathwayQuizzes.length}`
-      : `${currentPathway.title}: Lesson ${safePathwayIndex + 1} of ${currentPathwayLessons.length}`;
-    const reviewCards = getReadyReviewCards(safeProgress);
-    const reviewStreakCount = getCurrentReviewStreakCount(safeProgress);
+    const currentPathwayLessonCardCount = currentPathwayLessons.length * 2;
+    const currentPathwayContentCardCount = getPathwayCardCount(currentPathway.id);
+    const safePathwayIndex = clampLearningIndex(safeProgress.currentPathwayCardIndex, getPathwayFlowCardCount(currentPathway.id) || 1);
+    const isResumePathwayComplete = safePathwayIndex >= currentPathwayContentCardCount;
+    const isResumeQuiz = !isResumePathwayComplete && safePathwayIndex >= currentPathwayLessonCardCount;
+    const resumeLessonIndex = Math.floor(safePathwayIndex / 2);
+    const currentLessonLabel = isResumePathwayComplete
+      ? `${currentPathway.title}: Completion card`
+      : isResumeQuiz
+      ? `Continue ${currentPathway.title}: Quiz ${safePathwayIndex - currentPathwayLessonCardCount + 1} of ${currentPathwayQuizzes.length}`
+      : `${currentPathway.title}: Lesson ${Math.min(resumeLessonIndex + 1, currentPathwayLessons.length)} of ${currentPathwayLessons.length}`;
+    const dailyQuizCards = selectDailyQuizQuestions(safeProgress);
+    const dailyQuizStreakCount = getDailyQuizStreakCount(safeProgress);
 
     if (learnMode === 'nawawi') {
       return renderNawawiPage();
@@ -2095,19 +2356,23 @@ const closeNarratorBio = () => {
         </Text>
         <View style={styles.dailyReviewCard}>
           <View style={styles.learnCardHeader}>
-            <Text style={styles.continueLearningLabel}>Today’s Review</Text>
-            <Text style={styles.completedBadge}>{reviewCards.length} cards ready</Text>
+            <Text style={styles.continueLearningLabel}>Daily Quiz</Text>
+            <Text style={styles.completedBadge}>{dailyQuizCards.length} questions</Text>
           </View>
           <Text style={styles.continueLearningText}>
-            {reviewCards.length ? 'Review one card to keep your learning fresh.' : 'No review content available yet. Complete a lesson or quiz first.'}
+            {dailyQuizCards.length
+              ? 'Answer 3 quick recall questions from lessons you have completed.'
+              : 'Complete a lesson first to unlock your Daily Quiz.'}
           </Text>
-          <Text style={styles.continueLearningMeta}>Daily review streak: {reviewStreakCount} day{reviewStreakCount === 1 ? '' : 's'}</Text>
+          <Text style={styles.continueLearningMeta}>
+            Daily quiz streak: {dailyQuizStreakCount} day{dailyQuizStreakCount === 1 ? '' : 's'} • Questions are based on lessons you completed.
+          </Text>
           <Pressable
-            style={[styles.reviewStartButton, !reviewCards.length && styles.learnActionButtonDisabled]}
-            disabled={!reviewCards.length}
+            style={[styles.reviewStartButton, !dailyQuizCards.length && styles.learnActionButtonDisabled]}
+            disabled={!dailyQuizCards.length}
             onPress={openReviewFlow}
           >
-            <Text style={styles.learnActionText}>{reviewCards.length ? 'Start Today’s Review' : 'Review Complete'}</Text>
+            <Text style={styles.learnActionText}>{dailyQuizCards.length ? 'Start Daily Quiz' : 'Quiz Locked'}</Text>
           </Pressable>
         </View>
       </View>
@@ -2167,7 +2432,7 @@ const closeNarratorBio = () => {
               <View style={styles.welcomeBulletList}>
                 <Text style={styles.welcomeBullet}>• Search hadith by keyword or reference</Text>
                 <Text style={styles.welcomeBullet}>• Learn foundational hadith sciences through guided cards</Text>
-                <Text style={styles.welcomeBullet}>• Build consistent learning habits with Daily Review</Text>
+                <Text style={styles.welcomeBullet}>• Build consistent learning habits with Daily Quiz</Text>
                 <Text style={styles.welcomeBullet}>• Memorise selected hadith from Arbain Nawawi</Text>
                 <Text style={styles.welcomeBullet}>• Become familiar with hadith structure and preservation</Text>
               </View>
@@ -2443,7 +2708,7 @@ const closeNarratorBio = () => {
         <Text style={styles.settingsGroupTitle}>Information</Text>
         <Text style={styles.settingsSectionTitle}>About Takhrij</Text>
         <Text style={[styles.modalText, scaledTextStyle(16)]}>
-          Takhrij helps Muslims search hadith, learn foundational hadith sciences, memorise selected narrations, and build consistent learning habits through guided cards, quizzes, Daily Review, and Arbain Nawawi memorisation.
+          Takhrij helps Muslims search hadith, learn foundational hadith sciences, memorise selected narrations, and build consistent learning habits through guided cards, quizzes, Daily Quiz, and Arbain Nawawi memorisation.
         </Text>
 
         <Text style={styles.settingsSectionTitle}>Educational Disclaimer</Text>
@@ -2594,9 +2859,14 @@ const closeNarratorBio = () => {
 
         <KeyboardAvoidingView
           style={styles.screenContainer}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <ScrollView
+            ref={scrollRef}
+            contentContainerStyle={styles.container}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+          >
             <View style={styles.sectionTabs}>
               <Pressable
                 style={[styles.sectionTab, activeSection === 'search' && styles.sectionTabActive]}
@@ -3392,6 +3662,22 @@ const styles = StyleSheet.create({
     padding: 18,
     marginTop: 4,
   },
+  pathwayCompletionPanel: {
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#d8e2dc',
+    backgroundColor: '#f7faf7',
+    borderRadius: 8,
+    padding: 20,
+    marginTop: 4,
+  },
+  completionIcon: {
+    color: '#176b5f',
+    fontSize: 34,
+    fontWeight: '900',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
   lessonCompletionEyebrow: {
     color: '#176b5f',
     fontSize: 12,
@@ -3488,6 +3774,43 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 3,
   },
+  quizResultList: {
+    borderWidth: 1,
+    borderColor: '#dde7e3',
+    backgroundColor: '#f7faf7',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  quizResultRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 6,
+    gap: 12,
+  },
+  quizResultText: {
+    color: '#132f35',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  quizResultCorrect: {
+    color: '#176b5f',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  quizResultWrong: {
+    color: '#8a3a32',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  quizScoreText: {
+    color: '#132f35',
+    fontSize: 16,
+    fontWeight: '900',
+    marginBottom: 10,
+  },
   lockedPathwayNotice: {
     color: '#607174',
     fontSize: 13,
@@ -3531,6 +3854,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#176b5f',
     borderRadius: 8,
     paddingVertical: 11,
+    paddingHorizontal: 10,
     alignItems: 'center',
   },
   flowButtonDisabled: {
@@ -3540,6 +3864,19 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '800',
+    textAlign: 'center',
+  },
+  flowButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+  },
+  flowButtonChevron: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '900',
+    lineHeight: 18,
   },
   flowHint: {
     color: '#607174',
@@ -3593,6 +3930,16 @@ const styles = StyleSheet.create({
     color: '#2f3d40',
     fontSize: 15,
     fontWeight: '700',
+  },
+  dailyQuizInput: {
+    borderWidth: 1,
+    borderColor: '#d7dfd5',
+    backgroundColor: '#f7faf7',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 13,
+    color: '#132f35',
+    marginBottom: 10,
   },
   quizFeedbackCorrect: {
     color: '#176b5f',
