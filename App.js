@@ -1903,6 +1903,13 @@ const closeNarratorBio = () => {
     </View>
   );
 
+  const renderCompletionIcon = () => (
+    <View style={styles.completionIconCircle} accessible accessibilityLabel="Completed">
+      <View style={styles.completionCheckShort} />
+      <View style={styles.completionCheckLong} />
+    </View>
+  );
+
   const renderNawawiPage = () => {
     const introCards = nawawiIntroCards.slice(0, 2);
     const safeProgress = sanitizeLearnProgress(learnProgress);
@@ -1930,7 +1937,7 @@ const closeNarratorBio = () => {
         {arbainComplete && (
           <View style={[styles.learnCard, styles.learnCardCompleted]}>
             <View style={styles.pathwayCompletionPanel}>
-              <Text style={styles.completionIcon}>✓</Text>
+              {renderCompletionIcon()}
               <Text style={styles.lessonCompletionTitle}>Alhamdulillah!</Text>
               <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
                 You have completed the Arbain Nawawi Pathway.
@@ -2016,7 +2023,7 @@ const closeNarratorBio = () => {
         {renderAnimatedProgressBar()}
         {isPathwayCompletionCard && (
           <View style={styles.pathwayCompletionPanel}>
-            <Text style={styles.completionIcon}>✓</Text>
+            {renderCompletionIcon()}
             <Text style={styles.lessonCompletionTitle}>Alhamdulillah!</Text>
             <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
               You have completed the {pathway.title}.
@@ -2176,7 +2183,7 @@ const closeNarratorBio = () => {
         {renderAnimatedProgressBar()}
         {isArbainCompletionCard ? (
           <View style={styles.pathwayCompletionPanel}>
-            <Text style={styles.completionIcon}>✓</Text>
+            {renderCompletionIcon()}
             <Text style={styles.lessonCompletionTitle}>Alhamdulillah!</Text>
             <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
               You have completed the Arbain Nawawi Pathway.
@@ -2201,7 +2208,7 @@ const closeNarratorBio = () => {
           </View>
         ) : isHadithCompletionCard ? (
           <View style={styles.pathwayCompletionPanel}>
-            <Text style={styles.completionIcon}>âœ“</Text>
+            {renderCompletionIcon()}
             <Text style={styles.lessonCompletionTitle}>Alhamdulillah!</Text>
             <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
               You have completed Hadith {selectedHadithNumber} of Arbain Nawawi.
@@ -3946,6 +3953,40 @@ const styles = StyleSheet.create({
     marginTop: 2,
     marginBottom: 10,
     textAlign: 'center',
+  },
+  completionIconCircle: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#176b5f',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    shadowColor: '#102a2e',
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  completionCheckShort: {
+    position: 'absolute',
+    width: 11,
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: '#fff',
+    left: 15,
+    top: 29,
+    transform: [{ rotate: '42deg' }],
+  },
+  completionCheckLong: {
+    position: 'absolute',
+    width: 24,
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: '#fff',
+    left: 22,
+    top: 25,
+    transform: [{ rotate: '-45deg' }],
   },
   completionIcon: {
     color: '#176b5f',
