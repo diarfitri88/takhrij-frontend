@@ -1727,15 +1727,10 @@ const closeNarratorBio = () => {
   ]);
 
   const premiumFeatures = [
-    'Full Arbain Nawawi memorisation tracking',
     'Bulugh al-Maram memorisation',
     'Riyadh al-Salihin memorisation',
     'Top 100 Hadith Narrator Biographies',
-    "Jarh wa Ta'dil learning pathway",
-    'Revision schedule',
-    'Narrator flashcards',
-    'Sahihayn memorisation pathway',
-    'Rijal learning system'
+    "Jarh wa Ta'dil learning pathway"
   ];
 
   const openPathway = (pathwayId, options = {}) => {
