@@ -25,6 +25,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
+import * as Notifications from 'expo-notifications';
 import { Share } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -36,6 +37,16 @@ const dailyQuizQuestions = require('./data/dailyQuizQuestions.json');
 const appConfig = require('./app.json');
 const nawawiIntroCards = arbainLearning.introCards || [];
 const nawawiPreview = arbainLearning.hadiths || [];
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
 
 const { width, height } = Dimensions.get('window');
 
@@ -53,6 +64,8 @@ const DAILY_FREE_SEARCH_LIMIT = 5;
 const SEARCH_LIMIT_STORAGE_KEY = 'takhrij.dailySearchCounter';
 const LEARN_PROGRESS_STORAGE_KEY = 'takhrij.learnProgress';
 const USER_PREFERENCES_STORAGE_KEY = 'takhrij.userPreferences';
+const DAILY_REVIEW_REMINDER_HOUR = 20;
+const DAILY_REVIEW_REMINDER_MINUTE = 0;
 const TEXT_SIZE_OPTIONS = [
   { key: 'compact', label: 'Compact', scale: 0.94 },
   { key: 'comfortable', label: 'Comfortable', scale: 1 },
@@ -61,6 +74,8 @@ const TEXT_SIZE_OPTIONS = [
 const DEFAULT_USER_PREFERENCES = {
   textSize: 'comfortable',
   arabicTextSize: 'comfortable',
+  dailyReviewReminderEnabled: false,
+  dailyReviewNotificationId: '',
 };
 const DEFAULT_LEARN_PROGRESS = {
   completedLessons: {},
@@ -119,6 +134,10 @@ const sanitizeUserPreferences = preferences => ({
   arabicTextSize: TEXT_SIZE_OPTIONS.some(option => option.key === preferences?.arabicTextSize)
     ? preferences.arabicTextSize
     : DEFAULT_USER_PREFERENCES.arabicTextSize,
+  dailyReviewReminderEnabled: preferences?.dailyReviewReminderEnabled === true,
+  dailyReviewNotificationId: typeof preferences?.dailyReviewNotificationId === 'string'
+    ? preferences.dailyReviewNotificationId
+    : '',
 });
 const NAWAWI_SELECTION_TITLES = {
   'nawawi-1': 'Hadith 1: Actions Are by Intentions',
@@ -1138,6 +1157,96 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
     }
   };
 
+  const saveUserPreferences = async nextPreferences => {
+    const safePreferences = sanitizeUserPreferences(nextPreferences);
+    setUserPreferences(safePreferences);
+    try {
+      await AsyncStorage.setItem(USER_PREFERENCES_STORAGE_KEY, JSON.stringify(safePreferences));
+    } catch {
+      // Preferences are local polish only; storage errors should not block the app.
+    }
+  };
+
+  const cancelDailyReviewReminder = async notificationId = userPreferences.dailyReviewNotificationId) => {
+    if (!notificationId) return;
+    try {
+      await Notifications.cancelScheduledNotificationAsync(notificationId);
+    } catch {
+      // If the notification no longer exists, the preference can still be updated safely.
+    }
+  };
+
+  const scheduleDailyReviewReminder = async () => {
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('daily-review', {
+        name: 'Daily Review',
+        importance: Notifications.AndroidImportance.DEFAULT,
+      });
+    }
+
+    const existingPermission = await Notifications.getPermissionsAsync();
+    let finalStatus = existingPermission.status;
+    if (finalStatus !== 'granted') {
+      const requestedPermission = await Notifications.requestPermissionsAsync();
+      finalStatus = requestedPermission.status;
+    }
+
+    if (finalStatus !== 'granted') {
+      await cancelDailyReviewReminder();
+      await saveUserPreferences({
+        ...userPreferences,
+        dailyReviewReminderEnabled: false,
+        dailyReviewNotificationId: '',
+      });
+      Alert.alert(
+        'Notifications disabled',
+        'Daily Review reminders are off because notification permission was not granted.'
+      );
+      return;
+    }
+
+    await cancelDailyReviewReminder();
+    const notificationId = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Time for your Daily Review',
+        body: "Revise your lessons and complete today's quiz.",
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        channelId: Platform.OS === 'android' ? 'daily-review' : undefined,
+        hour: DAILY_REVIEW_REMINDER_HOUR,
+        minute: DAILY_REVIEW_REMINDER_MINUTE,
+      },
+    });
+    await saveUserPreferences({
+      ...userPreferences,
+      dailyReviewReminderEnabled: true,
+      dailyReviewNotificationId: notificationId,
+    });
+  };
+
+  const toggleDailyReviewReminder = async () => {
+    if (userPreferences.dailyReviewReminderEnabled) {
+      await cancelDailyReviewReminder();
+      await saveUserPreferences({
+        ...userPreferences,
+        dailyReviewReminderEnabled: false,
+        dailyReviewNotificationId: '',
+      });
+      return;
+    }
+    try {
+      await scheduleDailyReviewReminder();
+    } catch {
+      await saveUserPreferences({
+        ...userPreferences,
+        dailyReviewReminderEnabled: false,
+        dailyReviewNotificationId: '',
+      });
+      Alert.alert('Reminder unavailable', 'Daily Review reminders could not be scheduled on this device.');
+    }
+  };
+
   const markLessonComplete = lessonId => {
     updateLearnProgress(previousProgress => ({
       ...previousProgress,
@@ -1543,14 +1652,16 @@ const closeNarratorBio = () => {
     'Rijal learning system',
   ];
 
-  const openPathway = pathwayId => {
+  const openPathway = (pathwayId, options = {}) => {
     const savedProgress = sanitizeLearnProgress(learnProgressRef.current || DEFAULT_LEARN_PROGRESS);
     const lockMessage = getPathwayLockMessage(pathwayId, savedProgress);
     if (lockMessage) return;
     const pathwayCardCount = getPathwayFlowCardCount(pathwayId);
     setSelectedPathwayId(pathwayId);
     setActivePathwayCardIndex(
-      savedProgress.currentPathwayId === pathwayId
+      options.revise
+        ? 0
+        : savedProgress.currentPathwayId === pathwayId
         ? clampLearningIndex(savedProgress.currentPathwayCardIndex, pathwayCardCount || 1)
         : 0
     );
@@ -1675,16 +1786,23 @@ const closeNarratorBio = () => {
         const hasStarted = completedCount > 0 || pathwayQuizzes.some(quiz => safeProgress.quizAnswers?.[quiz.id]);
         const lockMessage = getPathwayLockMessage(pathway.id, safeProgress);
         const isLocked = !!lockMessage;
+        const isCompleted = isPathwayComplete(pathway.id, safeProgress);
 
         return (
           <Pressable
-            style={[styles.learnCard, isLocked && styles.learnCardLocked]}
-            onPress={() => openPathway(pathway.id)}
+            style={[
+              styles.learnCard,
+              isCompleted && styles.learnCardCompleted,
+              isLocked && styles.learnCardLocked,
+            ]}
+            onPress={() => openPathway(pathway.id, { revise: isCompleted })}
             disabled={isLocked}
           >
             <View style={styles.learnCardHeader}>
               <Text style={styles.lessonLevel}>{pathway.range}</Text>
-              <Text style={styles.completedBadge}>{activePathwayPreviewIndex + 1}/{LEARNING_PATHWAYS.length}</Text>
+              <Text style={isCompleted ? styles.completedStatusBadge : styles.completedBadge}>
+                {isCompleted ? '✓ Completed' : `${activePathwayPreviewIndex + 1}/${LEARNING_PATHWAYS.length}`}
+              </Text>
             </View>
             <Text style={styles.lessonTitle}>{pathway.title}</Text>
             <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{pathway.description}</Text>
@@ -1693,9 +1811,13 @@ const closeNarratorBio = () => {
             </Text>
             <Text style={styles.flowHint}>Study one card at a time, then try the pathway quiz.</Text>
             {isLocked && <Text style={styles.lockedPathwayNotice}>{lockMessage}</Text>}
-            <View style={[styles.learnActionButton, isLocked && styles.learnActionButtonDisabled]}>
+            <View style={[
+              styles.learnActionButton,
+              isCompleted && styles.learnActionButtonCompleted,
+              isLocked && styles.learnActionButtonDisabled,
+            ]}>
               <Text style={styles.learnActionText}>
-                {isLocked ? 'Locked' : hasStarted ? 'Continue Pathway' : 'Start Pathway'}
+                {isLocked ? 'Locked' : isCompleted ? 'Revise Again' : hasStarted ? 'Continue Pathway' : 'Start Pathway'}
               </Text>
             </View>
           </Pressable>
@@ -1728,24 +1850,30 @@ const closeNarratorBio = () => {
     </View>
   );
 
-  const renderNawawiOverview = () => (
+  const renderNawawiOverview = () => {
+    const safeProgress = sanitizeLearnProgress(learnProgress);
+    const arbainComplete = isArbainPathwayComplete(safeProgress);
+    return (
     <View>
-      <Pressable style={styles.learnCard} onPress={openNawawiItem}>
+      <Pressable style={[styles.learnCard, arbainComplete && styles.learnCardCompleted]} onPress={openNawawiItem}>
         <View style={styles.learnCardHeader}>
           <Text style={styles.lessonLevel}>Guided memorisation</Text>
-          <Text style={styles.completedBadge}>5 hadith</Text>
+          <Text style={arbainComplete ? styles.completedStatusBadge : styles.completedBadge}>
+            {arbainComplete ? '✓ Completed' : '5 hadith'}
+          </Text>
         </View>
         <Text style={styles.lessonTitle}>Arbain Nawawi Learning Path</Text>
         <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>Study and memorise the first 5 hadith through short guided cards.</Text>
         <Text style={[styles.lessonPoint, scaledTextStyle(15)]}>Includes introduction cards, full matn, key vocabulary, lessons, memorisation chunks, active recall, and review checkpoints.</Text>
-        <View style={styles.learnActionButton}>
+        <View style={[styles.learnActionButton, arbainComplete && styles.learnActionButtonCompleted]}>
           <Text style={styles.learnActionText}>
-            {learnProgress.currentNawawiCardIndex ? 'Continue Arbain Nawawi' : 'Explore Arbain Nawawi'}
+            {arbainComplete ? 'Revise Again' : learnProgress.currentNawawiCardIndex ? 'Continue Arbain Nawawi' : 'Explore Arbain Nawawi'}
           </Text>
         </View>
       </Pressable>
     </View>
-  );
+    );
+  };
 
   const renderAnimatedProgressBar = () => (
     <View style={styles.flowProgressTrack}>
@@ -1765,6 +1893,8 @@ const closeNarratorBio = () => {
 
   const renderNawawiPage = () => {
     const introCards = nawawiIntroCards.slice(0, 2);
+    const safeProgress = sanitizeLearnProgress(learnProgress);
+    const arbainComplete = isArbainPathwayComplete(safeProgress);
     return (
       <>
         <View style={styles.learnHeroCard}>
@@ -1785,25 +1915,54 @@ const closeNarratorBio = () => {
           </View>
         ))}
 
+        {arbainComplete && (
+          <View style={[styles.learnCard, styles.learnCardCompleted]}>
+            <View style={styles.pathwayCompletionPanel}>
+              <Text style={styles.completionIcon}>✓</Text>
+              <Text style={styles.lessonCompletionTitle}>Alhamdulillah!</Text>
+              <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
+                You have completed the Arbain Nawawi Pathway.
+              </Text>
+              <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
+                May Allah increase you in beneficial knowledge and steadfastness upon the Sunnah.
+              </Text>
+              <View style={styles.completionActionRow}>
+                <Pressable style={styles.lessonCompletionButton} onPress={() => setLearnMode('overview')}>
+                  <Text style={styles.lessonCompletionButtonText}>Return to Home</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.lessonCompletionButton, styles.learnActionButtonCompleted]}
+                  onPress={() => openNawawiHadith(nawawiPreview[0]?.id)}
+                >
+                  <Text style={styles.lessonCompletionButtonText}>Revise Again</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        )}
+
         <Text style={styles.learnSectionTitle}>Choose a Hadith</Text>
         {nawawiPreview.map((hadith, index) => {
           const tracker = learnProgress.memorisation?.[hadith.id] || {};
           const completedStages = (hadith.stages || []).filter(stage => tracker[stage]).length;
+          const hadithComplete = isNawawiHadithComplete(hadith, safeProgress);
           return (
             <Pressable
               key={hadith.id}
-              style={styles.learnCard}
+              style={[styles.learnCard, hadithComplete && styles.learnCardCompleted]}
               onPress={() => openNawawiHadith(hadith.id)}
             >
               <View style={styles.learnCardHeader}>
                 <Text style={styles.lessonLevel}>Hadith {index + 1}</Text>
-                <Text style={styles.completedBadge}>{completedStages}/{hadith.stages.length} checkpoints</Text>
+                <Text style={hadithComplete ? styles.completedStatusBadge : styles.completedBadge}>
+                  {hadithComplete ? '✓ Completed' : `${completedStages}/${hadith.stages.length} checkpoints`}
+                </Text>
               </View>
               <Text style={styles.lessonTitle}>{NAWAWI_SELECTION_TITLES[hadith.id] || hadith.title}</Text>
               <Text style={styles.nawawiReference}>{hadith.reference}</Text>
               <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{hadith.english}</Text>
-              <View style={styles.learnActionButton}>
-                <Text style={styles.learnActionText}>{completedStages ? 'Continue Hadith' : 'Start Hadith'}</Text>
+              <View style={[styles.learnActionButton, hadithComplete && styles.learnActionButtonCompleted]}>
+                <Text style={styles.learnActionText}>{hadithComplete ? 'Revise Again' : completedStages ? 'Continue Hadith' : 'Start Hadith'}</Text>
               </View>
             </Pressable>
           );
@@ -2002,9 +2161,20 @@ const closeNarratorBio = () => {
             <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
               May Allah increase you in beneficial knowledge and steadfastness upon the Sunnah.
             </Text>
-            <Pressable style={styles.lessonCompletionButton} onPress={() => setLearnMode('overview')}>
-              <Text style={styles.lessonCompletionButtonText}>Return to Home</Text>
-            </Pressable>
+            <View style={styles.completionActionRow}>
+              <Pressable style={styles.lessonCompletionButton} onPress={() => setLearnMode('overview')}>
+                <Text style={styles.lessonCompletionButtonText}>Return to Home</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.lessonCompletionButton, styles.learnActionButtonCompleted]}
+                onPress={() => {
+                  setActiveNawawiCardIndex(0);
+                  setLearnMode('nawawiHadith');
+                }}
+              >
+                <Text style={styles.lessonCompletionButtonText}>Revise Again</Text>
+              </Pressable>
+            </View>
           </View>
         ) : card.type === 'intro' ? (
           <>
@@ -2704,6 +2874,26 @@ const closeNarratorBio = () => {
             </Pressable>
           ))}
         </View>
+
+        <Text style={styles.settingsSectionTitle}>Daily Review Reminder</Text>
+        <Pressable
+          style={styles.settingsToggleRow}
+          onPress={toggleDailyReviewReminder}
+        >
+          <View style={styles.settingsToggleCopy}>
+            <Text style={styles.settingsToggleTitle}>Daily Review Reminder</Text>
+            <Text style={styles.settingsToggleDescription}>8:00 PM local reminder for revision and Daily Quiz.</Text>
+          </View>
+          <View style={[
+            styles.settingsToggle,
+            userPreferences.dailyReviewReminderEnabled && styles.settingsToggleActive,
+          ]}>
+            <View style={[
+              styles.settingsToggleKnob,
+              userPreferences.dailyReviewReminderEnabled && styles.settingsToggleKnobActive,
+            ]} />
+          </View>
+        </Pressable>
 
         <Text style={styles.settingsGroupTitle}>Information</Text>
         <Text style={styles.settingsSectionTitle}>About Takhrij</Text>
@@ -3516,6 +3706,10 @@ const styles = StyleSheet.create({
     borderColor: '#d6ded4',
     opacity: 0.72,
   },
+  learnCardCompleted: {
+    backgroundColor: '#f4fbf6',
+    borderColor: '#8ac7a4',
+  },
   flowCard: {
     padding: 18,
     marginBottom: 16,
@@ -3552,6 +3746,15 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     fontSize: 12,
     fontWeight: '800',
+  },
+  completedStatusBadge: {
+    color: '#0f5f47',
+    backgroundColor: '#dff3e6',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    fontSize: 12,
+    fontWeight: '900',
   },
   lessonTitle: {
     color: '#132f35',
@@ -3647,6 +3850,9 @@ const styles = StyleSheet.create({
   learnActionButtonSecondary: {
     backgroundColor: '#8aa5a0',
   },
+  learnActionButtonCompleted: {
+    backgroundColor: '#0f5f47',
+  },
   learnActionButtonDisabled: {
     backgroundColor: '#aebdb8',
   },
@@ -3669,6 +3875,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#f7faf7',
     borderRadius: 8,
     padding: 20,
+    marginTop: 4,
+  },
+  completionActionRow: {
+    width: '100%',
+    gap: 10,
     marginTop: 4,
   },
   completionIcon: {
@@ -4107,6 +4318,59 @@ const styles = StyleSheet.create({
   },
   preferenceOptionTextActive: {
     color: '#176b5f',
+  },
+  settingsToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#d7dfd5',
+    backgroundColor: '#f7faf7',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    marginBottom: 10,
+  },
+  settingsToggleCopy: {
+    flex: 1,
+  },
+  settingsToggleTitle: {
+    color: '#132f35',
+    fontSize: 14,
+    fontWeight: '900',
+    marginBottom: 3,
+  },
+  settingsToggleDescription: {
+    color: '#607174',
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '700',
+  },
+  settingsToggle: {
+    width: 50,
+    height: 30,
+    borderRadius: 999,
+    backgroundColor: '#c8d3ce',
+    padding: 3,
+    justifyContent: 'center',
+  },
+  settingsToggleActive: {
+    backgroundColor: '#176b5f',
+  },
+  settingsToggleKnob: {
+    width: 24,
+    height: 24,
+    borderRadius: 999,
+    backgroundColor: '#fff',
+    shadowColor: '#102a2e',
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  settingsToggleKnobActive: {
+    alignSelf: 'flex-end',
   },
   settingsSupportButton: {
     alignSelf: 'flex-start',
