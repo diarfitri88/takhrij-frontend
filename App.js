@@ -2236,7 +2236,9 @@ const closeNarratorBio = () => {
               {!unlocked && (
                 <View style={styles.lockedLessonNoticeRow}>
                   <Ionicons name="lock-closed" size={15} color="#607174" style={styles.lockedLessonIcon} />
-                  <Text style={styles.lockedPathwayNotice}>Complete the previous lesson to unlock</Text>
+                  <Text style={styles.lockedLessonNoticeText}>
+                    Complete the previous lesson to unlock
+                  </Text>
                 </View>
               )}
               <View style={[
@@ -4536,14 +4538,21 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   lockedLessonNoticeRow: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
     marginTop: 8,
     width: '100%',
   },
   lockedLessonIcon: {
-    marginRight: 6,
-    marginTop: 8,
+    marginBottom: 6,
+  },
+  lockedLessonNoticeText: {
+    color: '#607174',
+    fontSize: 13,
+    fontWeight: '800',
+    lineHeight: 20,
+    width: '100%',
+    flexShrink: 1,
+    flexWrap: 'wrap',
   },
   secondaryTextButton: {
     alignSelf: 'center',
