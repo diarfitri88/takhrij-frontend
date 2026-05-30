@@ -523,6 +523,10 @@ const isArbainPathwayComplete = progress => (
   nawawiPreview.length > 0 && nawawiPreview.every(hadith => isNawawiHadithComplete(hadith, progress))
 );
 
+const getCompletedArbainCount = progress => (
+  nawawiPreview.filter(hadith => isNawawiHadithComplete(hadith, progress)).length
+);
+
 const getCompletedLearningIds = progress => {
   const completedIds = new Set();
   lessons.forEach(lesson => {
@@ -1167,7 +1171,9 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
     }
   };
 
-  const cancelDailyReviewReminder = async notificationId = userPreferences.dailyReviewNotificationId) => {
+  const cancelDailyReviewReminder = async (
+    notificationId = userPreferences.dailyReviewNotificationId
+  ) => {
     if (!notificationId) return;
     try {
       await Notifications.cancelScheduledNotificationAsync(notificationId);
@@ -1891,6 +1897,12 @@ const closeNarratorBio = () => {
     </View>
   );
 
+  const renderStaticProgressBar = percentage => (
+    <View style={styles.flowProgressTrack}>
+      <View style={[styles.flowProgressFill, { width: `${Math.min(Math.max(percentage || 0, 0), 100)}%` }]} />
+    </View>
+  );
+
   const renderNawawiPage = () => {
     const introCards = nawawiIntroCards.slice(0, 2);
     const safeProgress = sanitizeLearnProgress(learnProgress);
@@ -2112,12 +2124,21 @@ const closeNarratorBio = () => {
     const selectedHadith = nawawiPreview.find(hadith => hadith.id === selectedNawawiHadithId) || nawawiPreview[0];
     const nawawiCards = getNawawiCards(selectedHadith?.id);
     const safeProgress = sanitizeLearnProgress(learnProgress);
+    const selectedHadithIndex = Math.max(0, nawawiPreview.findIndex(hadith => hadith.id === selectedHadith?.id));
+    const selectedHadithNumber = selectedHadithIndex + 1;
+    const selectedHadithComplete = selectedHadith ? isNawawiHadithComplete(selectedHadith, safeProgress) : false;
+    const completedArbainCount = getCompletedArbainCount(safeProgress);
+    const nextNawawiHadith = nawawiPreview[selectedHadithIndex + 1];
     const isFinalNawawiHadith = selectedHadith?.id === nawawiPreview[nawawiPreview.length - 1]?.id;
     const showArbainCompletionCard = isFinalNawawiHadith && isArbainPathwayComplete(safeProgress);
-    const totalCards = nawawiCards.length + (showArbainCompletionCard ? 1 : 0);
-    const isArbainCompletionCard = showArbainCompletionCard && activeNawawiCardIndex >= nawawiCards.length;
+    const showHadithCompletionCard = selectedHadithComplete;
+    const hadithCompletionCardIndex = nawawiCards.length;
+    const fullCompletionCardIndex = hadithCompletionCardIndex + (showHadithCompletionCard ? 1 : 0);
+    const totalCards = nawawiCards.length + (showHadithCompletionCard ? 1 : 0) + (showArbainCompletionCard ? 1 : 0);
+    const isHadithCompletionCard = showHadithCompletionCard && activeNawawiCardIndex === hadithCompletionCardIndex;
+    const isArbainCompletionCard = showArbainCompletionCard && activeNawawiCardIndex >= fullCompletionCardIndex;
     const card = nawawiCards[activeNawawiCardIndex] || nawawiCards[0];
-    if (!card && !isArbainCompletionCard) return null;
+    if (!card && !isHadithCompletionCard && !isArbainCompletionCard) return null;
     const { hadith } = card || {};
     const tracker = hadith ? learnProgress.memorisation?.[hadith.id] || {} : {};
     const questionChecks = hadith ? learnProgress.nawawiQuestionChecks?.[hadith.id] || {} : {};
@@ -2126,6 +2147,8 @@ const closeNarratorBio = () => {
     const progress = totalCards ? Math.min(100, ((activeNawawiCardIndex + 1) / totalCards) * 100) : 0;
     const cardLabel = isArbainCompletionCard
       ? 'Complete'
+      : isHadithCompletionCard
+        ? 'Hadith Complete'
       : card.type === 'intro'
       ? 'Introduction'
       : card.type === 'hadith'
@@ -2174,6 +2197,40 @@ const closeNarratorBio = () => {
               >
                 <Text style={styles.lessonCompletionButtonText}>Revise Again</Text>
               </Pressable>
+            </View>
+          </View>
+        ) : isHadithCompletionCard ? (
+          <View style={styles.pathwayCompletionPanel}>
+            <Text style={styles.completionIcon}>âœ“</Text>
+            <Text style={styles.lessonCompletionTitle}>Alhamdulillah!</Text>
+            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
+              You have completed Hadith {selectedHadithNumber} of Arbain Nawawi.
+            </Text>
+            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
+              May Allah increase you in beneficial knowledge and grant you success in acting upon it.
+            </Text>
+            <Text style={styles.completionProgressText}>
+              Progress: {completedArbainCount} / 40 Hadith Completed
+            </Text>
+            {renderStaticProgressBar((completedArbainCount / 40) * 100)}
+            <View style={styles.completionActionRow}>
+              <Pressable style={styles.lessonCompletionButton} onPress={() => setLearnMode('nawawi')}>
+                <Text style={styles.lessonCompletionButtonText}>Continue to Arbain</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.lessonCompletionButton, styles.learnActionButtonCompleted]}
+                onPress={() => setActiveNawawiCardIndex(0)}
+              >
+                <Text style={styles.lessonCompletionButtonText}>Revise Again</Text>
+              </Pressable>
+              {nextNawawiHadith && (
+                <Pressable
+                  style={styles.lessonCompletionButton}
+                  onPress={() => openNawawiHadith(nextNawawiHadith.id)}
+                >
+                  <Text style={styles.lessonCompletionButtonText}>Next Hadith</Text>
+                </Pressable>
+              )}
             </View>
           </View>
         ) : card.type === 'intro' ? (
@@ -2302,7 +2359,7 @@ const closeNarratorBio = () => {
             <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>This card is not available.</Text>
           </>
         )}
-        {!isArbainCompletionCard && (
+        {!isArbainCompletionCard && !isHadithCompletionCard && (
         <View style={styles.flowControls}>
           <Pressable
             style={[styles.flowButton, activeNawawiCardIndex === 0 && styles.flowButtonDisabled]}
@@ -3881,6 +3938,14 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 10,
     marginTop: 4,
+  },
+  completionProgressText: {
+    color: '#176b5f',
+    fontSize: 14,
+    fontWeight: '900',
+    marginTop: 2,
+    marginBottom: 10,
+    textAlign: 'center',
   },
   completionIcon: {
     color: '#176b5f',
