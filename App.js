@@ -35,9 +35,12 @@ const lessons = require('./data/lessons.json');
 const quizzes = require('./data/quizzes.json');
 const arbainLearning = require('./data/arbainLearning.json');
 const dailyQuizQuestions = require('./data/dailyQuizQuestions.json');
+const bayquniyyahLearning = require('./data/bayquniyyahLearning.json');
 const appConfig = require('./app.json');
 const nawawiIntroCards = arbainLearning.introCards || [];
 const nawawiPreview = arbainLearning.hadiths || [];
+const bayquniyyahIntroCards = bayquniyyahLearning.introCards || [];
+const bayquniyyahLessons = bayquniyyahLearning.lessons || [];
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -83,6 +86,10 @@ const DEFAULT_LEARN_PROGRESS = {
   quizAnswers: {},
   memorisation: {},
   nawawiQuestionChecks: {},
+  bayquniyyahCompletedLessons: {},
+  bayquniyyahQuizAnswers: {},
+  currentBayquniyyahLessonId: '',
+  currentBayquniyyahCardIndex: 0,
   reviewSchedule: {},
   reviewStreak: { count: 0, lastReviewDate: '' },
   dailyQuizHistory: {
@@ -127,6 +134,7 @@ const LEARNING_PATHWAYS = [
 
 const validLessonIds = new Set(lessons.map(lesson => lesson.id));
 const validPathwayIds = new Set(LEARNING_PATHWAYS.map(pathway => pathway.id));
+const validBayquniyyahIds = new Set(bayquniyyahLessons.map(lesson => lesson.id));
 const getTextScale = key => TEXT_SIZE_OPTIONS.find(option => option.key === key)?.scale || 1;
 const sanitizeUserPreferences = preferences => ({
   textSize: TEXT_SIZE_OPTIONS.some(option => option.key === preferences?.textSize)
@@ -278,6 +286,28 @@ const sanitizeLearnProgress = progress => {
     });
   });
 
+  const bayquniyyahCompletedLessons = {};
+  Object.entries(source.bayquniyyahCompletedLessons || {}).forEach(([lessonId, completed]) => {
+    if (validBayquniyyahIds.has(lessonId) && completed) {
+      bayquniyyahCompletedLessons[lessonId] = true;
+    }
+  });
+
+  const bayquniyyahQuizAnswers = {};
+  Object.entries(source.bayquniyyahQuizAnswers || {}).forEach(([lessonId, answer]) => {
+    const lesson = bayquniyyahLessons.find(item => item.id === lessonId);
+    if (!lesson || !answer || typeof answer !== 'object') return;
+    const selectedOption = typeof answer.selectedOption === 'string' ? answer.selectedOption : '';
+    const correctOption = lesson.quiz?.options?.[lesson.quiz.answerIndex] || '';
+    if (selectedOption && correctOption) {
+      bayquniyyahQuizAnswers[lessonId] = {
+        selectedOption,
+        correctOption,
+        correct: selectedOption === correctOption,
+      };
+    }
+  });
+
   const reviewSchedule = {};
   Object.entries(source.reviewSchedule || {}).forEach(([cardId, review]) => {
     if (!review || typeof review !== 'object') return;
@@ -339,12 +369,18 @@ const sanitizeLearnProgress = progress => {
     quizAnswers,
     memorisation,
     nawawiQuestionChecks,
+    bayquniyyahCompletedLessons,
+    bayquniyyahQuizAnswers,
     reviewSchedule,
     reviewStreak,
     dailyQuizHistory,
     currentPathwayId,
     currentPathwayCardIndex: clampLearningIndex(source.currentPathwayCardIndex, pathwayCardCount || 1),
     currentNawawiCardIndex: clampLearningIndex(source.currentNawawiCardIndex, getNawawiCards().length || 1),
+    currentBayquniyyahLessonId: validBayquniyyahIds.has(source.currentBayquniyyahLessonId)
+      ? source.currentBayquniyyahLessonId
+      : bayquniyyahLessons[0]?.id || '',
+    currentBayquniyyahCardIndex: clampLearningIndex(source.currentBayquniyyahCardIndex, 5),
   };
 };
 
@@ -527,6 +563,23 @@ const isArbainPathwayComplete = progress => (
 const getCompletedArbainCount = progress => (
   nawawiPreview.filter(hadith => isNawawiHadithComplete(hadith, progress)).length
 );
+
+const getCompletedBayquniyyahCount = progress => (
+  bayquniyyahLessons.filter(lesson => !!progress.bayquniyyahCompletedLessons?.[lesson.id]).length
+);
+
+const isBayquniyyahComplete = progress => (
+  bayquniyyahLessons.length > 0 && bayquniyyahLessons.every(lesson => !!progress.bayquniyyahCompletedLessons?.[lesson.id])
+);
+
+const getBayquniyyahLessonIndex = lessonId => bayquniyyahLessons.findIndex(lesson => lesson.id === lessonId);
+
+const isBayquniyyahLessonUnlocked = (lessonId, progress) => {
+  const lessonIndex = getBayquniyyahLessonIndex(lessonId);
+  if (lessonIndex <= 0) return lessonIndex === 0;
+  const previousLesson = bayquniyyahLessons[lessonIndex - 1];
+  return !!progress.bayquniyyahCompletedLessons?.[previousLesson?.id];
+};
 
 const getCompletedLearningIds = progress => {
   const completedIds = new Set();
@@ -951,6 +1004,8 @@ export default function App() {
   const [activePathwayCardIndex, setActivePathwayCardIndex] = useState(0);
   const [selectedNawawiHadithId, setSelectedNawawiHadithId] = useState(nawawiPreview[0]?.id || '');
   const [activeNawawiCardIndex, setActiveNawawiCardIndex] = useState(0);
+  const [selectedBayquniyyahLessonId, setSelectedBayquniyyahLessonId] = useState(bayquniyyahLessons[0]?.id || '');
+  const [activeBayquniyyahCardIndex, setActiveBayquniyyahCardIndex] = useState(0);
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
   const [activeReviewCards, setActiveReviewCards] = useState([]);
   const [reviewSessionSummary, setReviewSessionSummary] = useState(DEFAULT_DAILY_QUIZ_SESSION);
@@ -1040,7 +1095,7 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
         useNativeDriver: true,
       }),
     ]).start();
-  }, [learnMode, activePathwayCardIndex, selectedNawawiHadithId, activeNawawiCardIndex, activeReviewIndex, cardFadeAnim, cardSlideAnim]);
+  }, [learnMode, activePathwayCardIndex, selectedNawawiHadithId, activeNawawiCardIndex, activeBayquniyyahCardIndex, activeReviewIndex, cardFadeAnim, cardSlideAnim]);
 
   const animateProgressTo = percentage => {
     Animated.timing(progressAnim, {
@@ -1073,10 +1128,12 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
     } else if (learnMode === 'review') {
       const totalCards = activeReviewCards.length;
       animateProgressTo(totalCards ? ((activeReviewIndex + 1) / totalCards) * 100 : 0);
+    } else if (learnMode === 'bayquniyyahLesson') {
+      animateProgressTo(((activeBayquniyyahCardIndex + 1) / 5) * 100);
     } else {
       progressAnim.setValue(0);
     }
-  }, [learnMode, selectedPathwayId, activePathwayCardIndex, selectedNawawiHadithId, activeNawawiCardIndex, activeReviewIndex, activeReviewCards.length, progressAnim]);
+  }, [learnMode, selectedPathwayId, activePathwayCardIndex, selectedNawawiHadithId, activeNawawiCardIndex, activeBayquniyyahCardIndex, activeReviewIndex, activeReviewCards.length, progressAnim]);
 
   useEffect(() => {
     const loadLocalProgress = async () => {
@@ -1107,6 +1164,8 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
           const pathwayCardCount = getPathwayFlowCardCount(safeProgress.currentPathwayId);
           setActivePathwayCardIndex(clampLearningIndex(safeProgress.currentPathwayCardIndex, pathwayCardCount || 1));
           setActiveNawawiCardIndex(clampLearningIndex(safeProgress.currentNawawiCardIndex, getNawawiCards().length || 1));
+          setSelectedBayquniyyahLessonId(safeProgress.currentBayquniyyahLessonId || bayquniyyahLessons[0]?.id || '');
+          setActiveBayquniyyahCardIndex(clampLearningIndex(safeProgress.currentBayquniyyahCardIndex, 5));
         } catch {
           learnProgressRef.current = DEFAULT_LEARN_PROGRESS;
           setLearnProgress(DEFAULT_LEARN_PROGRESS);
@@ -1359,6 +1418,8 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
             setActivePathwayCardIndex(0);
             setSelectedNawawiHadithId(nawawiPreview[0]?.id || '');
             setActiveNawawiCardIndex(0);
+            setSelectedBayquniyyahLessonId(bayquniyyahLessons[0]?.id || '');
+            setActiveBayquniyyahCardIndex(0);
             setActiveReviewIndex(0);
             setActiveReviewCards([]);
             setReviewSessionSummary(DEFAULT_DAILY_QUIZ_SESSION);
@@ -1406,6 +1467,25 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
     setLearnProgress(nextProgress);
     persistLearnProgress(nextProgress);
   }, [learnMode, activeNawawiCardIndex]);
+
+  useEffect(() => {
+    if (learnMode !== 'bayquniyyahLesson') return;
+    const currentProgress = learnProgressRef.current || DEFAULT_LEARN_PROGRESS;
+    if (
+      currentProgress.currentBayquniyyahLessonId === selectedBayquniyyahLessonId &&
+      currentProgress.currentBayquniyyahCardIndex === activeBayquniyyahCardIndex
+    ) {
+      return;
+    }
+    const nextProgress = sanitizeLearnProgress({
+      ...currentProgress,
+      currentBayquniyyahLessonId: selectedBayquniyyahLessonId,
+      currentBayquniyyahCardIndex: activeBayquniyyahCardIndex,
+    });
+    learnProgressRef.current = nextProgress;
+    setLearnProgress(nextProgress);
+    persistLearnProgress(nextProgress);
+  }, [learnMode, selectedBayquniyyahLessonId, activeBayquniyyahCardIndex]);
 
   const incrementDailySearchCounter = async () => {
     const today = getTodayKey();
@@ -1622,6 +1702,11 @@ const closeNarratorBio = () => {
         return true;
       }
 
+      if (activeSection === 'learn' && learnMode === 'bayquniyyahLesson') {
+        setLearnMode('bayquniyyah');
+        return true;
+      }
+
       if (activeSection === 'learn' && learnMode !== 'overview') {
         setLearnMode('overview');
         return true;
@@ -1651,12 +1736,11 @@ const closeNarratorBio = () => {
   ]);
 
   const premiumFeatures = [
-    'All 40 Hadith Nawawi',
-    'Full memorisation tracking',
-    'Revision schedule',
-    'Narrator flashcards',
-    'Sahihayn memorisation pathway',
-    'Rijal learning system',
+    'Remaining Arbain Nawawi Hadith',
+    'Bulugh al-Maram memorisation',
+    'Riyadh al-Salihin memorisation',
+    'Top 100 Hadith Narrator Biographies',
+    "Jarh wa Ta'dil learning pathway"
   ];
 
   const openPathway = (pathwayId, options = {}) => {
@@ -1683,6 +1767,50 @@ const closeNarratorBio = () => {
     setSelectedNawawiHadithId(hadithId);
     setActiveNawawiCardIndex(0);
     setLearnMode('nawawiHadith');
+  };
+
+  const openBayquniyyahLesson = (lessonId, options = {}) => {
+    const savedProgress = sanitizeLearnProgress(learnProgressRef.current || DEFAULT_LEARN_PROGRESS);
+    if (!isBayquniyyahLessonUnlocked(lessonId, savedProgress)) return;
+    setSelectedBayquniyyahLessonId(lessonId);
+    setActiveBayquniyyahCardIndex(
+      options.revise
+        ? 0
+        : savedProgress.currentBayquniyyahLessonId === lessonId
+          ? clampLearningIndex(savedProgress.currentBayquniyyahCardIndex, 5)
+          : 0
+    );
+    setLearnMode('bayquniyyahLesson');
+  };
+
+  const markBayquniyyahLessonComplete = lessonId => {
+    updateLearnProgress(previousProgress => ({
+      ...previousProgress,
+      currentBayquniyyahLessonId: lessonId,
+      currentBayquniyyahCardIndex: activeBayquniyyahCardIndex,
+      bayquniyyahCompletedLessons: {
+        ...previousProgress.bayquniyyahCompletedLessons,
+        [lessonId]: true,
+      },
+    }));
+  };
+
+  const answerBayquniyyahQuiz = (lessonId, selectedOption) => {
+    const lesson = bayquniyyahLessons.find(item => item.id === lessonId);
+    const correctOption = lesson?.quiz?.options?.[lesson.quiz.answerIndex] || '';
+    updateLearnProgress(previousProgress => ({
+      ...previousProgress,
+      currentBayquniyyahLessonId: lessonId,
+      currentBayquniyyahCardIndex: activeBayquniyyahCardIndex,
+      bayquniyyahQuizAnswers: {
+        ...previousProgress.bayquniyyahQuizAnswers,
+        [lessonId]: {
+          selectedOption,
+          correctOption,
+          correct: selectedOption === correctOption,
+        },
+      },
+    }));
   };
 
   const openReviewFlow = () => {
@@ -1882,6 +2010,36 @@ const closeNarratorBio = () => {
     );
   };
 
+  const renderBayquniyyahOverview = () => {
+    const safeProgress = sanitizeLearnProgress(learnProgress);
+    const completedCount = getCompletedBayquniyyahCount(safeProgress);
+    const bayquniyyahComplete = isBayquniyyahComplete(safeProgress);
+    return (
+      <View>
+        <Pressable
+          style={[styles.learnCard, bayquniyyahComplete && styles.learnCardCompleted]}
+          onPress={() => setLearnMode('bayquniyyah')}
+        >
+          <View style={styles.learnCardHeader}>
+            <Text style={styles.lessonLevel}>Free pathway</Text>
+            <Text style={bayquniyyahComplete ? styles.completedStatusBadge : styles.completedBadge}>
+              {bayquniyyahComplete ? '✓ Completed' : `${completedCount}/34`}
+            </Text>
+          </View>
+          <Text style={styles.lessonTitle}>Bayquniyyah</Text>
+          <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
+            Learn mustalah al-hadith through the famous beginner poem, one term at a time.
+          </Text>
+          <Text style={styles.completionProgressText}>Progress: {completedCount} / 34 Lessons Completed</Text>
+          {renderStaticProgressBar((completedCount / 34) * 100)}
+          <View style={[styles.learnActionButton, bayquniyyahComplete && styles.learnActionButtonCompleted]}>
+            <Text style={styles.learnActionText}>{bayquniyyahComplete ? 'Revise Again' : completedCount ? 'Continue Bayquniyyah' : 'Start Bayquniyyah'}</Text>
+          </View>
+        </Pressable>
+      </View>
+    );
+  };
+
   const renderAnimatedProgressBar = () => (
     <View style={styles.flowProgressTrack}>
       <Animated.View
@@ -1915,7 +2073,7 @@ const closeNarratorBio = () => {
   );
 
   const renderNawawiPage = () => {
-    const introCards = nawawiIntroCards.slice(0, 2);
+    const introCards = nawawiIntroCards;
     const safeProgress = sanitizeLearnProgress(learnProgress);
     const arbainComplete = isArbainPathwayComplete(safeProgress);
     return (
@@ -1986,6 +2144,109 @@ const closeNarratorBio = () => {
               <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{hadith.english}</Text>
               <View style={[styles.learnActionButton, hadithComplete && styles.learnActionButtonCompleted]}>
                 <Text style={styles.learnActionText}>{hadithComplete ? 'Revise Again' : completedStages ? 'Continue Hadith' : 'Start Hadith'}</Text>
+              </View>
+            </Pressable>
+          );
+        })}
+      </>
+    );
+  };
+
+  const renderBayquniyyahPage = () => {
+    const safeProgress = sanitizeLearnProgress(learnProgress);
+    const completedCount = getCompletedBayquniyyahCount(safeProgress);
+    const bayquniyyahComplete = isBayquniyyahComplete(safeProgress);
+    return (
+      <>
+        <View style={styles.learnHeroCard}>
+          <Text style={styles.learnEyebrow}>Mustalah al-hadith poem</Text>
+          <Text style={styles.learnTitle}>Bayquniyyah</Text>
+          <Text style={styles.learnIntro}>Study 34 concise lines that introduce essential hadith terminology.</Text>
+          <Pressable style={styles.arbainBackButton} onPress={() => setLearnMode('overview')}>
+            <Text style={styles.arbainBackButtonText}>Back to Learn</Text>
+          </Pressable>
+        </View>
+
+        <Text style={styles.learnSectionTitle}>Before You Begin</Text>
+        {bayquniyyahIntroCards.map(card => (
+          <View key={card.id} style={styles.learnCard}>
+            <Text style={styles.lessonLevel}>Introduction</Text>
+            <Text style={styles.lessonTitle}>{card.title}</Text>
+            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{card.body}</Text>
+          </View>
+        ))}
+
+        <View style={styles.learnCard}>
+          <Text style={styles.lessonLevel}>Bayquniyyah Progress</Text>
+          <Text style={styles.lessonTitle}>{completedCount} / 34 Lessons Completed</Text>
+          {renderStaticProgressBar((completedCount / 34) * 100)}
+        </View>
+
+        {bayquniyyahComplete && (
+          <View style={[styles.learnCard, styles.learnCardCompleted]}>
+            <View style={styles.pathwayCompletionPanel}>
+              {renderCompletionIcon()}
+              <Text style={styles.lessonCompletionTitle}>Alhamdulillah!</Text>
+              <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
+                You have completed the Bayquniyyah Pathway.
+              </Text>
+              <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
+                May Allah increase you in beneficial knowledge and grant you understanding of the sciences of hadith.
+              </Text>
+              <Text style={styles.completionProgressText}>Progress: {completedCount} / 34 Lessons Completed</Text>
+              {renderStaticProgressBar(100)}
+              <View style={styles.completionActionRow}>
+                <Pressable style={styles.lessonCompletionButton} onPress={() => setLearnMode('overview')}>
+                  <Text style={styles.lessonCompletionButtonText}>Return Home</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.lessonCompletionButton, styles.learnActionButtonCompleted]}
+                  onPress={() => openBayquniyyahLesson(bayquniyyahLessons[0]?.id, { revise: true })}
+                >
+                  <Text style={styles.lessonCompletionButtonText}>Revise Again</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        )}
+
+        <Text style={styles.learnSectionTitle}>Choose a Lesson</Text>
+        {bayquniyyahLessons.map(lesson => {
+          const completed = !!safeProgress.bayquniyyahCompletedLessons?.[lesson.id];
+          const unlocked = isBayquniyyahLessonUnlocked(lesson.id, safeProgress);
+          return (
+            <Pressable
+              key={lesson.id}
+              style={[
+                styles.learnCard,
+                completed && styles.learnCardCompleted,
+                !unlocked && styles.learnCardLocked,
+              ]}
+              onPress={() => openBayquniyyahLesson(lesson.id, { revise: completed })}
+              disabled={!unlocked}
+            >
+              <View style={styles.learnCardHeader}>
+                <Text style={styles.lessonLevel}>Lesson {lesson.number}</Text>
+                <Text style={completed ? styles.completedStatusBadge : styles.completedBadge}>
+                  {completed ? '✓ Completed' : unlocked ? lesson.keyTerm : 'Locked'}
+                </Text>
+              </View>
+              <Text style={styles.lessonTitle}>{lesson.title}</Text>
+              <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{lesson.explanation}</Text>
+              {!unlocked && (
+                <View style={styles.lockedLessonNoticeRow}>
+                  <Ionicons name="lock-closed" size={15} color="#607174" style={styles.lockedLessonIcon} />
+                  <Text style={styles.lockedLessonNoticeText}>
+                    Complete the previous lesson to unlock
+                  </Text>
+                </View>
+              )}
+              <View style={[
+                styles.learnActionButton,
+                completed && styles.learnActionButtonCompleted,
+                !unlocked && styles.learnActionButtonDisabled,
+              ]}>
+                <Text style={styles.learnActionText}>{!unlocked ? 'Locked' : completed ? 'Revise Again' : 'Start Lesson'}</Text>
               </View>
             </Pressable>
           );
@@ -2395,6 +2656,160 @@ const closeNarratorBio = () => {
     );
   };
 
+  const renderBayquniyyahFlow = () => {
+    const safeProgress = sanitizeLearnProgress(learnProgress);
+    const lesson = bayquniyyahLessons.find(item => item.id === selectedBayquniyyahLessonId) || bayquniyyahLessons[0];
+    if (!lesson) return null;
+    const lessonIndex = Math.max(0, bayquniyyahLessons.findIndex(item => item.id === lesson.id));
+    const nextLesson = bayquniyyahLessons[lessonIndex + 1];
+    const completed = !!safeProgress.bayquniyyahCompletedLessons?.[lesson.id];
+    const completedCount = getCompletedBayquniyyahCount(safeProgress);
+    const quizAnswer = safeProgress.bayquniyyahQuizAnswers?.[lesson.id];
+    const cardLabel = activeBayquniyyahCardIndex === 0
+      ? 'Arabic Line'
+      : activeBayquniyyahCardIndex === 1
+        ? 'Meaning'
+        : activeBayquniyyahCardIndex === 2
+          ? 'Memorisation'
+          : activeBayquniyyahCardIndex === 3
+            ? 'Mini Quiz'
+            : 'Lesson Complete';
+
+    return (
+      <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim, transform: [{ translateY: cardSlideAnim }] }]}>
+        <View style={styles.learnCardHeader}>
+          <Text style={styles.lessonLevel}>Bayquniyyah • {cardLabel}</Text>
+          <Text style={styles.completedBadge}>{activeBayquniyyahCardIndex + 1}/5</Text>
+        </View>
+        {renderAnimatedProgressBar()}
+
+        {activeBayquniyyahCardIndex === 0 && (
+          <>
+            <Text style={styles.lessonTitle}>Lesson {lesson.number}: {lesson.title}</Text>
+            <Text style={[styles.nawawiArabic, scaledArabicTextStyle(22)]}>{lesson.arabic}</Text>
+            <Text style={styles.flowHint}>Read the Arabic slowly before moving to the meaning.</Text>
+          </>
+        )}
+
+        {activeBayquniyyahCardIndex === 1 && (
+          <>
+            <Text style={styles.lessonTitle}>{lesson.keyTerm}</Text>
+            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{lesson.english}</Text>
+            <View style={styles.vocabularyItem}>
+              <Text style={styles.vocabularyTerm}>Beginner explanation</Text>
+              <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{lesson.explanation}</Text>
+            </View>
+          </>
+        )}
+
+        {activeBayquniyyahCardIndex === 2 && (
+          <>
+            <Text style={styles.lessonTitle}>Memorise Gradually</Text>
+            <Text style={styles.nawawiQuestionTitle}>Missing word practice</Text>
+            <Text style={[styles.quizQuestion, scaledTextStyle(17)]}>{lesson.memorisePrompt.prompt}</Text>
+            <View style={styles.vocabularyItem}>
+              <Text style={styles.vocabularyTerm}>Answer</Text>
+              <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{lesson.memorisePrompt.answer}</Text>
+            </View>
+            <Text style={styles.flowHint}>Cover the answer and recite the line again from memory.</Text>
+          </>
+        )}
+
+        {activeBayquniyyahCardIndex === 3 && (
+          <>
+            <Text style={styles.quizTitle}>Mini Quiz</Text>
+            <Text style={[styles.quizQuestion, scaledTextStyle(17)]}>{lesson.quiz.question}</Text>
+            {getShuffledOptions(lesson.quiz.options, lesson.id).map(option => {
+              const correctOption = lesson.quiz.options[lesson.quiz.answerIndex];
+              const selected = quizAnswer?.selectedOption === option;
+              const correctOptionSelected = quizAnswer && option === correctOption;
+              const selectedWrong = selected && quizAnswer && !quizAnswer.correct;
+              return (
+                <Pressable
+                  key={option}
+                  style={[
+                    styles.quizOption,
+                    selected && styles.quizOptionSelected,
+                    selectedWrong && styles.quizOptionWrong,
+                    correctOptionSelected && styles.quizOptionCorrect,
+                  ]}
+                  onPress={() => answerBayquniyyahQuiz(lesson.id, option)}
+                >
+                  <Text style={[styles.quizOptionText, scaledTextStyle(15)]}>{option}</Text>
+                </Pressable>
+              );
+            })}
+            <Text style={styles.flowHint}>{quizAnswer ? 'Answer saved. Continue to complete the lesson.' : 'Choose an answer before completing the lesson.'}</Text>
+          </>
+        )}
+
+        {activeBayquniyyahCardIndex === 4 && (
+          <View style={styles.pathwayCompletionPanel}>
+            {renderCompletionIcon()}
+            <Text style={styles.lessonCompletionTitle}>Alhamdulillah!</Text>
+            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
+              You have completed Lesson {lesson.number} of Bayquniyyah.
+            </Text>
+            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
+              May Allah increase you in beneficial knowledge and make the sciences of hadith easy for you.
+            </Text>
+            <Text style={styles.completionProgressText}>
+              Progress: {completedCount} / 34 Lessons Completed
+            </Text>
+            {renderStaticProgressBar((completedCount / 34) * 100)}
+            {!completed && (
+              <Pressable style={styles.lessonCompletionButton} onPress={() => markBayquniyyahLessonComplete(lesson.id)}>
+                <Text style={styles.lessonCompletionButtonText}>Mark Complete</Text>
+              </Pressable>
+            )}
+            {completed && (
+              <View style={styles.completionActionRow}>
+                <Pressable style={styles.lessonCompletionButton} onPress={() => setLearnMode('bayquniyyah')}>
+                  <Text style={styles.lessonCompletionButtonText}>Continue to Bayquniyyah</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.lessonCompletionButton, styles.learnActionButtonCompleted]}
+                  onPress={() => setActiveBayquniyyahCardIndex(0)}
+                >
+                  <Text style={styles.lessonCompletionButtonText}>Revise Again</Text>
+                </Pressable>
+                {nextLesson && (
+                  <Pressable
+                    style={styles.lessonCompletionButton}
+                    onPress={() => openBayquniyyahLesson(nextLesson.id)}
+                  >
+                    <Text style={styles.lessonCompletionButtonText}>Next Lesson</Text>
+                  </Pressable>
+                )}
+              </View>
+            )}
+          </View>
+        )}
+
+        {activeBayquniyyahCardIndex < 4 && (
+          <View style={styles.flowControls}>
+            <Pressable
+              style={[styles.flowButton, activeBayquniyyahCardIndex === 0 && styles.flowButtonDisabled]}
+              disabled={activeBayquniyyahCardIndex === 0}
+              onPress={() => setActiveBayquniyyahCardIndex(index => Math.max(0, index - 1))}
+            >
+              <Text style={styles.flowButtonText}>Back</Text>
+            </Pressable>
+            <Pressable
+              style={styles.flowButton}
+              onPress={() => setActiveBayquniyyahCardIndex(index => Math.min(4, index + 1))}
+            >
+              <Text style={styles.flowButtonText}>Continue</Text>
+            </Pressable>
+          </View>
+        )}
+        <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode('bayquniyyah')}>
+          <Text style={styles.secondaryTextButtonText}>Back to Bayquniyyah</Text>
+        </Pressable>
+      </Animated.View>
+    );
+  };
+
   const renderReviewFlow = () => {
     const quizCards = activeReviewCards;
     const quizCard = quizCards[activeReviewIndex];
@@ -2570,6 +2985,14 @@ const closeNarratorBio = () => {
       return renderNawawiFlow();
     }
 
+    if (learnMode === 'bayquniyyah') {
+      return renderBayquniyyahPage();
+    }
+
+    if (learnMode === 'bayquniyyahLesson') {
+      return renderBayquniyyahFlow();
+    }
+
     return (
     <>
       <View style={styles.learnHeroCard}>
@@ -2623,8 +3046,11 @@ const closeNarratorBio = () => {
           <Text style={styles.learnSectionTitle}>Arbain Nawawi Learning</Text>
           {renderNawawiOverview()}
 
+          <Text style={styles.learnSectionTitle}>Bayquniyyah Learning</Text>
+          {renderBayquniyyahOverview()}
+
           <Text style={styles.learnSectionTitle}>Future Paid Version</Text>
-          <Text style={styles.premiumIntro}>A future paid version is planned to include deeper guided study tools.</Text>
+          <Text style={styles.premiumIntro}>Free modules include Arbain Nawawi and Bayquniyyah. A future paid version is planned to include deeper guided study tools.</Text>
           {premiumFeatures.map(feature => (
             <View key={feature} style={styles.lockedCard}>
               <View style={styles.lockedCopy}>
@@ -4108,6 +4534,25 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     lineHeight: 20,
     marginTop: 8,
+    flexShrink: 1,
+    flexWrap: 'wrap',
+  },
+  lockedLessonNoticeRow: {
+    alignItems: 'flex-start',
+    marginTop: 8,
+    width: '100%',
+  },
+  lockedLessonIcon: {
+    marginBottom: 6,
+  },
+  lockedLessonNoticeText: {
+    color: '#607174',
+    fontSize: 13,
+    fontWeight: '800',
+    lineHeight: 20,
+    width: '100%',
+    flexShrink: 1,
+    flexWrap: 'wrap',
   },
   secondaryTextButton: {
     alignSelf: 'center',
