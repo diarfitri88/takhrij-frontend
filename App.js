@@ -3587,7 +3587,7 @@ const closeNarratorBio = () => {
               <View style={styles.searchRow}>
                 <View style={styles.searchInputWrapper}>
                   <TextInput
-                    placeholder="Search Arabic, English, or references across 16 hadith collections"
+                    placeholder="Search hadith or reference..."
                     placeholderTextColor="#888"
                     style={styles.searchInput}
                     value={query}
@@ -3612,41 +3612,43 @@ const closeNarratorBio = () => {
                 </Pressable>
               </View>
 
-              <View style={styles.newCollectionsCard}>
-                <Text style={styles.newCollectionsTitle}>New Collections Added</Text>
-                <Text style={styles.newCollectionsText}>
-                  Takhrij now searches across 16 hadith collections with over 50,000 hadith.
-                </Text>
-                <Text style={styles.newCollectionsText}>Newly added:</Text>
-                <Text style={styles.newCollectionsList}>
-                  • Shama'il Muhammadiyah{'\n'}
-                  • Mishkat al-Masabih{'\n'}
-                  • Riyad as-Salihin{'\n'}
-                  • Bulugh al-Maram{'\n'}
-                  • Al-Adab al-Mufrad{'\n'}
-                  • Forty Hadith Qudsi{'\n'}
-                  • Forty Hadith of Imam Nawawi
-                </Text>
-                <Text style={styles.newCollectionsText}>Try searching:</Text>
-                <Text style={styles.newCollectionsExamples}>
-                  “Bulugh al-Maram 1”{'\n'}
-                  “Shama'il Muhammadiyah 1”{'\n'}
-                  “Riyad as-Salihin 1”
-                </Text>
-              </View>
-
               {!hasResults && !loading && (
                 <View style={styles.helpStaticCard}>
                   <Pressable style={styles.helpToggle} onPress={() => setShowSearchHelp(value => !value)}>
                     <Text style={styles.helpToggleText}>
-                      {showSearchHelp ? 'Hide search tips' : 'Search tips and disclaimer'}
+                      {showSearchHelp ? '- Search Tips and Disclaimer' : '+ Search Tips and Disclaimer'}
                     </Text>
                   </Pressable>
                   {showSearchHelp && (
                     <>
-                      <Text style={styles.helpStaticText}>
-                        Search Arabic, English, or references across 16 hadith collections. Exact Arabic or English wording usually gives better results. You can also search references like “Bukhari 10”, “Muslim 45”, “Tirmidhi 2970”, or “Bulugh al-Maram 1”.
-                      </Text>
+                      <Text style={styles.helpSectionTitle}>Search Tips</Text>
+                      <Text style={styles.helpStaticText}>- Search by Arabic</Text>
+                      <Text style={styles.helpStaticText}>- Search by English</Text>
+                      <Text style={styles.helpStaticText}>- Search by reference</Text>
+
+                      <View style={styles.newCollectionsInset}>
+                        <Text style={styles.helpSectionTitle}>New Collections Added</Text>
+                        <Text style={styles.helpStaticText}>
+                          Takhrij now searches across 16 hadith collections with over 50,000 hadith.
+                        </Text>
+                        <Text style={styles.newCollectionsList}>
+                          - Shama'il Muhammadiyah{'\n'}
+                          - Mishkat al-Masabih{'\n'}
+                          - Riyad as-Salihin{'\n'}
+                          - Bulugh al-Maram{'\n'}
+                          - Al-Adab al-Mufrad{'\n'}
+                          - Forty Hadith Qudsi{'\n'}
+                          - Forty Hadith of Imam Nawawi
+                        </Text>
+                        <Text style={styles.helpSectionTitle}>Example searches</Text>
+                        <Text style={styles.newCollectionsExamples}>
+                          - Bulugh al-Maram 1{'\n'}
+                          - Shama'il Muhammadiyah 1{'\n'}
+                          - Riyad as-Salihin 1
+                        </Text>
+                      </View>
+
+                      <Text style={styles.helpSectionTitle}>Disclaimer</Text>
                       <Text style={[styles.helpStaticText, styles.helpDisclaimer]}>
                         Takhrij is a beginner-friendly learning tool. It does not replace qualified scholars, formal study, or scholarly takhrij.
                       </Text>
@@ -3997,26 +3999,6 @@ const styles = StyleSheet.create({
     color: '#888',
     marginTop: 4,
   },
-  newCollectionsCard: {
-    backgroundColor: '#f8f5ea',
-    borderWidth: 1,
-    borderColor: '#e4d7ad',
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 12,
-  },
-  newCollectionsTitle: {
-    color: '#132f35',
-    fontSize: 15,
-    fontWeight: '900',
-    marginBottom: 6,
-  },
-  newCollectionsText: {
-    color: '#41504d',
-    fontSize: 13,
-    lineHeight: 19,
-    marginTop: 4,
-  },
   newCollectionsList: {
     color: '#41504d',
     fontSize: 13,
@@ -4046,11 +4028,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
   },
+  helpSectionTitle: {
+    color: '#132f35',
+    fontSize: 13,
+    fontWeight: '900',
+    marginTop: 12,
+    marginBottom: 2,
+  },
   helpStaticText: {
     fontSize: 13,
     color: '#41504d',
     marginTop: 8,
     lineHeight: 19,
+  },
+  newCollectionsInset: {
+    marginTop: 8,
   },
   helpDisclaimer: {
     fontWeight: '600',
