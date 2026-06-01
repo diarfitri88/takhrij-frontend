@@ -3090,15 +3090,18 @@ const closeNarratorBio = () => {
               <Text style={styles.welcomeEyebrow}>Learn, search, and memorise hadith step by step.</Text>
               <Text style={styles.welcomeTitle}>Welcome to Takhrij</Text>
               <Text style={styles.welcomeText}>
-                Takhrij is a beginner-friendly hadith learning tool that helps Muslims explore and appreciate the sciences of hadith without becoming overly technical.
+                Takhrij helps you search, study, and revise hadith across 16 collections with over 50,000 narrations.
+              </Text>
+              <Text style={styles.welcomeText}>
+                Explore Arabic and English hadith search, AI assisted commentary, Arbain Nawawi, Bayquniyyah, Daily Quiz, and memorisation focused learning tools.
               </Text>
               <Text style={styles.welcomeSectionTitle}>Features include</Text>
               <View style={styles.welcomeBulletList}>
-                <Text style={styles.welcomeBullet}>• Search hadith by keyword or reference</Text>
-                <Text style={styles.welcomeBullet}>• Learn foundational hadith sciences through guided cards</Text>
+                <Text style={styles.welcomeBullet}>• Search over 50,000 hadith across 16 collections</Text>
+                <Text style={styles.welcomeBullet}>• Search in Arabic, English, or by reference</Text>
+                <Text style={styles.welcomeBullet}>• Learn through Arbain Nawawi and Bayquniyyah pathways</Text>
                 <Text style={styles.welcomeBullet}>• Build consistent learning habits with Daily Quiz</Text>
-                <Text style={styles.welcomeBullet}>• Memorise selected hadith from Arbain Nawawi</Text>
-                <Text style={styles.welcomeBullet}>• Become familiar with hadith structure and preservation</Text>
+                <Text style={styles.welcomeBullet}>• Memorise and revise with focused learning tools</Text>
               </View>
               <Text style={styles.welcomeDisclaimer}>
                 Takhrij is for learning and reflection. It does not replace qualified scholars, formal study, or scholarly takhrij.
@@ -3584,7 +3587,7 @@ const closeNarratorBio = () => {
               <View style={styles.searchRow}>
                 <View style={styles.searchInputWrapper}>
                   <TextInput
-                    placeholder="Enter hadith, keyword, or topic"
+                    placeholder="Search hadith or reference..."
                     placeholderTextColor="#888"
                     style={styles.searchInput}
                     value={query}
@@ -3613,14 +3616,39 @@ const closeNarratorBio = () => {
                 <View style={styles.helpStaticCard}>
                   <Pressable style={styles.helpToggle} onPress={() => setShowSearchHelp(value => !value)}>
                     <Text style={styles.helpToggleText}>
-                      {showSearchHelp ? 'Hide search tips' : 'Search tips and disclaimer'}
+                      {showSearchHelp ? '- Search Tips and Disclaimer' : '+ Search Tips and Disclaimer'}
                     </Text>
                   </Pressable>
                   {showSearchHelp && (
                     <>
-                      <Text style={styles.helpStaticText}>
-                        Search by keyword, exact phrase, or Sunnah.com reference. Exact Arabic or English wording usually gives better results. You can also search references like “Bukhari 10”, “Muslim 45”, or “Tirmidhi 2970”.
-                      </Text>
+                      <Text style={styles.helpSectionTitle}>Search Tips</Text>
+                      <Text style={styles.helpStaticText}>- Search by Arabic</Text>
+                      <Text style={styles.helpStaticText}>- Search by English</Text>
+                      <Text style={styles.helpStaticText}>- Search by reference</Text>
+
+                      <View style={styles.newCollectionsInset}>
+                        <Text style={styles.helpSectionTitle}>New Collections Added</Text>
+                        <Text style={styles.helpStaticText}>
+                          Takhrij now searches across 16 hadith collections with over 50,000 hadith.
+                        </Text>
+                        <Text style={styles.newCollectionsList}>
+                          - Shama'il Muhammadiyah{'\n'}
+                          - Mishkat al-Masabih{'\n'}
+                          - Riyad as-Salihin{'\n'}
+                          - Bulugh al-Maram{'\n'}
+                          - Al-Adab al-Mufrad{'\n'}
+                          - Forty Hadith Qudsi{'\n'}
+                          - Forty Hadith of Imam Nawawi
+                        </Text>
+                        <Text style={styles.helpSectionTitle}>Example searches</Text>
+                        <Text style={styles.newCollectionsExamples}>
+                          - Bulugh al-Maram 1{'\n'}
+                          - Shama'il Muhammadiyah 1{'\n'}
+                          - Riyad as-Salihin 1
+                        </Text>
+                      </View>
+
+                      <Text style={styles.helpSectionTitle}>Disclaimer</Text>
                       <Text style={[styles.helpStaticText, styles.helpDisclaimer]}>
                         Takhrij is a beginner-friendly learning tool. It does not replace qualified scholars, formal study, or scholarly takhrij.
                       </Text>
@@ -3971,6 +3999,19 @@ const styles = StyleSheet.create({
     color: '#888',
     marginTop: 4,
   },
+  newCollectionsList: {
+    color: '#41504d',
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 6,
+  },
+  newCollectionsExamples: {
+    color: '#176b5f',
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 6,
+    fontWeight: '800',
+  },
   helpStaticCard: {
     backgroundColor: '#f4f7f2',
     padding: 10,
@@ -3987,11 +4028,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
   },
+  helpSectionTitle: {
+    color: '#132f35',
+    fontSize: 13,
+    fontWeight: '900',
+    marginTop: 12,
+    marginBottom: 2,
+  },
   helpStaticText: {
     fontSize: 13,
     color: '#41504d',
     marginTop: 8,
     lineHeight: 19,
+  },
+  newCollectionsInset: {
+    marginTop: 8,
   },
   helpDisclaimer: {
     fontWeight: '600',
