@@ -56,7 +56,7 @@ const { width, height } = Dimensions.get('window');
 
 const APP_DOWNLOAD_LINK = `
 Download the Takhrij App:
-Android: https://play.google.com/store/apps/details?id=com.yourapp.takhrij
+Android: https://play.google.com/store/apps/details?id=com.diarfitri88.daleelfrontend
 iOS: Coming soon
 `;
 
