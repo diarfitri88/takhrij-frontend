@@ -56,7 +56,7 @@ const { width, height } = Dimensions.get('window');
 
 const APP_DOWNLOAD_LINK = `
 Download the Takhrij App:
-Android: https://play.google.com/store/apps/details?id=com.diarfitri88.daleelfrontend
+Android: https://pagea.uk/takhrijapp
 iOS: Coming soon
 `;
 
@@ -64,8 +64,6 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://takhrij-ba
 const APP_VERSION = appConfig?.expo?.version || '1.0.0';
 const DEFAULT_API_TIMEOUT_MS = 30000;
 const NARRATOR_BIO_TIMEOUT_MS = 60000;
-const DAILY_FREE_SEARCH_LIMIT = 5;
-const SEARCH_LIMIT_STORAGE_KEY = 'takhrij.dailySearchCounter';
 const LEARN_PROGRESS_STORAGE_KEY = 'takhrij.learnProgress';
 const USER_PREFERENCES_STORAGE_KEY = 'takhrij.userPreferences';
 const DAILY_REVIEW_REMINDER_HOUR = 20;
@@ -995,7 +993,6 @@ export default function App() {
   const [query, setQuery] = useState('');
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
-  const [dailySearchCounter, setDailySearchCounter] = useState({ date: getTodayKey(), count: 0 });
   const [learnProgress, setLearnProgress] = useState(DEFAULT_LEARN_PROGRESS);
   const learnProgressRef = useRef(DEFAULT_LEARN_PROGRESS);
   const [learnMode, setLearnMode] = useState('overview');
@@ -1138,22 +1135,10 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
   useEffect(() => {
     const loadLocalProgress = async () => {
       try {
-        const [storedCounter, storedProgress, storedPreferences] = await Promise.all([
-          AsyncStorage.getItem(SEARCH_LIMIT_STORAGE_KEY),
+        const [storedProgress, storedPreferences] = await Promise.all([
           AsyncStorage.getItem(LEARN_PROGRESS_STORAGE_KEY),
           AsyncStorage.getItem(USER_PREFERENCES_STORAGE_KEY),
         ]);
-        const today = getTodayKey();
-        try {
-          const parsedCounter = storedCounter ? JSON.parse(storedCounter) : null;
-          setDailySearchCounter(
-            parsedCounter?.date === today
-              ? parsedCounter
-              : { date: today, count: 0 }
-          );
-        } catch {
-          setDailySearchCounter({ date: today, count: 0 });
-        }
         try {
           const parsedProgress = storedProgress ? JSON.parse(storedProgress) : DEFAULT_LEARN_PROGRESS;
           const safeProgress = sanitizeLearnProgress(parsedProgress);
@@ -1177,7 +1162,6 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
           setUserPreferences(DEFAULT_USER_PREFERENCES);
         }
       } catch {
-        setDailySearchCounter({ date: getTodayKey(), count: 0 });
         learnProgressRef.current = DEFAULT_LEARN_PROGRESS;
         setLearnProgress(DEFAULT_LEARN_PROGRESS);
         setUserPreferences(DEFAULT_USER_PREFERENCES);
@@ -1404,7 +1388,7 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
   const resetLearningProgress = () => {
     Alert.alert(
       'Reset learning progress?',
-      'This clears lesson completion, quiz attempts, pathway position, and Arbain checklist progress. Search limits and app settings will not be changed.',
+      'This clears lesson completion, quiz attempts, pathway position, and Arbain checklist progress. App settings will not be changed.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -1487,20 +1471,6 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
     persistLearnProgress(nextProgress);
   }, [learnMode, selectedBayquniyyahLessonId, activeBayquniyyahCardIndex]);
 
-  const incrementDailySearchCounter = async () => {
-    const today = getTodayKey();
-    const nextCounter = {
-      date: today,
-      count: dailySearchCounter.date === today ? dailySearchCounter.count + 1 : 1,
-    };
-    setDailySearchCounter(nextCounter);
-    try {
-      await AsyncStorage.setItem(SEARCH_LIMIT_STORAGE_KEY, JSON.stringify(nextCounter));
-    } catch {
-      // Search should continue even if local storage is unavailable.
-    }
-  };
-
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       const wasAwayFromApp =
@@ -1570,22 +1540,11 @@ const closeNarratorBio = () => {
     setCommentaryModalVisible(false);
     const q = query.trim();
     if (!q) return;
-    const today = getTodayKey();
-    const searchesUsed = dailySearchCounter.date === today ? dailySearchCounter.count : 0;
-    if (!__DEV__ && searchesUsed >= DAILY_FREE_SEARCH_LIMIT) {
-      setResult(
-        `---\nEnglish Matn:\nYou have used your ${DAILY_FREE_SEARCH_LIMIT} free searches for today.\n\nCome back tomorrow for more free searches, or continue learning in the Learn section.\n\nReference: No Local Match\nNote: Daily free search limit reached.`
-      );
-      return;
-    }
     setLoading(true);
     setResult('');
     try {
       const data = await postJson('/search-hadith', { query: q });
       setResult(data.result || formatStructuredSearchResults(data.results) || '');
-      if (!__DEV__) {
-        await incrementDailySearchCounter();
-      }
     } catch {
       setResult('Error connecting to server.');
     } finally {
@@ -1625,6 +1584,19 @@ const closeNarratorBio = () => {
     }
     setCommentaryModalVisible(true);
     setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 100);
+  };
+
+  const buildHadithShareText = ({ reference, arabic, english, authenticityStatus, commentary = '', chain = '' }) =>
+    `Hadith Reference: ${reference}\n\nArabic Matn:\n${arabic}\n\nEnglish Matn:\n${english}\n\nAuthenticity Status:\n${authenticityStatus || 'Not specified in source'}\n\nCommentary:\n${commentary}\n\nChain of Narrators:\n${chain}\n\n${APP_DOWNLOAD_LINK}`;
+
+  const shareHadith = async hadith => {
+    const textToShare = buildHadithShareText({
+      reference: hadith.reference || '',
+      arabic: hadith.arabic || '',
+      english: hadith.english || '',
+      authenticityStatus: hadith.authenticityStatus || '',
+    });
+    await Share.share({ message: textToShare });
   };
 
   const parseResult = raw => {
@@ -3090,10 +3062,10 @@ const closeNarratorBio = () => {
               <Text style={styles.welcomeEyebrow}>Learn, search, and memorise hadith step by step.</Text>
               <Text style={styles.welcomeTitle}>Welcome to Takhrij</Text>
               <Text style={styles.welcomeText}>
-                Takhrij helps you search, study, and revise hadith across 16 collections with over 50,000 narrations.
+                Takhrij lets you search and study hadith across 16 collections with over 50,000 narrations.
               </Text>
               <Text style={styles.welcomeText}>
-                Explore Arabic and English hadith search, AI assisted commentary, Arbain Nawawi, Bayquniyyah, Daily Quiz, and memorisation focused learning tools.
+                Arabic and English hadith search is available from the database. AI commentary is limited to 5 uses per day for free users.
               </Text>
               <Text style={styles.welcomeSectionTitle}>Features include</Text>
               <View style={styles.welcomeBulletList}>
@@ -3101,7 +3073,7 @@ const closeNarratorBio = () => {
                 <Text style={styles.welcomeBullet}>• Search in Arabic, English, or by reference</Text>
                 <Text style={styles.welcomeBullet}>• Learn through Arbain Nawawi and Bayquniyyah pathways</Text>
                 <Text style={styles.welcomeBullet}>• Build consistent learning habits with Daily Quiz</Text>
-                <Text style={styles.welcomeBullet}>• Memorise and revise with focused learning tools</Text>
+                <Text style={styles.welcomeBullet}>• Track progress with memorisation focused learning tools</Text>
               </View>
               <Text style={styles.welcomeDisclaimer}>
                 Takhrij is for learning and reflection. It does not replace qualified scholars, formal study, or scholarly takhrij.
@@ -3173,7 +3145,7 @@ const closeNarratorBio = () => {
 </View>
               </ScrollView>
               <Text style={styles.modalDisclaimer}>
-                This explanation is for learning support only. It may contain mistakes, inaccuracies, or incomplete information. Please verify religious matters with qualified scholars.
+                AI-generated commentary. This response is for educational support only. Please verify important religious matters with qualified teachers and reliable scholarly sources.
               </Text>
               <View style={styles.shareCopyRow}>
                 <TouchableOpacity
@@ -3190,7 +3162,14 @@ const closeNarratorBio = () => {
                 <TouchableOpacity
   style={styles.shareCopyButton}
   onPress={async () => {
-    const textToShare = `Hadith Reference: ${commentaryData.reference}\n\nArabic Matn:\n${commentaryData.arabic}\n\nEnglish Matn:\n${commentaryData.english}\n\nAuthenticity Status:\n${commentaryData.authenticityStatus || 'Not specified in source'}\n\nCommentary:\n${commentaryData.commentary}\n\nChain of Narrators:\n${commentaryData.chain}\n\n${APP_DOWNLOAD_LINK}`;
+    const textToShare = buildHadithShareText({
+      reference: commentaryData.reference,
+      arabic: commentaryData.arabic,
+      english: commentaryData.english,
+      authenticityStatus: commentaryData.authenticityStatus,
+      commentary: commentaryData.commentary,
+      chain: commentaryData.chain,
+    });
     await Share.share({ message: textToShare });
   }}
 >
@@ -3301,9 +3280,9 @@ const closeNarratorBio = () => {
     <View style={styles.modalContent}>
       <Text style={styles.modalHeader}>About Takhrij</Text>
       <Text style={[styles.modalText, scaledTextStyle(16)]}>
-        In hadith studies, takhrij is the scholarly process of tracing narrations and identifying their sources.{"\n\n"}
-        This app does not perform scholarly takhrij or authoritative hadith verification. It helps beginners search hadith, learn foundational hadith sciences, memorise selected narrations, and become more familiar with how hadith are structured and preserved.{"\n\n"}
-        Takhrij is designed as a calm, beginner-friendly learning tool for Muslims. It supports study and appreciation of hadith, but religious matters should still be verified with qualified scholars and reliable works of hadith scholarship.
+        Takhrij helps Muslims search across 16 hadith collections with over 50,000 narrations in Arabic and English. It also supports AI assisted commentary, narrator biography lookup, Arbain Nawawi and Bayquniyyah learning pathways, Daily Quiz, progress tracking, and memorisation focused learning tools.{"\n\n"}
+        Takhrij is an educational and research aid. AI commentary and narrator biography content are AI generated and may contain mistakes or incomplete information. Please verify important religious matters with qualified teachers and reliable scholarly sources.{"\n\n"}
+        The app is not a fatwa service. AI commentary is limited to 5 uses per day for free users.
       </Text>
       <TouchableOpacity
         style={styles.modalCloseButton}
@@ -3395,12 +3374,12 @@ const closeNarratorBio = () => {
         <Text style={styles.settingsGroupTitle}>Information</Text>
         <Text style={styles.settingsSectionTitle}>About Takhrij</Text>
         <Text style={[styles.modalText, scaledTextStyle(16)]}>
-          Takhrij helps Muslims search hadith, learn foundational hadith sciences, memorise selected narrations, and build consistent learning habits through guided cards, quizzes, Daily Quiz, and Arbain Nawawi memorisation.
+          Takhrij helps Muslims search across 16 hadith collections with over 50,000 narrations in Arabic and English. It includes AI assisted commentary, narrator biography lookup, Arbain Nawawi and Bayquniyyah learning pathways, Daily Quiz, progress tracking, and memorisation focused learning tools.
         </Text>
 
         <Text style={styles.settingsSectionTitle}>Educational Disclaimer</Text>
         <Text style={[styles.modalText, scaledTextStyle(16)]}>
-          Takhrij is a beginner-friendly learning tool. It does not replace qualified scholars, formal study, or scholarly takhrij. Explanations may contain mistakes, so religious matters should be verified with reliable scholarship.
+          Takhrij is an educational and research aid, not a fatwa service. AI commentary and narrator biography content are AI generated and may contain mistakes or incomplete information. Please verify important religious matters with qualified teachers and reliable scholarly sources. AI commentary is limited to 5 uses per day for free users.
         </Text>
 
         <Text style={styles.settingsSectionTitle}>Support Takhrij</Text>
@@ -3578,12 +3557,6 @@ const closeNarratorBio = () => {
             <>
             <View style={styles.searchCard}>
               <Text style={styles.searchTitle}>Find a Hadith</Text>
-              <Text style={styles.searchLimitText}>
-                Free searches today: {Math.min(dailySearchCounter.date === getTodayKey() ? dailySearchCounter.count : 0, DAILY_FREE_SEARCH_LIMIT)}/{DAILY_FREE_SEARCH_LIMIT}
-              </Text>
-              <Text style={styles.searchLimitHelp}>
-                Free searches reset daily at midnight. Learn, quizzes, and glossary remain free.
-              </Text>
               <View style={styles.searchRow}>
                 <View style={styles.searchInputWrapper}>
                   <TextInput
@@ -3703,12 +3676,20 @@ const closeNarratorBio = () => {
 ))}
                 {h.warning   && <Text style={[styles.warning, scaledTextStyle(14)]}>{h.warning}</Text>}
                 {!isSearchSuggestionReference(h.reference) && (
-                  <Pressable
-                    style={styles.commentaryButton}
-                    onPress={() => fetchCommentary(h.arabic, h.english, h.reference, h.collection)}
-                  >
-                    <Text style={styles.commentaryText}>View Commentary</Text>
-                  </Pressable>
+                  <View style={styles.resultActionRow}>
+                    <Pressable
+                      style={styles.resultShareButton}
+                      onPress={() => shareHadith(h)}
+                    >
+                      <Text style={styles.resultShareText}>Share</Text>
+                    </Pressable>
+                    <Pressable
+                      style={styles.commentaryButton}
+                      onPress={() => fetchCommentary(h.arabic, h.english, h.reference, h.collection)}
+                    >
+                      <Text style={styles.commentaryText}>View AI Commentary</Text>
+                    </Pressable>
+                  </View>
                 )}
               </View>
             ))}
@@ -4780,13 +4761,33 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   commentaryButton: {
+    flex: 1,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#176b5f',
     paddingVertical: 12,
     borderRadius: 8,
+  },
+  resultActionRow: {
+    flexDirection: 'row',
+    gap: 10,
     marginTop: 12,
+  },
+  resultShareButton: {
+    minWidth: 92,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f4f7f2',
+    borderWidth: 1,
+    borderColor: '#cfdcd3',
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  resultShareText: {
+    color: '#176b5f',
+    fontSize: 16,
+    fontWeight: '800',
   },
   commentaryText: {
     color: '#fff',
