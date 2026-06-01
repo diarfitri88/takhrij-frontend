@@ -3698,10 +3698,15 @@ const closeNarratorBio = () => {
             {hasResults && hadithSections.map((h, i) => (
               <View key={i} style={styles.card}>
                 <View style={styles.resultCardHeader}>
-                  <View style={styles.resultReferenceArea}>
+                  <View style={styles.resultMetadataGroup}>
                     {h.reference && (
                       <View style={styles.referenceBadge}>
                         <Text style={styles.referenceBadgeText}>{h.reference}</Text>
+                      </View>
+                    )}
+                    {!isSearchSuggestionReference(h.reference) && h.authenticityStatus && (
+                      <View style={styles.resultAuthenticityBadge}>
+                        <Text style={styles.resultAuthenticityText}>Authenticity: {h.authenticityStatus}</Text>
                       </View>
                     )}
                   </View>
@@ -3726,11 +3731,6 @@ const closeNarratorBio = () => {
                     </View>
                   )}
                 </View>
-                {!isSearchSuggestionReference(h.reference) && h.authenticityStatus && (
-                  <View style={styles.resultAuthenticityBadge}>
-                    <Text style={styles.resultAuthenticityText}>Authenticity: {h.authenticityStatus}</Text>
-                  </View>
-                )}
                 {h.arabic    && <Text style={[styles.arabicMatn, scaledArabicTextStyle(21)]}>{h.arabic}</Text>}
                 {h.english && h.english.split('\n').map((para, index) => (
   <Text key={`english-${index}`} style={[styles.englishMatn, scaledTextStyle(16)]}>{para.trim()}</Text>
@@ -4121,6 +4121,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#edf4e8',
     alignSelf: 'flex-start',
+    maxWidth: '100%',
     paddingVertical: 6,
     paddingHorizontal: 9,
     borderRadius: 8,
@@ -4132,6 +4133,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     color: '#1b433f',
+    flexShrink: 1,
   },
   resultAuthenticityBadge: {
     alignSelf: 'flex-start',
@@ -4141,8 +4143,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 5,
     paddingHorizontal: 9,
-    marginTop: -6,
-    marginBottom: 14,
   },
   resultAuthenticityText: {
     color: '#6f5a17',
@@ -4820,8 +4820,10 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 10,
   },
-  resultReferenceArea: {
+  resultMetadataGroup: {
     flex: 1,
+    alignItems: 'flex-start',
+    gap: 6,
   },
   resultHeaderActions: {
     flexDirection: 'row',
