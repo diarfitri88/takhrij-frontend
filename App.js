@@ -56,7 +56,7 @@ const { width, height } = Dimensions.get('window');
 
 const APP_DOWNLOAD_LINK = `
 Download the Takhrij App:
-Android: https://pagea.uk/takhrijapp
+Android: https://play.google.com/store/apps/details?id=com.diarfitri88.daleelfrontend
 iOS: Coming soon
 `;
 
@@ -1586,8 +1586,45 @@ const closeNarratorBio = () => {
     setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 100);
   };
 
-  const buildHadithShareText = ({ reference, arabic, english, authenticityStatus, commentary = '', chain = '' }) =>
-    `Hadith Reference: ${reference}\n\nArabic Matn:\n${arabic}\n\nEnglish Matn:\n${english}\n\nAuthenticity Status:\n${authenticityStatus || 'Not specified in source'}\n\nCommentary:\n${commentary}\n\nChain of Narrators:\n${chain}\n\n${APP_DOWNLOAD_LINK}`;
+  const buildHadithShareText = ({
+    reference,
+    arabic,
+    english,
+    authenticityStatus,
+    commentary = '',
+    chain = '',
+    includeDownloadLink = true,
+  }) => {
+    const sections = [
+      `Hadith Reference: ${reference}`,
+      `Arabic Matn:\n${arabic}`,
+      `English Matn:\n${english}`,
+      `Authenticity Status:\n${authenticityStatus || 'Not specified in source'}`,
+    ];
+
+    if (commentary?.trim()) {
+      sections.push(`Commentary:\n${commentary.trim()}`);
+    }
+    if (chain?.trim()) {
+      sections.push(`Chain of Narrators:\n${chain.trim()}`);
+    }
+    if (includeDownloadLink) {
+      sections.push(APP_DOWNLOAD_LINK.trim());
+    }
+
+    return sections.join('\n\n');
+  };
+
+  const copyHadith = async hadith => {
+    const textToCopy = buildHadithShareText({
+      reference: hadith.reference || '',
+      arabic: hadith.arabic || '',
+      english: hadith.english || '',
+      authenticityStatus: hadith.authenticityStatus || '',
+      includeDownloadLink: false,
+    });
+    await Clipboard.setStringAsync(textToCopy);
+  };
 
   const shareHadith = async hadith => {
     const textToShare = buildHadithShareText({
@@ -3660,11 +3697,35 @@ const closeNarratorBio = () => {
 
             {hasResults && hadithSections.map((h, i) => (
               <View key={i} style={styles.card}>
-                {h.reference && (
-                  <View style={styles.referenceBadge}>
-                    <Text style={styles.referenceBadgeText}>{h.reference}</Text>
+                <View style={styles.resultCardHeader}>
+                  <View style={styles.resultReferenceArea}>
+                    {h.reference && (
+                      <View style={styles.referenceBadge}>
+                        <Text style={styles.referenceBadgeText}>{h.reference}</Text>
+                      </View>
+                    )}
                   </View>
-                )}
+                  {!isSearchSuggestionReference(h.reference) && (
+                    <View style={styles.resultHeaderActions}>
+                      <Pressable
+                        style={styles.resultIconButton}
+                        onPress={() => copyHadith(h)}
+                        accessibilityRole="button"
+                        accessibilityLabel="Copy hadith"
+                      >
+                        <Ionicons name="copy-outline" size={20} color="#176b5f" />
+                      </Pressable>
+                      <Pressable
+                        style={styles.resultIconButton}
+                        onPress={() => shareHadith(h)}
+                        accessibilityRole="button"
+                        accessibilityLabel="Share hadith"
+                      >
+                        <Ionicons name="share-social-outline" size={20} color="#176b5f" />
+                      </Pressable>
+                    </View>
+                  )}
+                </View>
                 {!isSearchSuggestionReference(h.reference) && h.authenticityStatus && (
                   <View style={styles.resultAuthenticityBadge}>
                     <Text style={styles.resultAuthenticityText}>Authenticity: {h.authenticityStatus}</Text>
@@ -3676,20 +3737,12 @@ const closeNarratorBio = () => {
 ))}
                 {h.warning   && <Text style={[styles.warning, scaledTextStyle(14)]}>{h.warning}</Text>}
                 {!isSearchSuggestionReference(h.reference) && (
-                  <View style={styles.resultActionRow}>
-                    <Pressable
-                      style={styles.resultShareButton}
-                      onPress={() => shareHadith(h)}
-                    >
-                      <Text style={styles.resultShareText}>Share</Text>
-                    </Pressable>
-                    <Pressable
-                      style={styles.commentaryButton}
-                      onPress={() => fetchCommentary(h.arabic, h.english, h.reference, h.collection)}
-                    >
-                      <Text style={styles.commentaryText}>View AI Commentary</Text>
-                    </Pressable>
-                  </View>
+                  <Pressable
+                    style={styles.commentaryButton}
+                    onPress={() => fetchCommentary(h.arabic, h.english, h.reference, h.collection)}
+                  >
+                    <Text style={styles.commentaryText}>View AI Commentary</Text>
+                  </Pressable>
                 )}
               </View>
             ))}
@@ -4071,7 +4124,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 9,
     borderRadius: 8,
-    marginBottom: 14,
+    marginBottom: 0,
     borderWidth: 1,
     borderColor: '#d7e5ce',
   },
@@ -4760,34 +4813,38 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontWeight: '700',
   },
-  commentaryButton: {
+  resultCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginBottom: 10,
+  },
+  resultReferenceArea: {
     flex: 1,
+  },
+  resultHeaderActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  resultIconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f4f7f2',
+    borderWidth: 1,
+    borderColor: '#cfdcd3',
+  },
+  commentaryButton: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#176b5f',
     paddingVertical: 12,
     borderRadius: 8,
-  },
-  resultActionRow: {
-    flexDirection: 'row',
-    gap: 10,
     marginTop: 12,
-  },
-  resultShareButton: {
-    minWidth: 92,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f4f7f2',
-    borderWidth: 1,
-    borderColor: '#cfdcd3',
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  resultShareText: {
-    color: '#176b5f',
-    fontSize: 16,
-    fontWeight: '800',
   },
   commentaryText: {
     color: '#fff',
