@@ -3156,13 +3156,22 @@ const closeNarratorBio = () => {
 
         {activeMemorisationStepIndex === 5 && (
           <View style={styles.pathwayCompletionPanel}>
-            {renderCompletionIcon()}
-            <Text style={styles.lessonCompletionTitle}>Alhamdulillah!</Text>
-            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
-              {memorisationRemembered
-                ? 'You have completed memorisation practice for this lesson.'
-                : 'Review this lesson again and repeat the memorisation steps.'}
-            </Text>
+            {memorisationRemembered ? (
+              <>
+                {renderCompletionIcon()}
+                <Text style={styles.lessonCompletionTitle}>Alhamdulillah!</Text>
+                <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
+                  You have completed memorisation practice for this lesson.
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.lessonCompletionTitle}>Review this lesson again.</Text>
+                <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
+                  Repeat the memorisation steps until you can recall it confidently.
+                </Text>
+              </>
+            )}
             <Text style={styles.flowHint}>
               Progress saved: {MUTUN_MEMORISATION_STAGES.filter(stage => tracker[stage] || (stage === 'memorised' && memorisationRemembered)).length}/{MUTUN_MEMORISATION_STAGES.length} steps
             </Text>
@@ -3178,7 +3187,7 @@ const closeNarratorBio = () => {
                 setMemorisationRemembered(false);
               }}
             >
-              <Text style={styles.lessonCompletionButtonText}>Revise Again</Text>
+              <Text style={styles.lessonCompletionButtonText}>{memorisationRemembered ? 'Revise Again' : 'Try Again'}</Text>
             </Pressable>
           </View>
         )}
