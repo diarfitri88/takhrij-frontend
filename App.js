@@ -27,6 +27,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import * as Notifications from 'expo-notifications';
+import * as Speech from 'expo-speech';
 import { Share } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -83,6 +84,7 @@ const DEFAULT_LEARN_PROGRESS = {
   completedLessons: {},
   quizAnswers: {},
   memorisation: {},
+  mutunMemorisation: {},
   nawawiQuestionChecks: {},
   bayquniyyahCompletedLessons: {},
   bayquniyyahQuizAnswers: {},
@@ -104,6 +106,14 @@ const DEFAULT_DAILY_QUIZ_SESSION = {
   answers: [],
 };
 const REVIEW_INTERVAL_DAYS = [1, 3, 7];
+const MUTUN_MEMORISATION_STAGES = [
+  'readComplete',
+  'repeatComplete',
+  'hideWordsComplete',
+  'halfRecallComplete',
+  'fullRecallComplete',
+  'memorised',
+];
 const clampLearningIndex = (value, length) => {
   const index = Number(value);
   if (!Number.isFinite(index)) return 0;
@@ -204,6 +214,29 @@ const getShuffledOptions = (options = [], seed = '') => (
     .map(item => item.option)
 );
 
+const getMutunMemorisationKey = (source, id) => `${source}:${id}`;
+const getMutunMemorisationTracker = (progress, source, id) =>
+  progress?.mutunMemorisation?.[getMutunMemorisationKey(source, id)] || {};
+const isMutunMemorised = (progress, source, id) =>
+  !!getMutunMemorisationTracker(progress, source, id).memorised;
+const splitArabicWords = text => String(text || '').trim().split(/\s+/).filter(Boolean);
+const getHiddenWordsText = text => {
+  const words = splitArabicWords(text);
+  if (words.length < 4) return `${text || ''} ______`.trim();
+  const hiddenIndexes = new Set();
+  words.forEach((_, index) => {
+    if (index >= 2 && index % 4 === 2) hiddenIndexes.add(index);
+  });
+  if (!hiddenIndexes.size) hiddenIndexes.add(Math.max(1, Math.floor(words.length / 2)));
+  return words.map((word, index) => hiddenIndexes.has(index) ? '______' : word).join(' ');
+};
+const getHalfRecallText = text => {
+  const words = splitArabicWords(text);
+  if (words.length < 6) return getHiddenWordsText(text);
+  const splitIndex = Math.max(2, Math.ceil(words.length / 2));
+  return `${words.slice(0, splitIndex).join(' ')} ______`;
+};
+
 const sanitizeLearnProgress = progress => {
   const source = progress && typeof progress === 'object' ? progress : {};
   const completedLessons = {};
@@ -249,6 +282,17 @@ const sanitizeLearnProgress = progress => {
     memorisation[hadithId] = {};
     hadith.stages.forEach(stage => {
       if (tracker[stage]) memorisation[hadithId][stage] = true;
+    });
+  });
+
+  const mutunMemorisation = {};
+  Object.entries(source.mutunMemorisation || {}).forEach(([itemKey, tracker]) => {
+    const validArbainKey = itemKey.startsWith('arbain:') && nawawiPreview.some(item => item.id === itemKey.replace('arbain:', ''));
+    const validBayquniyyahKey = itemKey.startsWith('bayquniyyah:') && bayquniyyahLessons.some(item => item.id === itemKey.replace('bayquniyyah:', ''));
+    if ((!validArbainKey && !validBayquniyyahKey) || !tracker || typeof tracker !== 'object') return;
+    mutunMemorisation[itemKey] = {};
+    MUTUN_MEMORISATION_STAGES.forEach(stage => {
+      if (tracker[stage]) mutunMemorisation[itemKey][stage] = true;
     });
   });
 
@@ -366,6 +410,7 @@ const sanitizeLearnProgress = progress => {
     completedLessons,
     quizAnswers,
     memorisation,
+    mutunMemorisation,
     nawawiQuestionChecks,
     bayquniyyahCompletedLessons,
     bayquniyyahQuizAnswers,
@@ -1003,6 +1048,13 @@ export default function App() {
   const [activeNawawiCardIndex, setActiveNawawiCardIndex] = useState(0);
   const [selectedBayquniyyahLessonId, setSelectedBayquniyyahLessonId] = useState(bayquniyyahLessons[0]?.id || '');
   const [activeBayquniyyahCardIndex, setActiveBayquniyyahCardIndex] = useState(0);
+  const [memorisationSource, setMemorisationSource] = useState('arbain');
+  const [memorisationItemId, setMemorisationItemId] = useState(nawawiPreview[0]?.id || '');
+  const [activeMemorisationStepIndex, setActiveMemorisationStepIndex] = useState(0);
+  const [memorisationRepeatChecks, setMemorisationRepeatChecks] = useState({});
+  const [memorisationReveal, setMemorisationReveal] = useState(false);
+  const [memorisationRemembered, setMemorisationRemembered] = useState(false);
+  const [speakingTextKey, setSpeakingTextKey] = useState('');
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
   const [activeReviewCards, setActiveReviewCards] = useState([]);
   const [reviewSessionSummary, setReviewSessionSummary] = useState(DEFAULT_DAILY_QUIZ_SESSION);
@@ -1045,6 +1097,57 @@ const arabicTextScale = getTextScale(userPreferences.arabicTextSize);
 const scaledTextStyle = fontSize => ({ fontSize: Math.round(fontSize * textScale) });
 const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * arabicTextScale) });
 
+  const stopArabicSpeech = async () => {
+    try {
+      await Speech.stop();
+    } catch {
+      // Speech availability depends on the device; stopping should never block learning.
+    } finally {
+      setSpeakingTextKey('');
+    }
+  };
+
+  const speakArabicText = async (text, textKey) => {
+    const cleanText = String(text || '').trim();
+    if (!cleanText) return;
+    try {
+      const isSpeaking = await Speech.isSpeakingAsync();
+      if (isSpeaking) {
+        await Speech.stop();
+        if (speakingTextKey === textKey) {
+          setSpeakingTextKey('');
+          return;
+        }
+      }
+      setSpeakingTextKey(textKey);
+      Speech.speak(cleanText, {
+        language: 'ar',
+        rate: 0.82,
+        onDone: () => setSpeakingTextKey(currentKey => currentKey === textKey ? '' : currentKey),
+        onStopped: () => setSpeakingTextKey(currentKey => currentKey === textKey ? '' : currentKey),
+        onError: () => {
+          setSpeakingTextKey(currentKey => currentKey === textKey ? '' : currentKey);
+          Alert.alert('Arabic voice unavailable', 'Arabic voice may depend on your device settings.');
+        },
+      });
+    } catch {
+      setSpeakingTextKey('');
+      Alert.alert('Arabic voice unavailable', 'Arabic voice may depend on your device settings.');
+    }
+  };
+
+  const renderArabicSpeakerButton = (text, textKey, label = 'Play Arabic') => (
+    <Pressable
+      style={styles.arabicSpeakerButton}
+      onPress={() => speakArabicText(text, textKey)}
+      accessibilityRole="button"
+      accessibilityLabel={speakingTextKey === textKey ? 'Stop Arabic audio' : label}
+    >
+      <Ionicons name={speakingTextKey === textKey ? 'stop-circle-outline' : 'volume-high-outline'} size={18} color="#176b5f" />
+      <Text style={styles.arabicSpeakerText}>{speakingTextKey === textKey ? 'Stop' : label}</Text>
+    </Pressable>
+  );
+
   useEffect(() => {
     Animated.parallel([
       Animated.timing(welcomeFadeAnim, {
@@ -1078,6 +1181,22 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
   }, [activeSection, sectionFadeAnim, sectionSlideAnim]);
 
   useEffect(() => {
+    if (activeSection !== 'learn') {
+      stopArabicSpeech();
+    }
+  }, [activeSection]);
+
+  useEffect(() => {
+    if (!['nawawiHadith', 'bayquniyyahLesson', 'mutunMemorisation'].includes(learnMode)) {
+      stopArabicSpeech();
+    }
+  }, [learnMode]);
+
+  useEffect(() => () => {
+    Speech.stop();
+  }, []);
+
+  useEffect(() => {
     cardFadeAnim.setValue(0.88);
     cardSlideAnim.setValue(10);
     Animated.parallel([
@@ -1092,7 +1211,7 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
         useNativeDriver: true,
       }),
     ]).start();
-  }, [learnMode, activePathwayCardIndex, selectedNawawiHadithId, activeNawawiCardIndex, activeBayquniyyahCardIndex, activeReviewIndex, cardFadeAnim, cardSlideAnim]);
+  }, [learnMode, activePathwayCardIndex, selectedNawawiHadithId, activeNawawiCardIndex, activeBayquniyyahCardIndex, activeReviewIndex, activeMemorisationStepIndex, memorisationItemId, cardFadeAnim, cardSlideAnim]);
 
   const animateProgressTo = percentage => {
     Animated.timing(progressAnim, {
@@ -1127,10 +1246,12 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
       animateProgressTo(totalCards ? ((activeReviewIndex + 1) / totalCards) * 100 : 0);
     } else if (learnMode === 'bayquniyyahLesson') {
       animateProgressTo(((activeBayquniyyahCardIndex + 1) / 5) * 100);
+    } else if (learnMode === 'mutunMemorisation') {
+      animateProgressTo(((activeMemorisationStepIndex + 1) / 6) * 100);
     } else {
       progressAnim.setValue(0);
     }
-  }, [learnMode, selectedPathwayId, activePathwayCardIndex, selectedNawawiHadithId, activeNawawiCardIndex, activeBayquniyyahCardIndex, activeReviewIndex, activeReviewCards.length, progressAnim]);
+  }, [learnMode, selectedPathwayId, activePathwayCardIndex, selectedNawawiHadithId, activeNawawiCardIndex, activeBayquniyyahCardIndex, activeReviewIndex, activeReviewCards.length, activeMemorisationStepIndex, progressAnim]);
 
   useEffect(() => {
     const loadLocalProgress = async () => {
@@ -1359,6 +1480,35 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
           : previousProgress.reviewSchedule,
       };
     });
+  };
+
+  const markMutunMemorisationStage = (source, id, stage, value = true) => {
+    if (!MUTUN_MEMORISATION_STAGES.includes(stage)) return;
+    const itemKey = getMutunMemorisationKey(source, id);
+    updateLearnProgress(previousProgress => {
+      const currentTracker = previousProgress.mutunMemorisation?.[itemKey] || {};
+      return {
+        ...previousProgress,
+        mutunMemorisation: {
+          ...previousProgress.mutunMemorisation,
+          [itemKey]: {
+            ...currentTracker,
+            [stage]: value,
+          },
+        },
+      };
+    });
+  };
+
+  const openMutunMemorisation = (source, id) => {
+    setMemorisationSource(source);
+    setMemorisationItemId(id);
+    setActiveMemorisationStepIndex(0);
+    setMemorisationRepeatChecks({});
+    setMemorisationReveal(false);
+    setMemorisationRemembered(false);
+    stopArabicSpeech();
+    setLearnMode('mutunMemorisation');
   };
 
   const toggleNawawiQuestionCheck = (hadithId, questionIndex, selectedOption = true, correctOption = '') => {
@@ -1706,6 +1856,12 @@ const closeNarratorBio = () => {
         return true;
       }
 
+      if (activeSection === 'learn' && learnMode === 'mutunMemorisation') {
+        stopArabicSpeech();
+        setLearnMode(memorisationSource === 'arbain' ? 'nawawiHadith' : 'bayquniyyahLesson');
+        return true;
+      }
+
       if (activeSection === 'learn' && learnMode === 'nawawiHadith') {
         setLearnMode('nawawi');
         return true;
@@ -1739,6 +1895,7 @@ const closeNarratorBio = () => {
     activeSection,
     learnMode,
     loadingCommentary,
+    memorisationSource,
     narratorBioVisible,
     settingsVisible,
     thankYouVisible,
@@ -2136,6 +2293,7 @@ const closeNarratorBio = () => {
           const tracker = learnProgress.memorisation?.[hadith.id] || {};
           const completedStages = (hadith.stages || []).filter(stage => tracker[stage]).length;
           const hadithComplete = isNawawiHadithComplete(hadith, safeProgress);
+          const hadithMemorised = isMutunMemorised(safeProgress, 'arbain', hadith.id);
           return (
             <Pressable
               key={hadith.id}
@@ -2148,6 +2306,7 @@ const closeNarratorBio = () => {
                   {hadithComplete ? '✓ Completed' : `${completedStages}/${hadith.stages.length} checkpoints`}
                 </Text>
               </View>
+              {hadithMemorised && <Text style={styles.memorisedBadge}>Memorised</Text>}
               <Text style={styles.lessonTitle}>{NAWAWI_SELECTION_TITLES[hadith.id] || hadith.title}</Text>
               <Text style={styles.nawawiReference}>{hadith.reference}</Text>
               <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{hadith.english}</Text>
@@ -2223,6 +2382,7 @@ const closeNarratorBio = () => {
         {bayquniyyahLessons.map(lesson => {
           const completed = !!safeProgress.bayquniyyahCompletedLessons?.[lesson.id];
           const unlocked = isBayquniyyahLessonUnlocked(lesson.id, safeProgress);
+          const lessonMemorised = isMutunMemorised(safeProgress, 'bayquniyyah', lesson.id);
           return (
             <Pressable
               key={lesson.id}
@@ -2240,6 +2400,7 @@ const closeNarratorBio = () => {
                   {completed ? '✓ Completed' : unlocked ? lesson.keyTerm : 'Locked'}
                 </Text>
               </View>
+              {lessonMemorised && <Text style={styles.memorisedBadge}>Memorised</Text>}
               <Text style={styles.lessonTitle}>{lesson.title}</Text>
               <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{lesson.explanation}</Text>
               {!unlocked && (
@@ -2525,6 +2686,14 @@ const closeNarratorBio = () => {
             <Text style={styles.nawawiReference}>{hadith.reference}</Text>
             <Text style={styles.nawawiReference}>Narrator: {hadith.narrator}</Text>
             <Text style={[styles.nawawiArabic, scaledArabicTextStyle(22)]}>{hadith.arabic}</Text>
+            {renderArabicSpeakerButton(hadith.arabic, `arbain:${hadith.id}:full`, 'Play Arabic')}
+            <Pressable
+              style={styles.memoriseModeButton}
+              onPress={() => openMutunMemorisation('arbain', hadith.id)}
+            >
+              <Ionicons name="school-outline" size={17} color="#176b5f" />
+              <Text style={styles.memoriseModeButtonText}>Memorise</Text>
+            </Pressable>
             <Text style={styles.flowHint}>Read the full matn slowly before practicing smaller chunks.</Text>
           </>
         ) : card.type === 'meaning' ? (
@@ -2555,6 +2724,7 @@ const closeNarratorBio = () => {
             <Text style={styles.lessonTitle}>{hadith.title}</Text>
             <Text style={styles.nawawiQuestionTitle}>Read this chunk aloud</Text>
             <Text style={[styles.nawawiArabic, scaledArabicTextStyle(22)]}>{card.chunk}</Text>
+            {renderArabicSpeakerButton(card.chunk, `arbain:${hadith.id}:chunk:${card.chunkIndex}`, 'Play Arabic')}
             <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>Cover the screen after reading, then try to recite this phrase from memory.</Text>
           </>
         ) : card.type === 'reflection' ? (
@@ -2696,6 +2866,14 @@ const closeNarratorBio = () => {
           <>
             <Text style={styles.lessonTitle}>Lesson {lesson.number}: {lesson.title}</Text>
             <Text style={[styles.nawawiArabic, scaledArabicTextStyle(22)]}>{lesson.arabic}</Text>
+            {renderArabicSpeakerButton(lesson.arabic, `bayquniyyah:${lesson.id}:line`, 'Play Arabic')}
+            <Pressable
+              style={styles.memoriseModeButton}
+              onPress={() => openMutunMemorisation('bayquniyyah', lesson.id)}
+            >
+              <Ionicons name="school-outline" size={17} color="#176b5f" />
+              <Text style={styles.memoriseModeButtonText}>Memorise</Text>
+            </Pressable>
             <Text style={styles.flowHint}>Read the Arabic slowly before moving to the meaning.</Text>
           </>
         )}
@@ -2716,6 +2894,7 @@ const closeNarratorBio = () => {
             <Text style={styles.lessonTitle}>Memorise Gradually</Text>
             <Text style={styles.nawawiQuestionTitle}>Missing word practice</Text>
             <Text style={[styles.quizQuestion, scaledTextStyle(17)]}>{lesson.memorisePrompt.prompt}</Text>
+            {renderArabicSpeakerButton(lesson.arabic, `bayquniyyah:${lesson.id}:practice`, 'Play Arabic')}
             <View style={styles.vocabularyItem}>
               <Text style={styles.vocabularyTerm}>Answer</Text>
               <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>{lesson.memorisePrompt.answer}</Text>
@@ -2814,6 +2993,218 @@ const closeNarratorBio = () => {
         )}
         <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode('bayquniyyah')}>
           <Text style={styles.secondaryTextButtonText}>Back to Bayquniyyah</Text>
+        </Pressable>
+      </Animated.View>
+    );
+  };
+
+  const renderMutunMemorisationFlow = () => {
+    const safeProgress = sanitizeLearnProgress(learnProgress);
+    const isArbain = memorisationSource === 'arbain';
+    const item = isArbain
+      ? nawawiPreview.find(hadith => hadith.id === memorisationItemId)
+      : bayquniyyahLessons.find(lesson => lesson.id === memorisationItemId);
+    if (!item) return null;
+
+    const itemNumber = isArbain
+      ? Math.max(1, nawawiPreview.findIndex(hadith => hadith.id === item.id) + 1)
+      : item.number;
+    const sourceTitle = isArbain ? 'Arbain Nawawi' : 'Bayquniyyah';
+    const returnMode = isArbain ? 'nawawiHadith' : 'bayquniyyahLesson';
+    const itemTitle = isArbain ? item.title : `Lesson ${item.number}: ${item.title}`;
+    const arabicText = item.arabic || '';
+    const tracker = getMutunMemorisationTracker(safeProgress, memorisationSource, item.id);
+    const hiddenWordsText = getHiddenWordsText(arabicText);
+    const halfRecallText = isArbain && item.chunks?.[0]
+      ? `${item.chunks[0]} ______`
+      : getHalfRecallText(arabicText);
+    const repeatComplete = [1, 2, 3].every(repeat => memorisationRepeatChecks[repeat]);
+    const stepTitles = ['Read', 'Repeat', 'Hide Words', 'Half Recall', 'Full Recall', 'Result'];
+    const progress = ((activeMemorisationStepIndex + 1) / stepTitles.length) * 100;
+
+    const goToNextStep = (stage = '') => {
+      if (stage) markMutunMemorisationStage(memorisationSource, item.id, stage, true);
+      setMemorisationReveal(false);
+      setActiveMemorisationStepIndex(index => Math.min(stepTitles.length - 1, index + 1));
+    };
+
+    const toggleRepeat = repeatNumber => {
+      const nextChecks = {
+        ...memorisationRepeatChecks,
+        [repeatNumber]: !memorisationRepeatChecks[repeatNumber],
+      };
+      setMemorisationRepeatChecks(nextChecks);
+      if ([1, 2, 3].every(repeat => nextChecks[repeat])) {
+        markMutunMemorisationStage(memorisationSource, item.id, 'repeatComplete', true);
+      }
+    };
+
+    const finishFullRecall = remembered => {
+      markMutunMemorisationStage(memorisationSource, item.id, 'fullRecallComplete', true);
+      markMutunMemorisationStage(memorisationSource, item.id, 'memorised', remembered);
+      setMemorisationRemembered(remembered);
+      setMemorisationReveal(false);
+      setActiveMemorisationStepIndex(5);
+    };
+
+    return (
+      <Animated.View style={[styles.learnCard, styles.flowCard, { opacity: cardFadeAnim, transform: [{ translateY: cardSlideAnim }] }]}>
+        <View style={styles.learnCardHeader}>
+          <Text style={styles.lessonLevel}>{sourceTitle} • Memorise</Text>
+          <Text style={styles.completedBadge}>{activeMemorisationStepIndex + 1}/{stepTitles.length}</Text>
+        </View>
+        {renderStaticProgressBar(progress)}
+        <Text style={styles.lessonTitle}>{stepTitles[activeMemorisationStepIndex]}</Text>
+        <Text style={styles.nawawiReference}>{itemTitle}</Text>
+
+        {activeMemorisationStepIndex === 0 && (
+          <>
+            <Text style={[styles.nawawiArabic, scaledArabicTextStyle(22)]}>{arabicText}</Text>
+            {renderArabicSpeakerButton(arabicText, `mutun:${memorisationSource}:${item.id}:read`, 'Play Arabic')}
+            <Text style={styles.flowHint}>Read the text carefully. This is a memorisation aid, not Qur'an recitation. Arabic voice quality depends on your device settings.</Text>
+            <Pressable style={styles.lessonCompletionButton} onPress={() => goToNextStep('readComplete')}>
+              <Text style={styles.lessonCompletionButtonText}>Continue</Text>
+            </Pressable>
+          </>
+        )}
+
+        {activeMemorisationStepIndex === 1 && (
+          <>
+            <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>Repeat the Arabic text three times. Mark each repeat after you recite it.</Text>
+            {renderArabicSpeakerButton(arabicText, `mutun:${memorisationSource}:${item.id}:repeat`, 'Play Arabic')}
+            <View style={styles.memorisationGrid}>
+              {[1, 2, 3].map(repeat => {
+                const done = !!memorisationRepeatChecks[repeat];
+                return (
+                  <Pressable
+                    key={repeat}
+                    style={[styles.memorisationStep, done && styles.memorisationStepDone]}
+                    onPress={() => toggleRepeat(repeat)}
+                  >
+                    <Text style={[styles.memorisationStepText, done && styles.memorisationStepTextDone]}>
+                      Repeat {repeat}{done ? ' done' : ''}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Pressable
+              style={[styles.lessonCompletionButton, !repeatComplete && styles.flowButtonDisabled]}
+              disabled={!repeatComplete}
+              onPress={() => goToNextStep('repeatComplete')}
+            >
+              <Text style={styles.lessonCompletionButtonText}>Continue</Text>
+            </Pressable>
+          </>
+        )}
+
+        {activeMemorisationStepIndex === 2 && (
+          <>
+            <Text style={styles.nawawiQuestionTitle}>Hide Words</Text>
+            <Text style={[styles.nawawiArabic, scaledArabicTextStyle(22)]}>{memorisationReveal ? arabicText : hiddenWordsText}</Text>
+            <Text style={styles.flowHint}>Try to complete the hidden words from memory before revealing.</Text>
+            <View style={styles.flowControls}>
+              <Pressable style={styles.flowButton} onPress={() => setMemorisationReveal(reveal => !reveal)}>
+                <Text style={styles.flowButtonText}>{memorisationReveal ? 'Hide Again' : 'Reveal'}</Text>
+              </Pressable>
+              <Pressable style={styles.flowButton} onPress={() => goToNextStep('hideWordsComplete')}>
+                <Text style={styles.flowButtonText}>Continue</Text>
+              </Pressable>
+            </View>
+          </>
+        )}
+
+        {activeMemorisationStepIndex === 3 && (
+          <>
+            <Text style={styles.nawawiQuestionTitle}>Half Recall</Text>
+            <Text style={[styles.nawawiArabic, scaledArabicTextStyle(22)]}>{memorisationReveal ? arabicText : halfRecallText}</Text>
+            <Text style={styles.flowHint}>Read the visible part, then recite the rest before revealing.</Text>
+            <View style={styles.flowControls}>
+              <Pressable style={styles.flowButton} onPress={() => setMemorisationReveal(reveal => !reveal)}>
+                <Text style={styles.flowButtonText}>{memorisationReveal ? 'Hide Again' : 'Reveal'}</Text>
+              </Pressable>
+              <Pressable style={styles.flowButton} onPress={() => goToNextStep('halfRecallComplete')}>
+                <Text style={styles.flowButtonText}>Continue</Text>
+              </Pressable>
+            </View>
+          </>
+        )}
+
+        {activeMemorisationStepIndex === 4 && (
+          <>
+            <Text style={styles.nawawiQuestionTitle}>Full Recall</Text>
+            {memorisationReveal ? (
+              <Text style={[styles.nawawiArabic, scaledArabicTextStyle(22)]}>{arabicText}</Text>
+            ) : (
+              <View style={styles.recallHiddenPanel}>
+                <Text style={styles.recallHiddenText}>Recite from memory before revealing.</Text>
+              </View>
+            )}
+            <View style={styles.flowControls}>
+              <Pressable style={styles.flowButton} onPress={() => setMemorisationReveal(true)}>
+                <Text style={styles.flowButtonText}>Reveal Text</Text>
+              </Pressable>
+            </View>
+            <Pressable style={styles.lessonCompletionButton} onPress={() => finishFullRecall(true)}>
+              <Text style={styles.lessonCompletionButtonText}>I remembered it</Text>
+            </Pressable>
+            <Pressable style={[styles.lessonCompletionButton, styles.learnActionButtonSecondary]} onPress={() => finishFullRecall(false)}>
+              <Text style={styles.lessonCompletionButtonText}>I need to revise</Text>
+            </Pressable>
+          </>
+        )}
+
+        {activeMemorisationStepIndex === 5 && (
+          <View style={styles.pathwayCompletionPanel}>
+            {memorisationRemembered ? (
+              <>
+                {renderCompletionIcon()}
+                <Text style={styles.lessonCompletionTitle}>Alhamdulillah!</Text>
+                <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
+                  You have completed memorisation practice for this lesson.
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.lessonCompletionTitle}>Review this lesson again.</Text>
+                <Text style={[styles.lessonSummary, scaledTextStyle(16)]}>
+                  Repeat the memorisation steps until you can recall it confidently.
+                </Text>
+              </>
+            )}
+            <Text style={styles.flowHint}>
+              Progress saved: {MUTUN_MEMORISATION_STAGES.filter(stage => tracker[stage] || (stage === 'memorised' && memorisationRemembered)).length}/{MUTUN_MEMORISATION_STAGES.length} steps
+            </Text>
+            <Pressable style={styles.lessonCompletionButton} onPress={() => setLearnMode(returnMode)}>
+              <Text style={styles.lessonCompletionButtonText}>Return to {sourceTitle}</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.lessonCompletionButton, styles.learnActionButtonCompleted]}
+              onPress={() => {
+                setActiveMemorisationStepIndex(0);
+                setMemorisationRepeatChecks({});
+                setMemorisationReveal(false);
+                setMemorisationRemembered(false);
+              }}
+            >
+              <Text style={styles.lessonCompletionButtonText}>{memorisationRemembered ? 'Revise Again' : 'Try Again'}</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {activeMemorisationStepIndex > 0 && activeMemorisationStepIndex < 5 && (
+          <Pressable
+            style={styles.secondaryTextButton}
+            onPress={() => {
+              setMemorisationReveal(false);
+              setActiveMemorisationStepIndex(index => Math.max(0, index - 1));
+            }}
+          >
+            <Text style={styles.secondaryTextButtonText}>Back</Text>
+          </Pressable>
+        )}
+        <Pressable style={styles.secondaryTextButton} onPress={() => setLearnMode(returnMode)}>
+          <Text style={styles.secondaryTextButtonText}>Exit Memorisation</Text>
         </Pressable>
       </Animated.View>
     );
@@ -3000,6 +3391,10 @@ const closeNarratorBio = () => {
 
     if (learnMode === 'bayquniyyahLesson') {
       return renderBayquniyyahFlow();
+    }
+
+    if (learnMode === 'mutunMemorisation') {
+      return renderMutunMemorisationFlow();
     }
 
     return (
@@ -4335,6 +4730,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '900',
   },
+  memorisedBadge: {
+    alignSelf: 'flex-start',
+    color: '#176b5f',
+    backgroundColor: '#e9f5ee',
+    borderWidth: 1,
+    borderColor: '#b9d9c6',
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    fontSize: 12,
+    fontWeight: '900',
+    marginBottom: 8,
+  },
   lessonTitle: {
     color: '#132f35',
     fontSize: 19,
@@ -4366,6 +4774,57 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textAlign: 'right',
     marginBottom: 10,
+  },
+  arabicSpeakerButton: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#cfdcd3',
+    backgroundColor: '#f4f7f2',
+    paddingVertical: 8,
+    paddingHorizontal: 11,
+    borderRadius: 999,
+    marginBottom: 12,
+  },
+  arabicSpeakerText: {
+    color: '#176b5f',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  memoriseModeButton: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    borderWidth: 1,
+    borderColor: '#cfdcd3',
+    backgroundColor: '#edf4e8',
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  memoriseModeButtonText: {
+    color: '#176b5f',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  recallHiddenPanel: {
+    backgroundColor: '#f4f7f2',
+    borderWidth: 1,
+    borderColor: '#d7e5ce',
+    borderRadius: 8,
+    padding: 18,
+    marginBottom: 14,
+  },
+  recallHiddenText: {
+    color: '#415355',
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   nawawiQuestionTitle: {
     color: '#132f35',
