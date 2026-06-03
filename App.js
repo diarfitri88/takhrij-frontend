@@ -67,6 +67,7 @@ const DEFAULT_API_TIMEOUT_MS = 30000;
 const NARRATOR_BIO_TIMEOUT_MS = 60000;
 const LEARN_PROGRESS_STORAGE_KEY = 'takhrij.learnProgress';
 const USER_PREFERENCES_STORAGE_KEY = 'takhrij.userPreferences';
+const ONBOARDING_STORAGE_KEY = 'takhrij.hasSeenOnboarding';
 const DAILY_REVIEW_REMINDER_HOUR = 20;
 const DAILY_REVIEW_REMINDER_MINUTE = 0;
 const TEXT_SIZE_OPTIONS = [
@@ -105,6 +106,39 @@ const DEFAULT_DAILY_QUIZ_SESSION = {
   correct: 0,
   answers: [],
 };
+const ONBOARDING_SCREENS = [
+  {
+    title: 'Welcome to Takhrij',
+    body: 'Takhrij helps you search, study, and revise hadith across 16 collections with over 50,000 narrations.',
+  },
+  {
+    title: 'Search Hadith',
+    body: 'Search by Arabic, English, or reference.',
+    points: ['Bukhari 1', 'Sahih Muslim 300', 'Bulugh al-Maram 1', "Shama'il Muhammadiyah 1"],
+  },
+  {
+    title: 'AI Commentary',
+    body: 'Tap View AI Commentary for AI-generated educational support. Free users get 5 AI features per day. Always verify important religious matters with qualified teachers and reliable scholarly sources.',
+  },
+  {
+    title: 'Narrator Biography',
+    body: 'Tap narrator names to learn more about narrators. Narrator biographies are AI-generated and should be verified with reliable sources.',
+  },
+  {
+    title: 'Learning Pathways',
+    body: 'Study through structured pathways and track your progress as you learn.',
+    points: ['Arbain Nawawi', 'Bayquniyyah', 'Daily Quiz'],
+  },
+  {
+    title: 'Memorisation Mode',
+    body: 'Use Memorise mode to revise with Arabic audio support.',
+    points: ['Read', 'Repeat', 'Hide Words', 'Half Recall', 'Full Recall'],
+  },
+  {
+    title: 'Sharing',
+    body: 'Use the copy and share icons on hadith cards to share hadith without using AI quota.',
+  },
+];
 const REVIEW_INTERVAL_DAYS = [1, 3, 7];
 const MUTUN_MEMORISATION_STAGES = [
   'readComplete',
@@ -1034,6 +1068,9 @@ const glossary = [
 
 export default function App() {
   const [showWelcome, setShowWelcome] = useState(true);
+  const [onboardingVisible, setOnboardingVisible] = useState(false);
+  const [onboardingIndex, setOnboardingIndex] = useState(0);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(true);
   const [activeSection, setActiveSection] = useState('search');
   const [query, setQuery] = useState('');
   const [result, setResult] = useState('');
@@ -1256,10 +1293,12 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
   useEffect(() => {
     const loadLocalProgress = async () => {
       try {
-        const [storedProgress, storedPreferences] = await Promise.all([
+        const [storedProgress, storedPreferences, storedOnboarding] = await Promise.all([
           AsyncStorage.getItem(LEARN_PROGRESS_STORAGE_KEY),
           AsyncStorage.getItem(USER_PREFERENCES_STORAGE_KEY),
+          AsyncStorage.getItem(ONBOARDING_STORAGE_KEY),
         ]);
+        setHasSeenOnboarding(storedOnboarding === 'true');
         try {
           const parsedProgress = storedProgress ? JSON.parse(storedProgress) : DEFAULT_LEARN_PROGRESS;
           const safeProgress = sanitizeLearnProgress(parsedProgress);
@@ -1286,6 +1325,7 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
         learnProgressRef.current = DEFAULT_LEARN_PROGRESS;
         setLearnProgress(DEFAULT_LEARN_PROGRESS);
         setUserPreferences(DEFAULT_USER_PREFERENCES);
+        setHasSeenOnboarding(false);
       }
     };
 
@@ -1333,6 +1373,29 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
       await AsyncStorage.setItem(USER_PREFERENCES_STORAGE_KEY, JSON.stringify(safePreferences));
     } catch {
       // Preferences are local polish only; storage errors should not block the app.
+    }
+  };
+
+  const openOnboarding = () => {
+    setOnboardingIndex(0);
+    setOnboardingVisible(true);
+  };
+
+  const finishOnboarding = async () => {
+    setOnboardingVisible(false);
+    setOnboardingIndex(0);
+    setHasSeenOnboarding(true);
+    try {
+      await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
+    } catch {
+      // Onboarding should never block the app if local storage is unavailable.
+    }
+  };
+
+  const dismissWelcome = () => {
+    setShowWelcome(false);
+    if (!hasSeenOnboarding) {
+      openOnboarding();
     }
   };
 
@@ -1851,6 +1914,11 @@ const closeNarratorBio = () => {
         return true;
       }
 
+      if (onboardingVisible) {
+        finishOnboarding();
+        return true;
+      }
+
       if (settingsVisible) {
         setSettingsVisible(false);
         return true;
@@ -1897,6 +1965,7 @@ const closeNarratorBio = () => {
     loadingCommentary,
     memorisationSource,
     narratorBioVisible,
+    onboardingVisible,
     settingsVisible,
     thankYouVisible,
   ]);
@@ -3510,7 +3579,7 @@ const closeNarratorBio = () => {
               <Text style={styles.welcomeDisclaimer}>
                 Takhrij is for learning and reflection. It does not replace qualified scholars, formal study, or scholarly takhrij.
               </Text>
-              <Pressable style={styles.welcomeButton} onPress={() => setShowWelcome(false)}>
+              <Pressable style={styles.welcomeButton} onPress={dismissWelcome}>
                 <Text style={styles.welcomeButtonText}>Start Learning</Text>
               </Pressable>
             </Animated.View>
@@ -3528,6 +3597,67 @@ const closeNarratorBio = () => {
         <Modal visible={loadingCommentary} transparent animationType="none">
           <View style={styles.overlay}>
             <ActivityIndicator size="large" color="#fff" />
+          </View>
+        </Modal>
+
+        <Modal
+          visible={onboardingVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={finishOnboarding}
+        >
+          <View style={styles.modalBackdrop}>
+            <View style={[styles.modalContent, styles.onboardingModalContent]}>
+              <Text style={styles.onboardingProgress}>{onboardingIndex + 1} / {ONBOARDING_SCREENS.length}</Text>
+              <View style={styles.onboardingProgressTrack}>
+                <View
+                  style={[
+                    styles.onboardingProgressFill,
+                    { width: `${((onboardingIndex + 1) / ONBOARDING_SCREENS.length) * 100}%` },
+                  ]}
+                />
+              </View>
+              <ScrollView contentContainerStyle={styles.onboardingScrollContent}>
+                <Text style={styles.onboardingTitle}>{ONBOARDING_SCREENS[onboardingIndex].title}</Text>
+                <Text style={[styles.onboardingBody, scaledTextStyle(16)]}>{ONBOARDING_SCREENS[onboardingIndex].body}</Text>
+                {!!ONBOARDING_SCREENS[onboardingIndex].points?.length && (
+                  <View style={styles.onboardingPointList}>
+                    {ONBOARDING_SCREENS[onboardingIndex].points.map(point => (
+                      <Text key={point} style={[styles.onboardingPoint, scaledTextStyle(15)]}>• {point}</Text>
+                    ))}
+                  </View>
+                )}
+              </ScrollView>
+              <View style={styles.onboardingControls}>
+                <Pressable
+                  style={[
+                    styles.onboardingSecondaryButton,
+                    onboardingIndex === 0 && styles.flowButtonDisabled,
+                  ]}
+                  disabled={onboardingIndex === 0}
+                  onPress={() => setOnboardingIndex(index => Math.max(0, index - 1))}
+                >
+                  <Text style={styles.onboardingSecondaryButtonText}>Back</Text>
+                </Pressable>
+                <Pressable style={styles.onboardingSkipButton} onPress={finishOnboarding}>
+                  <Text style={styles.onboardingSkipButtonText}>Skip</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.onboardingPrimaryButton}
+                  onPress={() => {
+                    if (onboardingIndex >= ONBOARDING_SCREENS.length - 1) {
+                      finishOnboarding();
+                    } else {
+                      setOnboardingIndex(index => Math.min(ONBOARDING_SCREENS.length - 1, index + 1));
+                    }
+                  }}
+                >
+                  <Text style={styles.onboardingPrimaryButtonText}>
+                    {onboardingIndex >= ONBOARDING_SCREENS.length - 1 ? 'Start Using Takhrij' : 'Next'}
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
           </View>
         </Modal>
 
@@ -3804,6 +3934,13 @@ const closeNarratorBio = () => {
         </Pressable>
 
         <Text style={styles.settingsGroupTitle}>Information</Text>
+        <Pressable
+          style={styles.settingsInfoButton}
+          onPress={openOnboarding}
+        >
+          <Text style={styles.settingsInfoButtonText}>How to Use Takhrij</Text>
+        </Pressable>
+
         <Text style={styles.settingsSectionTitle}>About Takhrij</Text>
         <Text style={[styles.modalText, scaledTextStyle(16)]}>
           Takhrij helps Muslims search across 16 hadith collections with over 50,000 narrations in Arabic and English. It includes AI assisted commentary, narrator biography lookup, Arbain Nawawi and Bayquniyyah learning pathways, Daily Quiz, progress tracking, and memorisation focused learning tools.
@@ -5345,6 +5482,112 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e5e9df',
   },
+  onboardingModalContent: {
+    maxHeight: height * 0.7,
+    padding: 18,
+  },
+  onboardingProgress: {
+    color: '#176b5f',
+    fontSize: 13,
+    fontWeight: '900',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  onboardingProgressTrack: {
+    height: 6,
+    backgroundColor: '#e7eee5',
+    borderRadius: 999,
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  onboardingProgressFill: {
+    height: '100%',
+    backgroundColor: '#d8b15a',
+    borderRadius: 999,
+  },
+  onboardingScrollContent: {
+    paddingBottom: 8,
+  },
+  onboardingTitle: {
+    color: '#132f35',
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: '900',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  onboardingBody: {
+    color: '#2f3d40',
+    fontSize: 16,
+    lineHeight: 25,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  onboardingPointList: {
+    backgroundColor: '#f7faf7',
+    borderWidth: 1,
+    borderColor: '#d7dfd5',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginTop: 8,
+  },
+  onboardingPoint: {
+    color: '#41504d',
+    fontSize: 15,
+    lineHeight: 23,
+    fontWeight: '700',
+    marginBottom: 3,
+  },
+  onboardingControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 12,
+  },
+  onboardingPrimaryButton: {
+    flex: 1.25,
+    minHeight: 44,
+    backgroundColor: '#176b5f',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+  },
+  onboardingPrimaryButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  onboardingSecondaryButton: {
+    minHeight: 44,
+    minWidth: 64,
+    borderWidth: 1,
+    borderColor: '#cfdcd3',
+    backgroundColor: '#f4f7f2',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+  },
+  onboardingSecondaryButtonText: {
+    color: '#176b5f',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  onboardingSkipButton: {
+    minHeight: 44,
+    minWidth: 58,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  onboardingSkipButtonText: {
+    color: '#607174',
+    fontSize: 14,
+    fontWeight: '900',
+  },
   modalHeader: {
     fontSize: 22,
     fontWeight: '800',
@@ -5478,6 +5721,21 @@ const styles = StyleSheet.create({
   },
   settingsSupportButtonText: {
     color: '#fff',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  settingsInfoButton: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: '#cfdcd3',
+    backgroundColor: '#f4f7f2',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 8,
+  },
+  settingsInfoButtonText: {
+    color: '#176b5f',
     fontSize: 14,
     fontWeight: '900',
   },
