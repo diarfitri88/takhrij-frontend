@@ -68,6 +68,7 @@ const NARRATOR_BIO_TIMEOUT_MS = 60000;
 const LEARN_PROGRESS_STORAGE_KEY = 'takhrij.learnProgress';
 const USER_PREFERENCES_STORAGE_KEY = 'takhrij.userPreferences';
 const ONBOARDING_STORAGE_KEY = 'takhrij.hasSeenOnboarding';
+const GUIDED_TOUR_STORAGE_KEY = 'takhrij.hasSeenGuidedTour';
 const DAILY_REVIEW_REMINDER_HOUR = 20;
 const DAILY_REVIEW_REMINDER_MINUTE = 0;
 const TEXT_SIZE_OPTIONS = [
@@ -137,6 +138,91 @@ const ONBOARDING_SCREENS = [
   {
     title: 'Sharing',
     body: 'Use the copy and share icons on hadith cards to share hadith without using AI quota.',
+  },
+];
+const GUIDED_TOUR_STEPS = [
+  {
+    section: 'search',
+    label: 'Search Input',
+    title: 'Search Hadith',
+    body: 'Type Arabic, English, or a reference such as Bukhari 1 or Bulugh al-Maram 1.',
+    arrow: '↓',
+  },
+  {
+    section: 'search',
+    label: 'Search Tips and Disclaimer',
+    title: 'Open Search Tips',
+    body: 'Use this expandable section for search examples, collection notes, and the learning disclaimer.',
+    arrow: '↓',
+  },
+  {
+    section: 'search',
+    label: 'Search Result Card',
+    title: 'Read Results',
+    body: 'Hadith results appear as cards with reference, authenticity label when available, Arabic, and English text.',
+    arrow: '↓',
+  },
+  {
+    section: 'search',
+    label: 'Copy and Share Icons',
+    title: 'Copy or Share',
+    body: 'Use the copy and share icons on a hadith card without using AI quota.',
+    arrow: '↗',
+  },
+  {
+    section: 'search',
+    label: 'View AI Commentary',
+    title: 'AI Commentary',
+    body: 'Tap View AI Commentary for educational support. This uses the daily AI feature limit.',
+    arrow: '↓',
+  },
+  {
+    section: 'learn',
+    learnMode: 'overview',
+    label: 'Learn Section',
+    title: 'Learning Pathways',
+    body: 'Use Learn for Arbain Nawawi, Bayquniyyah, Daily Quiz, and progress tracking.',
+    arrow: '↓',
+  },
+  {
+    section: 'learn',
+    learnMode: 'overview',
+    label: 'Arbain Nawawi Pathway',
+    title: 'Arbain Nawawi',
+    body: 'Open Arbain Nawawi to study foundational hadith with guided cards and memorisation tools.',
+    arrow: '↓',
+  },
+  {
+    section: 'learn',
+    learnMode: 'overview',
+    label: 'Bayquniyyah Pathway',
+    title: 'Bayquniyyah',
+    body: 'Open Bayquniyyah to learn mustalah al-hadith terms through short poem lessons.',
+    arrow: '↓',
+  },
+  {
+    section: 'learn',
+    learnMode: 'overview',
+    label: 'Daily Quiz',
+    title: 'Daily Quiz',
+    body: 'Daily Quiz gives active recall questions based on lessons you have completed.',
+    arrow: '↓',
+  },
+  {
+    section: 'learn',
+    learnMode: 'nawawiHadith',
+    label: 'Memorise Button',
+    title: 'Memorise Mode',
+    body: 'Inside Arbain or Bayquniyyah lessons, tap Memorise to practise Read, Repeat, Hide Words, Half Recall, and Full Recall.',
+    arrow: '↓',
+  },
+  {
+    section: 'learn',
+    learnMode: 'nawawiHadith',
+    label: 'Arabic Speaker Icon',
+    title: 'Arabic Audio',
+    body: 'Use the speaker icon near Arabic text as a memorisation aid. Voice quality depends on your device.',
+    arrow: '↘',
   },
 ];
 const REVIEW_INTERVAL_DAYS = [1, 3, 7];
@@ -1071,6 +1157,9 @@ export default function App() {
   const [onboardingVisible, setOnboardingVisible] = useState(false);
   const [onboardingIndex, setOnboardingIndex] = useState(0);
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(true);
+  const [guidedTourVisible, setGuidedTourVisible] = useState(false);
+  const [guidedTourIndex, setGuidedTourIndex] = useState(0);
+  const [hasSeenGuidedTour, setHasSeenGuidedTour] = useState(true);
   const [activeSection, setActiveSection] = useState('search');
   const [query, setQuery] = useState('');
   const [result, setResult] = useState('');
@@ -1293,12 +1382,14 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
   useEffect(() => {
     const loadLocalProgress = async () => {
       try {
-        const [storedProgress, storedPreferences, storedOnboarding] = await Promise.all([
+        const [storedProgress, storedPreferences, storedOnboarding, storedGuidedTour] = await Promise.all([
           AsyncStorage.getItem(LEARN_PROGRESS_STORAGE_KEY),
           AsyncStorage.getItem(USER_PREFERENCES_STORAGE_KEY),
           AsyncStorage.getItem(ONBOARDING_STORAGE_KEY),
+          AsyncStorage.getItem(GUIDED_TOUR_STORAGE_KEY),
         ]);
         setHasSeenOnboarding(storedOnboarding === 'true');
+        setHasSeenGuidedTour(storedGuidedTour === 'true');
         try {
           const parsedProgress = storedProgress ? JSON.parse(storedProgress) : DEFAULT_LEARN_PROGRESS;
           const safeProgress = sanitizeLearnProgress(parsedProgress);
@@ -1326,6 +1417,7 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
         setLearnProgress(DEFAULT_LEARN_PROGRESS);
         setUserPreferences(DEFAULT_USER_PREFERENCES);
         setHasSeenOnboarding(false);
+        setHasSeenGuidedTour(false);
       }
     };
 
@@ -1379,6 +1471,42 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
   const openOnboarding = () => {
     setOnboardingIndex(0);
     setOnboardingVisible(true);
+  };
+
+  const applyGuidedTourStep = stepIndex => {
+    const step = GUIDED_TOUR_STEPS[stepIndex] || GUIDED_TOUR_STEPS[0];
+    if (!step) return;
+    setActiveSection(step.section || 'search');
+    if (step.section === 'learn') {
+      setLearnMode(step.learnMode || 'overview');
+      if (step.learnMode === 'nawawiHadith') {
+        setSelectedNawawiHadithId(nawawiPreview[0]?.id || '');
+        setActiveNawawiCardIndex(0);
+      }
+    }
+    if (step.section === 'search' && step.label === 'Search Tips and Disclaimer') {
+      setShowSearchHelp(true);
+    }
+    setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 120);
+  };
+
+  const openGuidedTour = () => {
+    setSettingsVisible(false);
+    setShowWelcome(false);
+    setGuidedTourIndex(0);
+    setGuidedTourVisible(true);
+    applyGuidedTourStep(0);
+  };
+
+  const finishGuidedTour = async () => {
+    setGuidedTourVisible(false);
+    setGuidedTourIndex(0);
+    setHasSeenGuidedTour(true);
+    try {
+      await AsyncStorage.setItem(GUIDED_TOUR_STORAGE_KEY, 'true');
+    } catch {
+      // Tour state is helpful, but storage errors should not block the app.
+    }
   };
 
   const finishOnboarding = async () => {
@@ -1914,6 +2042,11 @@ const closeNarratorBio = () => {
         return true;
       }
 
+      if (guidedTourVisible) {
+        finishGuidedTour();
+        return true;
+      }
+
       if (onboardingVisible) {
         finishOnboarding();
         return true;
@@ -1959,6 +2092,7 @@ const closeNarratorBio = () => {
     commentaryModalVisible,
     donationVisible,
     glossaryModalVisible,
+    guidedTourVisible,
     hasSearchOutput,
     activeSection,
     learnMode,
@@ -3657,6 +3791,67 @@ const closeNarratorBio = () => {
                   </Text>
                 </Pressable>
               </View>
+              {onboardingIndex >= ONBOARDING_SCREENS.length - 1 && (
+                <Pressable
+                  style={styles.guidedTourStartButton}
+                  onPress={async () => {
+                    await finishOnboarding();
+                    openGuidedTour();
+                  }}
+                >
+                  <Text style={styles.guidedTourStartButtonText}>Start Guided Tour</Text>
+                </Pressable>
+              )}
+            </View>
+          </View>
+        </Modal>
+
+        <Modal
+          visible={guidedTourVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={finishGuidedTour}
+        >
+          <View style={styles.guidedTourBackdrop}>
+            <View style={styles.guidedTourCard}>
+              <Text style={styles.guidedTourProgress}>{guidedTourIndex + 1} / {GUIDED_TOUR_STEPS.length}</Text>
+              <View style={styles.guidedTourTargetRow}>
+                <Text style={styles.guidedTourArrow}>{GUIDED_TOUR_STEPS[guidedTourIndex]?.arrow || '↓'}</Text>
+                <View style={styles.guidedTourTargetPill}>
+                  <Text style={styles.guidedTourTargetText}>{GUIDED_TOUR_STEPS[guidedTourIndex]?.label}</Text>
+                </View>
+              </View>
+              <Text style={styles.guidedTourTitle}>{GUIDED_TOUR_STEPS[guidedTourIndex]?.title}</Text>
+              <Text style={[styles.guidedTourBody, scaledTextStyle(16)]}>{GUIDED_TOUR_STEPS[guidedTourIndex]?.body}</Text>
+              <View style={styles.onboardingProgressTrack}>
+                <View
+                  style={[
+                    styles.onboardingProgressFill,
+                    { width: `${((guidedTourIndex + 1) / GUIDED_TOUR_STEPS.length) * 100}%` },
+                  ]}
+                />
+              </View>
+              <View style={styles.guidedTourControls}>
+                <Pressable style={styles.onboardingSkipButton} onPress={finishGuidedTour}>
+                  <Text style={styles.onboardingSkipButtonText}>Skip Tour</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.onboardingPrimaryButton}
+                  onPress={() => {
+                    if (guidedTourIndex >= GUIDED_TOUR_STEPS.length - 1) {
+                      finishGuidedTour();
+                    } else {
+                      const nextIndex = guidedTourIndex + 1;
+                      setGuidedTourIndex(nextIndex);
+                      applyGuidedTourStep(nextIndex);
+                    }
+                  }}
+                >
+                  <Text style={styles.onboardingPrimaryButtonText}>
+                    {guidedTourIndex >= GUIDED_TOUR_STEPS.length - 1 ? 'Finish Tour' : 'Next'}
+                  </Text>
+                </Pressable>
+              </View>
             </View>
           </View>
         </Modal>
@@ -3939,6 +4134,12 @@ const closeNarratorBio = () => {
           onPress={openOnboarding}
         >
           <Text style={styles.settingsInfoButtonText}>How to Use Takhrij</Text>
+        </Pressable>
+        <Pressable
+          style={styles.settingsInfoButton}
+          onPress={openGuidedTour}
+        >
+          <Text style={styles.settingsInfoButtonText}>Start Guided Tour</Text>
         </Pressable>
 
         <Text style={styles.settingsSectionTitle}>About Takhrij</Text>
@@ -5587,6 +5788,90 @@ const styles = StyleSheet.create({
     color: '#607174',
     fontSize: 14,
     fontWeight: '900',
+  },
+  guidedTourStartButton: {
+    minHeight: 44,
+    borderWidth: 1,
+    borderColor: '#d8b15a',
+    backgroundColor: '#fff9e9',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    marginTop: 10,
+  },
+  guidedTourStartButtonText: {
+    color: '#7a5a12',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  guidedTourBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(9, 23, 26, 0.68)',
+    justifyContent: 'flex-end',
+    padding: 18,
+    paddingBottom: 24,
+  },
+  guidedTourCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e5e9df',
+    padding: 18,
+    shadowColor: '#102a2e',
+    shadowOpacity: 0.18,
+    shadowOffset: { width: 0, height: 10 },
+    shadowRadius: 18,
+    elevation: 6,
+  },
+  guidedTourProgress: {
+    color: '#176b5f',
+    fontSize: 13,
+    fontWeight: '900',
+    marginBottom: 10,
+  },
+  guidedTourTargetRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
+  },
+  guidedTourArrow: {
+    color: '#d8b15a',
+    fontSize: 28,
+    fontWeight: '900',
+  },
+  guidedTourTargetPill: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#d7e5ce',
+    backgroundColor: '#edf4e8',
+    borderRadius: 999,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+  },
+  guidedTourTargetText: {
+    color: '#176b5f',
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  guidedTourTitle: {
+    color: '#132f35',
+    fontSize: 21,
+    fontWeight: '900',
+    marginBottom: 8,
+  },
+  guidedTourBody: {
+    color: '#2f3d40',
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 12,
+  },
+  guidedTourControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 12,
   },
   modalHeader: {
     fontSize: 22,
