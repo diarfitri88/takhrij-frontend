@@ -143,86 +143,97 @@ const ONBOARDING_SCREENS = [
 const GUIDED_TOUR_STEPS = [
   {
     section: 'search',
+    placement: 'top',
     label: 'Search Input',
     title: 'Search Hadith',
     body: 'Type Arabic, English, or a reference such as Bukhari 1 or Bulugh al-Maram 1.',
-    arrow: '↓',
+    pointer: '↓ Look here',
   },
   {
     section: 'search',
+    placement: 'center',
     label: 'Search Tips and Disclaimer',
     title: 'Open Search Tips',
     body: 'Use this expandable section for search examples, collection notes, and the learning disclaimer.',
-    arrow: '↓',
+    pointer: '↓ Look here',
   },
   {
     section: 'search',
+    placement: 'center',
     label: 'Search Result Card',
     title: 'Read Results',
     body: 'Hadith results appear as cards with reference, authenticity label when available, Arabic, and English text.',
-    arrow: '↓',
+    pointer: '↓ Look here',
   },
   {
     section: 'search',
+    placement: 'upperMiddle',
     label: 'Copy and Share Icons',
     title: 'Copy or Share',
     body: 'Use the copy and share icons on a hadith card without using AI quota.',
-    arrow: '↗',
+    pointer: '↗ Look here',
   },
   {
     section: 'search',
+    placement: 'bottom',
     label: 'View AI Commentary',
     title: 'AI Commentary',
     body: 'Tap View AI Commentary for educational support. This uses the daily AI feature limit.',
-    arrow: '↓',
+    pointer: '↓ Look here',
   },
   {
     section: 'learn',
     learnMode: 'overview',
+    placement: 'top',
     label: 'Learn Section',
     title: 'Learning Pathways',
     body: 'Use Learn for Arbain Nawawi, Bayquniyyah, Daily Quiz, and progress tracking.',
-    arrow: '↓',
+    pointer: '↓ Look here',
   },
   {
     section: 'learn',
     learnMode: 'overview',
+    placement: 'center',
     label: 'Arbain Nawawi Pathway',
     title: 'Arbain Nawawi',
     body: 'Open Arbain Nawawi to study foundational hadith with guided cards and memorisation tools.',
-    arrow: '↓',
+    pointer: '↓ Look here',
   },
   {
     section: 'learn',
     learnMode: 'overview',
+    placement: 'center',
     label: 'Bayquniyyah Pathway',
     title: 'Bayquniyyah',
     body: 'Open Bayquniyyah to learn mustalah al-hadith terms through short poem lessons.',
-    arrow: '↓',
+    pointer: '↓ Look here',
   },
   {
     section: 'learn',
     learnMode: 'overview',
+    placement: 'center',
     label: 'Daily Quiz',
     title: 'Daily Quiz',
     body: 'Daily Quiz gives active recall questions based on lessons you have completed.',
-    arrow: '↓',
+    pointer: '↓ Look here',
   },
   {
     section: 'learn',
     learnMode: 'nawawiHadith',
+    placement: 'bottom',
     label: 'Memorise Button',
     title: 'Memorise Mode',
     body: 'Inside Arbain or Bayquniyyah lessons, tap Memorise to practise Read, Repeat, Hide Words, Half Recall, and Full Recall.',
-    arrow: '↓',
+    pointer: '↓ Look here',
   },
   {
     section: 'learn',
     learnMode: 'nawawiHadith',
+    placement: 'upperMiddle',
     label: 'Arabic Speaker Icon',
     title: 'Arabic Audio',
     body: 'Use the speaker icon near Arabic text as a memorisation aid. Voice quality depends on your device.',
-    arrow: '↘',
+    pointer: '↘ Look here',
   },
 ];
 const REVIEW_INTERVAL_DAYS = [1, 3, 7];
@@ -1507,6 +1518,37 @@ const scaledArabicTextStyle = fontSize => ({ fontSize: Math.round(fontSize * ara
     } catch {
       // Tour state is helpful, but storage errors should not block the app.
     }
+  };
+
+  const resetTutorialState = () => {
+    Alert.alert(
+      'Reset tutorial state?',
+      'This will show the first-time tutorial and guided tour again. Your learning progress will not be changed.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await AsyncStorage.multiRemove([
+                ONBOARDING_STORAGE_KEY,
+                GUIDED_TOUR_STORAGE_KEY,
+              ]);
+            } catch {
+              // Reset is only for testing/replay; storage errors should not interrupt app use.
+            }
+            setHasSeenOnboarding(false);
+            setHasSeenGuidedTour(false);
+            setOnboardingIndex(0);
+            setGuidedTourIndex(0);
+            setOnboardingVisible(false);
+            setGuidedTourVisible(false);
+            Alert.alert('Tutorial reset', 'Restart the app to see the first-time tutorial again.');
+          },
+        },
+      ]
+    );
   };
 
   const finishOnboarding = async () => {
@@ -3674,6 +3716,16 @@ const closeNarratorBio = () => {
     );
   };
 
+  const currentGuidedTourStep = GUIDED_TOUR_STEPS[guidedTourIndex] || GUIDED_TOUR_STEPS[0];
+  const guidedTourPlacementStyle =
+    currentGuidedTourStep?.placement === 'top'
+      ? styles.guidedTourBackdropTop
+      : currentGuidedTourStep?.placement === 'upperMiddle'
+        ? styles.guidedTourBackdropUpperMiddle
+        : currentGuidedTourStep?.placement === 'center'
+          ? styles.guidedTourBackdropCenter
+          : styles.guidedTourBackdropBottom;
+
   if (showWelcome) {
     return (
       <SafeAreaProvider>
@@ -3812,17 +3864,17 @@ const closeNarratorBio = () => {
           animationType="fade"
           onRequestClose={finishGuidedTour}
         >
-          <View style={styles.guidedTourBackdrop}>
+          <View style={[styles.guidedTourBackdrop, guidedTourPlacementStyle]}>
             <View style={styles.guidedTourCard}>
               <Text style={styles.guidedTourProgress}>{guidedTourIndex + 1} / {GUIDED_TOUR_STEPS.length}</Text>
               <View style={styles.guidedTourTargetRow}>
-                <Text style={styles.guidedTourArrow}>{GUIDED_TOUR_STEPS[guidedTourIndex]?.arrow || '↓'}</Text>
+                <Text style={styles.guidedTourArrow}>{currentGuidedTourStep?.pointer || '↓ Look here'}</Text>
                 <View style={styles.guidedTourTargetPill}>
-                  <Text style={styles.guidedTourTargetText}>{GUIDED_TOUR_STEPS[guidedTourIndex]?.label}</Text>
+                  <Text style={styles.guidedTourTargetText}>{currentGuidedTourStep?.label}</Text>
                 </View>
               </View>
-              <Text style={styles.guidedTourTitle}>{GUIDED_TOUR_STEPS[guidedTourIndex]?.title}</Text>
-              <Text style={[styles.guidedTourBody, scaledTextStyle(16)]}>{GUIDED_TOUR_STEPS[guidedTourIndex]?.body}</Text>
+              <Text style={styles.guidedTourTitle}>{currentGuidedTourStep?.title}</Text>
+              <Text style={[styles.guidedTourBody, scaledTextStyle(16)]}>{currentGuidedTourStep?.body}</Text>
               <View style={styles.onboardingProgressTrack}>
                 <View
                   style={[
@@ -4140,6 +4192,12 @@ const closeNarratorBio = () => {
           onPress={openGuidedTour}
         >
           <Text style={styles.settingsInfoButtonText}>Start Guided Tour</Text>
+        </Pressable>
+        <Pressable
+          style={styles.settingsInfoButton}
+          onPress={resetTutorialState}
+        >
+          <Text style={styles.settingsInfoButtonText}>Reset Tutorial State</Text>
         </Pressable>
 
         <Text style={styles.settingsSectionTitle}>About Takhrij</Text>
@@ -5808,9 +5866,22 @@ const styles = StyleSheet.create({
   guidedTourBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(9, 23, 26, 0.68)',
-    justifyContent: 'flex-end',
     padding: 18,
     paddingBottom: 24,
+  },
+  guidedTourBackdropTop: {
+    justifyContent: 'flex-start',
+    paddingTop: 96,
+  },
+  guidedTourBackdropUpperMiddle: {
+    justifyContent: 'flex-start',
+    paddingTop: 170,
+  },
+  guidedTourBackdropCenter: {
+    justifyContent: 'center',
+  },
+  guidedTourBackdropBottom: {
+    justifyContent: 'flex-end',
   },
   guidedTourCard: {
     backgroundColor: '#fff',
