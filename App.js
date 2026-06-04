@@ -118,8 +118,8 @@ const ONBOARDING_SCREENS = [
     points: ['Bukhari 1', 'Sahih Muslim 300', 'Bulugh al-Maram 1', "Shama'il Muhammadiyah 1"],
   },
   {
-    title: 'AI Commentary',
-    body: 'Tap View AI Commentary for AI-generated educational support. Free users get 5 AI features per day. Always verify important religious matters with qualified teachers and reliable scholarly sources.',
+    title: 'Lessons & Benefits',
+    body: 'Tap View Lessons & Benefits for AI-generated educational support. Free users get 5 AI features per day. Always verify important religious matters with qualified teachers and reliable scholarly sources.',
   },
   {
     title: 'Narrator Biography',
@@ -172,9 +172,9 @@ const GUIDED_TOUR_STEPS = [
   {
     section: 'search',
     placement: 'bottom',
-    label: 'View AI Commentary',
-    title: 'AI Commentary',
-    body: 'Tap View AI Commentary for educational support. This uses the daily AI feature limit.',
+    label: 'View Lessons & Benefits',
+    title: 'Lessons & Benefits',
+    body: 'Tap View Lessons & Benefits for educational support. This uses the daily AI feature limit.',
   },
   {
     section: 'learn',
@@ -1006,9 +1006,18 @@ const sanitizeNarratorBioText = (rawBio = '') => {
 const getSafeCommentaryText = (text = '') => {
   const trimmed = String(text || '').trim();
   if (!trimmed || /^no commentary\.?$/i.test(trimmed)) {
-    return 'Commentary was not available for this hadith. Please refer to qualified scholars for detailed explanation.';
+    return 'Lessons and benefits were not available for this hadith. Please refer to qualified scholars for detailed explanation.';
+  }
+  const lessonsMatch = trimmed.match(/(?:Lessons\s*&\s*Benefits|Commentary)\s*:\s*([\s\S]*?)(?=\n\s*(?:Chain of Narrators|Narrator Chain|Isnad|Chain)\s*:|$)/i);
+  if (lessonsMatch?.[1]?.trim()) {
+    return lessonsMatch[1].trim();
   }
   return trimmed;
+};
+
+const hasMeaningfulNarratorChain = (chain = '') => {
+  const trimmed = String(chain || '').trim();
+  return !!trimmed && !/^(?:no chain|chain not available)\.?$/i.test(trimmed);
 };
 
 const glossary = [
@@ -1975,9 +1984,9 @@ const closeNarratorBio = () => {
     ];
 
     if (commentary?.trim()) {
-      sections.push(`Commentary:\n${commentary.trim()}`);
+      sections.push(`Lessons & Benefits:\n${commentary.trim()}`);
     }
-    if (chain?.trim()) {
+    if (hasMeaningfulNarratorChain(chain)) {
       sections.push(`Chain of Narrators:\n${chain.trim()}`);
     }
     if (includeDownloadLink) {
@@ -3741,7 +3750,7 @@ const closeNarratorBio = () => {
                 Takhrij lets you search and study hadith across 16 collections with over 50,000 narrations.
               </Text>
               <Text style={styles.welcomeText}>
-                Arabic and English hadith search is available from the database. AI commentary is limited to 5 uses per day for free users.
+                Arabic and English hadith search is available from the database. Lessons & Benefits and Narrator Biography are limited to 5 AI features per day for free users.
               </Text>
               <Text style={styles.welcomeSectionTitle}>Features include</Text>
               <View style={styles.welcomeBulletList}>
@@ -3916,7 +3925,7 @@ const closeNarratorBio = () => {
         >
           <View style={styles.modalBackdrop}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalHeader}>Hadith Commentary</Text>
+              <Text style={styles.modalHeader}>AI-generated Lessons & Benefits</Text>
               <ScrollView
                 ref={scrollRef}
                 style={styles.modalScroll}
@@ -3930,7 +3939,7 @@ const closeNarratorBio = () => {
                 {!!commentaryData.sourceCaution && (
                   <Text style={styles.authenticityCautionText}>{commentaryData.sourceCaution}</Text>
                 )}
-                <Text style={styles.sectionHeader}>Commentary</Text>
+                <Text style={styles.sectionHeader}>Lessons & Benefits</Text>
                 <Text style={[styles.modalText, scaledTextStyle(16)]}>{commentaryData.commentary}</Text>
                 <Text style={styles.sectionHeader}>Chain of Narrators (click to view biography)</Text>
 <View style={styles.chainContainer}>
@@ -3954,13 +3963,21 @@ const closeNarratorBio = () => {
 </View>
               </ScrollView>
               <Text style={styles.modalDisclaimer}>
-                AI-generated commentary. This response is for educational support only. Please verify important religious matters with qualified teachers and reliable scholarly sources.
+                AI-generated educational content. These lessons and benefits are intended for learning support only and should not be treated as a fatwa or scholarly ruling. Verify important religious matters with qualified teachers and reliable scholarly sources.
               </Text>
               <View style={styles.shareCopyRow}>
                 <TouchableOpacity
                   style={styles.shareCopyButton}
                   onPress={async () => {
-                    const textToCopy = `Hadith Reference: ${commentaryData.reference}\n\nArabic Matn:\n${commentaryData.arabic}\n\nEnglish Matn:\n${commentaryData.english}\n\nAuthenticity Status:\n${commentaryData.authenticityStatus || 'Not specified in source'}\n\nCommentary:\n${commentaryData.commentary}\n\nChain of Narrators:\n${commentaryData.chain}`;
+                    const textToCopy = buildHadithShareText({
+                      reference: commentaryData.reference,
+                      arabic: commentaryData.arabic,
+                      english: commentaryData.english,
+                      authenticityStatus: commentaryData.authenticityStatus,
+                      commentary: commentaryData.commentary,
+                      chain: commentaryData.chain,
+                      includeDownloadLink: false,
+                    });
                     await Clipboard.setStringAsync(textToCopy);
                     alert('Copied to clipboard!');
                   }}
@@ -4089,9 +4106,9 @@ const closeNarratorBio = () => {
     <View style={styles.modalContent}>
       <Text style={styles.modalHeader}>About Takhrij</Text>
       <Text style={[styles.modalText, scaledTextStyle(16)]}>
-        Takhrij helps Muslims search across 16 hadith collections with over 50,000 narrations in Arabic and English. It also supports AI assisted commentary, narrator biography lookup, Arbain Nawawi and Bayquniyyah learning pathways, Daily Quiz, progress tracking, and memorisation focused learning tools.{"\n\n"}
-        Takhrij is an educational and research aid. AI commentary and narrator biography content are AI generated and may contain mistakes or incomplete information. Please verify important religious matters with qualified teachers and reliable scholarly sources.{"\n\n"}
-        The app is not a fatwa service. AI commentary is limited to 5 uses per day for free users.
+        Takhrij helps Muslims search across 16 hadith collections with over 50,000 narrations in Arabic and English. It also supports AI-generated Lessons & Benefits, narrator biography lookup, Arbain Nawawi and Bayquniyyah learning pathways, Daily Quiz, progress tracking, and memorisation focused learning tools.{"\n\n"}
+        Takhrij is an educational and research aid. Lessons & Benefits and narrator biography content are AI generated and may contain mistakes or incomplete information. Please verify important religious matters with qualified teachers and reliable scholarly sources.{"\n\n"}
+        The app is not a fatwa service. Free users get 5 AI features per day, including Lessons & Benefits and Narrator Biography.
       </Text>
       <TouchableOpacity
         style={styles.modalCloseButton}
@@ -4202,12 +4219,12 @@ const closeNarratorBio = () => {
 
         <Text style={styles.settingsSectionTitle}>About Takhrij</Text>
         <Text style={[styles.modalText, scaledTextStyle(16)]}>
-          Takhrij helps Muslims search across 16 hadith collections with over 50,000 narrations in Arabic and English. It includes AI assisted commentary, narrator biography lookup, Arbain Nawawi and Bayquniyyah learning pathways, Daily Quiz, progress tracking, and memorisation focused learning tools.
+          Takhrij helps Muslims search across 16 hadith collections with over 50,000 narrations in Arabic and English. It includes AI-generated Lessons & Benefits, narrator biography lookup, Arbain Nawawi and Bayquniyyah learning pathways, Daily Quiz, progress tracking, and memorisation focused learning tools.
         </Text>
 
         <Text style={styles.settingsSectionTitle}>Educational Disclaimer</Text>
         <Text style={[styles.modalText, scaledTextStyle(16)]}>
-          Takhrij is an educational and research aid, not a fatwa service. AI commentary and narrator biography content are AI generated and may contain mistakes or incomplete information. Please verify important religious matters with qualified teachers and reliable scholarly sources. AI commentary is limited to 5 uses per day for free users.
+          Takhrij is an educational and research aid, not a fatwa service. Lessons & Benefits and narrator biography content are AI generated and may contain mistakes or incomplete information. Please verify important religious matters with qualified teachers and reliable scholarly sources. Free users get 5 AI features per day, including Lessons & Benefits and Narrator Biography.
         </Text>
 
         <Text style={styles.settingsSectionTitle}>Support Takhrij</Text>
@@ -4532,7 +4549,7 @@ const closeNarratorBio = () => {
                     style={styles.commentaryButton}
                     onPress={() => fetchCommentary(h.arabic, h.english, h.reference, h.collection)}
                   >
-                    <Text style={styles.commentaryText}>View AI Commentary</Text>
+                    <Text style={styles.commentaryText}>View Lessons & Benefits</Text>
                   </Pressable>
                 )}
               </View>
