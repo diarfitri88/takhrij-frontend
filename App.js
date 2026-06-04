@@ -147,7 +147,6 @@ const GUIDED_TOUR_STEPS = [
     label: 'Search Input',
     title: 'Search Hadith',
     body: 'Type Arabic, English, or a reference such as Bukhari 1 or Bulugh al-Maram 1.',
-    pointer: '↓ Look here',
   },
   {
     section: 'search',
@@ -155,7 +154,6 @@ const GUIDED_TOUR_STEPS = [
     label: 'Search Tips and Disclaimer',
     title: 'Open Search Tips',
     body: 'Use this expandable section for search examples, collection notes, and the learning disclaimer.',
-    pointer: '↓ Look here',
   },
   {
     section: 'search',
@@ -163,7 +161,6 @@ const GUIDED_TOUR_STEPS = [
     label: 'Search Result Card',
     title: 'Read Results',
     body: 'Hadith results appear as cards with reference, authenticity label when available, Arabic, and English text.',
-    pointer: '↓ Look here',
   },
   {
     section: 'search',
@@ -171,7 +168,6 @@ const GUIDED_TOUR_STEPS = [
     label: 'Copy and Share Icons',
     title: 'Copy or Share',
     body: 'Use the copy and share icons on a hadith card without using AI quota.',
-    pointer: '↗ Look here',
   },
   {
     section: 'search',
@@ -179,7 +175,6 @@ const GUIDED_TOUR_STEPS = [
     label: 'View AI Commentary',
     title: 'AI Commentary',
     body: 'Tap View AI Commentary for educational support. This uses the daily AI feature limit.',
-    pointer: '↓ Look here',
   },
   {
     section: 'learn',
@@ -188,7 +183,6 @@ const GUIDED_TOUR_STEPS = [
     label: 'Learn Section',
     title: 'Learning Pathways',
     body: 'Use Learn for Arbain Nawawi, Bayquniyyah, Daily Quiz, and progress tracking.',
-    pointer: '↓ Look here',
   },
   {
     section: 'learn',
@@ -197,7 +191,6 @@ const GUIDED_TOUR_STEPS = [
     label: 'Arbain Nawawi Pathway',
     title: 'Arbain Nawawi',
     body: 'Open Arbain Nawawi to study foundational hadith with guided cards and memorisation tools.',
-    pointer: '↓ Look here',
   },
   {
     section: 'learn',
@@ -206,7 +199,6 @@ const GUIDED_TOUR_STEPS = [
     label: 'Bayquniyyah Pathway',
     title: 'Bayquniyyah',
     body: 'Open Bayquniyyah to learn mustalah al-hadith terms through short poem lessons.',
-    pointer: '↓ Look here',
   },
   {
     section: 'learn',
@@ -215,7 +207,6 @@ const GUIDED_TOUR_STEPS = [
     label: 'Daily Quiz',
     title: 'Daily Quiz',
     body: 'Daily Quiz gives active recall questions based on lessons you have completed.',
-    pointer: '↓ Look here',
   },
   {
     section: 'learn',
@@ -224,7 +215,6 @@ const GUIDED_TOUR_STEPS = [
     label: 'Memorise Button',
     title: 'Memorise Mode',
     body: 'Inside Arbain or Bayquniyyah lessons, tap Memorise to practise Read, Repeat, Hide Words, Half Recall, and Full Recall.',
-    pointer: '↓ Look here',
   },
   {
     section: 'learn',
@@ -233,7 +223,6 @@ const GUIDED_TOUR_STEPS = [
     label: 'Arabic Speaker Icon',
     title: 'Arabic Audio',
     body: 'Use the speaker icon near Arabic text as a memorisation aid. Voice quality depends on your device.',
-    pointer: '↘ Look here',
   },
 ];
 const REVIEW_INTERVAL_DAYS = [1, 3, 7];
@@ -3867,11 +3856,8 @@ const closeNarratorBio = () => {
           <View style={[styles.guidedTourBackdrop, guidedTourPlacementStyle]}>
             <View style={styles.guidedTourCard}>
               <Text style={styles.guidedTourProgress}>{guidedTourIndex + 1} / {GUIDED_TOUR_STEPS.length}</Text>
-              <View style={styles.guidedTourTargetRow}>
-                <Text style={styles.guidedTourArrow}>{currentGuidedTourStep?.pointer || '↓ Look here'}</Text>
-                <View style={styles.guidedTourTargetPill}>
-                  <Text style={styles.guidedTourTargetText}>{currentGuidedTourStep?.label}</Text>
-                </View>
+              <View style={styles.guidedTourTargetPill}>
+                <Text style={styles.guidedTourTargetText}>{currentGuidedTourStep?.label}</Text>
               </View>
               <Text style={styles.guidedTourTitle}>{currentGuidedTourStep?.title}</Text>
               <Text style={[styles.guidedTourBody, scaledTextStyle(16)]}>{currentGuidedTourStep?.body}</Text>
@@ -3884,6 +3870,20 @@ const closeNarratorBio = () => {
                 />
               </View>
               <View style={styles.guidedTourControls}>
+                <Pressable
+                  style={[
+                    styles.onboardingSecondaryButton,
+                    guidedTourIndex === 0 && styles.flowButtonDisabled,
+                  ]}
+                  disabled={guidedTourIndex === 0}
+                  onPress={() => {
+                    const previousIndex = Math.max(0, guidedTourIndex - 1);
+                    setGuidedTourIndex(previousIndex);
+                    applyGuidedTourStep(previousIndex);
+                  }}
+                >
+                  <Text style={styles.onboardingSecondaryButtonText}>Back</Text>
+                </Pressable>
                 <Pressable style={styles.onboardingSkipButton} onPress={finishGuidedTour}>
                   <Text style={styles.onboardingSkipButtonText}>Skip Tour</Text>
                 </Pressable>
@@ -5901,25 +5901,15 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     marginBottom: 10,
   },
-  guidedTourTargetRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 12,
-  },
-  guidedTourArrow: {
-    color: '#d8b15a',
-    fontSize: 28,
-    fontWeight: '900',
-  },
   guidedTourTargetPill: {
-    flex: 1,
+    alignSelf: 'flex-start',
     borderWidth: 1,
     borderColor: '#d7e5ce',
     backgroundColor: '#edf4e8',
     borderRadius: 999,
     paddingVertical: 7,
     paddingHorizontal: 12,
+    marginBottom: 12,
   },
   guidedTourTargetText: {
     color: '#176b5f',
