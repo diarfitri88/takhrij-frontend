@@ -941,16 +941,13 @@ const getAuthenticitySourceLabel = (status = '', source = '') => {
 const sanitizeNarratorBioText = (rawBio = '') => {
   const forbiddenPattern = /\b(scholarly remarks|jarh|ta['‘’]?dil|grading|grade|graded|authenticity|trustworthy|reliable|unreliable|weak|thiqah|liar|fabricator|majhul|abandoned|criticism|dispute|disputed)\b/i;
   const allowedLabels = [
-    'era/generation',
+    'birth/death',
     'place/region',
     'region',
     'teachers',
     'students',
-    'collections',
-    'known for',
-    'role in hadith transmission',
-    'educational note',
-    'educational importance'
+    'why this narrator matters',
+    'interesting fact'
   ];
   const sectionValues = new Map();
   let currentLabel = null;
@@ -982,20 +979,17 @@ const sanitizeNarratorBioText = (rawBio = '') => {
     });
 
   const isPlaceholder = value => /^(not listed|not specified|unknown|unclear|n\/a|none)\b/i.test(String(value).trim());
-  const knownFor = sectionValues.get('known for') || sectionValues.get('educational importance');
   const safeSections = [
-    ['Era/Generation', sectionValues.get('era/generation')],
+    ['Birth/Death', sectionValues.get('birth/death')],
     ['Place/Region', sectionValues.get('place/region') || sectionValues.get('region')],
-    ['Known For', knownFor],
-    ['Role in Hadith Transmission', sectionValues.get('role in hadith transmission')],
     ['Teachers', sectionValues.get('teachers')],
     ['Students', sectionValues.get('students')],
-    ['Collections', sectionValues.get('collections')],
-    ['Educational Note', sectionValues.get('educational note')]
+    ['Why This Narrator Matters', sectionValues.get('why this narrator matters')],
+    ['Interesting Fact', sectionValues.get('interesting fact')]
   ].filter(([, value]) => value && !isPlaceholder(value));
 
   if (!safeSections.length) {
-    return '**Educational Note:** Beginner-level historical information for this narrator is not available in this brief summary.';
+    return '**Why This Narrator Matters:** Beginner-level historical information for this narrator is not clearly available in this brief summary.';
   }
 
   return safeSections
@@ -3940,7 +3934,7 @@ const closeNarratorBio = () => {
                   <Text style={styles.authenticityCautionText}>{commentaryData.sourceCaution}</Text>
                 )}
                 <Text style={styles.sectionHeader}>Lessons & Benefits</Text>
-                <Text style={[styles.modalText, scaledTextStyle(16)]}>{commentaryData.commentary}</Text>
+                <Markdown style={markdownStyles}>{commentaryData.commentary}</Markdown>
                 <Text style={styles.sectionHeader}>Chain of Narrators (click to view biography)</Text>
 <View style={styles.chainContainer}>
   {parseNarratorNames(commentaryData.chain).map((narrator, idx, arr) => (
