@@ -24,6 +24,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useFonts } from 'expo-font';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import * as Notifications from 'expo-notifications';
@@ -1162,6 +1163,9 @@ const glossary = [
 ];
 
 export default function App() {
+  const [headerFontLoaded] = useFonts({
+    TakhrijHeader: require('./assets/fonts/PlayfairDisplay-Variable.ttf'),
+  });
   const [showWelcome, setShowWelcome] = useState(true);
   const [onboardingVisible, setOnboardingVisible] = useState(false);
   const [onboardingIndex, setOnboardingIndex] = useState(0);
@@ -3745,12 +3749,7 @@ const closeNarratorBio = () => {
               ]}
             >
               <Text style={styles.welcomeEyebrow}>Learn, search, and memorise hadith step by step.</Text>
-              <Text style={styles.welcomeTitleKicker}>Welcome to</Text>
-              <Image
-                source={require('./assets/takhrij-wordmark.png')}
-                style={styles.welcomeWordmark}
-                resizeMode="contain"
-              />
+              <Text style={styles.welcomeTitle}>Welcome to Takhrij</Text>
               <Text style={styles.welcomeText}>
                 Takhrij lets you search and study hadith across 16 collections with over 50,000 narrations.
               </Text>
@@ -4356,11 +4355,8 @@ const closeNarratorBio = () => {
 
         <LinearGradient colors={['#0f2f35', '#176b5f']} style={styles.header}>
           <View style={styles.headerBrand}>
-            <Image
-              source={require('./assets/takhrij-wordmark.png')}
-              style={styles.headerWordmark}
-              resizeMode="contain"
-            />
+            <Image source={require('./assets/icon.png')} style={styles.headerLogo} />
+            <Text style={[styles.headerText, headerFontLoaded && styles.headerBrandFont]}>Takhrij</Text>
           </View>
           <Pressable
             style={styles.headerSettingsButton}
@@ -4607,19 +4603,12 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginBottom: 10,
   },
-  welcomeTitleKicker: {
-    fontSize: 18,
+  welcomeTitle: {
+    fontSize: 32,
     fontWeight: '800',
-    color: '#f7f1df',
+    color: '#fff',
     textAlign: 'left',
-    marginBottom: 0,
-  },
-  welcomeWordmark: {
-    width: '100%',
-    maxWidth: 360,
-    height: 112,
-    alignSelf: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   welcomeText: {
     fontSize: 15,
@@ -4694,10 +4683,25 @@ const styles = StyleSheet.create({
   headerBrand: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
   },
-  headerWordmark: {
-    width: 204,
-    height: 46,
+  headerLogo: {
+    width: 36,
+    height: 36,
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.32)',
+  },
+  headerText: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#fff',
+    lineHeight: 38,
+  },
+  headerBrandFont: {
+    fontFamily: 'TakhrijHeader',
+    fontWeight: '900',
+    letterSpacing: 0,
   },
   headerSettingsButton: {
     width: 44,
