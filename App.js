@@ -24,6 +24,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useFonts } from 'expo-font';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import * as Notifications from 'expo-notifications';
@@ -1162,6 +1163,9 @@ const glossary = [
 ];
 
 export default function App() {
+  const [brandingFontsLoaded] = useFonts({
+    TakhrijBrand: require('./assets/fonts/Fraunces-Variable.ttf'),
+  });
   const [showWelcome, setShowWelcome] = useState(true);
   const [onboardingVisible, setOnboardingVisible] = useState(false);
   const [onboardingIndex, setOnboardingIndex] = useState(0);
@@ -3745,7 +3749,8 @@ const closeNarratorBio = () => {
               ]}
             >
               <Text style={styles.welcomeEyebrow}>Learn, search, and memorise hadith step by step.</Text>
-              <Text style={styles.welcomeTitle}>Welcome to Takhrij</Text>
+              <Text style={styles.welcomeTitleKicker}>Welcome to</Text>
+              <Text style={[styles.welcomeTitle, brandingFontsLoaded && styles.brandWordmark]}>Takhrij</Text>
               <Text style={styles.welcomeText}>
                 Takhrij lets you search and study hadith across 16 collections with over 50,000 narrations.
               </Text>
@@ -4352,7 +4357,7 @@ const closeNarratorBio = () => {
         <LinearGradient colors={['#0f2f35', '#176b5f']} style={styles.header}>
           <View style={styles.headerBrand}>
             <Image source={require('./assets/icon.png')} style={styles.headerLogo} />
-            <Text style={styles.headerText}>Takhrij</Text>
+            <Text style={[styles.headerText, brandingFontsLoaded && styles.brandWordmark]}>Takhrij</Text>
           </View>
           <Pressable
             style={styles.headerSettingsButton}
@@ -4599,12 +4604,20 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginBottom: 10,
   },
-  welcomeTitle: {
-    fontSize: 32,
+  welcomeTitleKicker: {
+    fontSize: 18,
     fontWeight: '800',
+    color: '#f7f1df',
+    textAlign: 'left',
+    marginBottom: 0,
+  },
+  welcomeTitle: {
+    fontSize: 46,
+    fontWeight: '900',
     color: '#fff',
     textAlign: 'left',
-    marginBottom: 14,
+    marginBottom: 12,
+    lineHeight: 54,
   },
   welcomeText: {
     fontSize: 15,
@@ -4689,9 +4702,15 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.32)',
   },
   headerText: {
-    fontSize: 30,
-    fontWeight: '800',
+    fontSize: 32,
+    fontWeight: '900',
     color: '#fff',
+    lineHeight: 38,
+  },
+  brandWordmark: {
+    fontFamily: 'TakhrijBrand',
+    fontWeight: '900',
+    letterSpacing: 0,
   },
   headerSettingsButton: {
     width: 44,
