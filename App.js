@@ -4682,8 +4682,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.32)',
   },
   headerWordmark: {
-    width: 116,
-    height: 32,
+    width: 104,
+    height: 29,
   },
   headerSettingsButton: {
     width: 44,
