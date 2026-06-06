@@ -4682,7 +4682,7 @@ const styles = StyleSheet.create({
   headerWordmark: {
     width: 100,
     height: 28,
-    marginTop: 2,
+    marginTop: 5,
   },
   headerSettingsButton: {
     width: 44,
