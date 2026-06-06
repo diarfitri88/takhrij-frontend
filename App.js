@@ -946,7 +946,6 @@ const sanitizeNarratorBioText = (rawBio = '') => {
     'region',
     'teachers',
     'students',
-    'why this narrator matters',
     'interesting fact'
   ];
   const sectionValues = new Map();
@@ -983,7 +982,6 @@ const sanitizeNarratorBioText = (rawBio = '') => {
     ['Place/Region', sectionValues.get('place/region') || sectionValues.get('region')],
     ['Teachers', sectionValues.get('teachers')],
     ['Students', sectionValues.get('students')],
-    ['Why This Narrator Matters', sectionValues.get('why this narrator matters')],
     ['Interesting Fact', sectionValues.get('interesting fact')]
   ];
 
