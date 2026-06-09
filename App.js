@@ -786,32 +786,6 @@ const selectDailyQuizQuestions = (progress, todayKey = getTodayKey()) => {
 
 const getDailyQuizStreakCount = getCurrentReviewStreakCount;
 
-const isPlausibleNarratorChainName = (name = '') => {
-  const cleaned = String(name || '').replace(/\s+/g, ' ').trim();
-  if (!cleaned || /[\u0600-\u06FF]/.test(cleaned)) return false;
-  if (/^(?:his father|her father|their father|his mother|her mother)$/i.test(cleaned)) return true;
-  if (cleaned.length < 4) return /^(?:amr|ali|ata)$/i.test(cleaned);
-  if (/\b(?:habwah|jumaa|jumuah|friday|imam|yakhtub|sermon|khutbah|forbade|commanded|asked|questioned|book of allah|quran|matn|text|topic|reward|virtue|prayer|fasting|zakat|hajj|women|man l)\b/i.test(cleaned)) return false;
-  if (/\b(?:said|says|heard|from|that|when|while|until|whoever|whatever|wherever)\b/i.test(cleaned)) return false;
-
-  const allowedShortWords = new Set(['al', 'ibn', 'bin', 'abu', 'abi', 'bint']);
-  return cleaned.split(/\s+/).filter(Boolean).every(word => {
-    const normalized = word.replace(/[^A-Za-z']/g, '');
-    if (!normalized) return false;
-    if (allowedShortWords.has(normalized.toLowerCase())) return true;
-    if (normalized.length < 3) return false;
-    return /[aeiou]/i.test(normalized);
-  });
-};
-
-const isClickableNarratorName = (name = '') => {
-  const cleaned = String(name || '').replace(/\s+/g, ' ').trim();
-  if (!isPlausibleNarratorChainName(cleaned)) return false;
-  if (/^(?:his father|her father|their father|his mother|her mother|father|mother)$/i.test(cleaned)) return false;
-  if (/^(?:abu|abi|ibn|bin|bint|al)$/i.test(cleaned)) return false;
-  return true;
-};
-
 const parseNarratorNames = (chain = '') => {
   const normalizedChain = String(chain)
     .replace(/Chain of Narrators:?/gi, '')
@@ -835,8 +809,7 @@ const parseNarratorNames = (chain = '') => {
       name.length > 1 &&
       name.length <= 55 &&
       !sentencePattern.test(name) &&
-      !/^unknown|unclear|not specified$/i.test(name) &&
-      isPlausibleNarratorChainName(name)
+      !/^unknown|unclear|not specified$/i.test(name)
     );
 
   return names.length >= 2 ? names : [];
@@ -3957,29 +3930,20 @@ const closeNarratorBio = () => {
                 <Text style={[styles.modalText, scaledTextStyle(16)]}>{commentaryData.commentary}</Text>
                 <Text style={styles.sectionHeader}>Chain of Narrators (click to view biography)</Text>
 <View style={styles.chainContainer}>
-  {parseNarratorNames(commentaryData.chain).map((narrator, idx, arr) => {
-    const canOpenBio = isClickableNarratorName(narrator);
-    return (
-      <React.Fragment key={`${narrator}-${idx}`}>
-        {canOpenBio ? (
-          <TouchableOpacity
-            style={styles.narratorChip}
-            onPress={() => fetchNarratorBio(narrator)}
-            activeOpacity={0.78}
-          >
-            <Text style={styles.linkText}>{narrator}</Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={[styles.narratorChip, styles.narratorChipDisabled]}>
-            <Text style={[styles.linkText, styles.linkTextDisabled]}>{narrator}</Text>
-          </View>
-        )}
-        {idx < arr.length - 1 && (
-          <Text style={styles.chainArrow}>{String.fromCharCode(8594)}</Text>
-        )}
-      </React.Fragment>
-    );
-  })}
+  {parseNarratorNames(commentaryData.chain).map((narrator, idx, arr) => (
+    <React.Fragment key={`${narrator}-${idx}`}>
+      <TouchableOpacity
+        style={styles.narratorChip}
+        onPress={() => fetchNarratorBio(narrator)}
+        activeOpacity={0.78}
+      >
+        <Text style={styles.linkText}>{narrator}</Text>
+      </TouchableOpacity>
+      {idx < arr.length - 1 && (
+        <Text style={styles.chainArrow}>→</Text>
+      )}
+    </React.Fragment>
+  ))}
   {parseNarratorNames(commentaryData.chain).length === 0 && (
     <Text style={[styles.modalText, scaledTextStyle(16)]}>Chain not available.</Text>
   )}
@@ -6272,10 +6236,6 @@ donateLink: {
     marginRight: 6,
     marginBottom: 8,
   },
-  narratorChipDisabled: {
-    backgroundColor: '#f4f4ef',
-    borderColor: '#e1e1d8',
-  },
   chainArrow: {
     color: '#8aa5a0',
     fontSize: 16,
@@ -6286,9 +6246,6 @@ donateLink: {
   linkText: {
     color: '#176b5f',
     fontWeight: '800',
-  },
-  linkTextDisabled: {
-    color: '#7d8680',
   },
   background: {
     flex: 1,
